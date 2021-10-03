@@ -1,6 +1,5 @@
 module EEG
 
-# test
 
 println("Loading BrainFlow...")
 using BrainFlow
