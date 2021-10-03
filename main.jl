@@ -175,17 +175,11 @@ function old_network()
 end
 
 function train(new = false)
-    
     device = prepare_cuda()
-
     train_data = get_loader()
-
     # Load the training data and create the model structure with randomized weights
-
     model = build_model()
-    
     global train_losses = Float64[]
-
     if new
         new_network()
     else
@@ -210,7 +204,7 @@ function train(new = false)
             gs = gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
             Flux.Optimise.update!(opt, ps, gs) # update parameters
         end
-        plot_loss(epoch, 5, train_data, model, device)
+        plot_loss(epoch, 20, train_data, model, device)
     end
 
     cpu(model)
