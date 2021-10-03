@@ -237,5 +237,5 @@ end
 
 global hyper_parameters = Args(0.008, 10, 500, true)
 
-train(true)
+train(false)
 end # module
