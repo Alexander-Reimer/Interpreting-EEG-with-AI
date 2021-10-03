@@ -1,0 +1,233 @@
+module EEG
+
+println("Loading BrainFlow...")
+using BrainFlow
+println("Loading Flux...")
+using Flux
+println("Loading CUDA...")
+using CUDA
+println("Loading PyPlot...")
+using PyPlot
+println("Loading BSON...")
+using BSON
+using BSON: @load
+println("Packages loaded!")
+
+println("Loading Recover...")
+include("recover_data.jl")
+println("Recover loaded!")
+
+function clean_nans(loader)
+    for i = 1:size(loader.data[1])[2]
+        
+        if isnan(loader.data[1][800, i])
+            println("NaN at i!")
+            loader.data[1][800, i] = 0.0
+        end
+
+    end
+    return loader
+end
+
+function get_loader(shuffle, batch_size = 5,blink_path="Blink/", no_blink_path="NoBlink/")
+    endings = Recover.get_endings()
+    train_data_x = Array{Float64}(undef, 800, 0)
+    i = 1
+    while isfile(blink_path * string(i) * ".csv")
+        sample = BrainFlow.read_file(blink_path * string(i) * ".csv") |> transpose
+        sample = reshape(sample, (:, 1))
+        train_data_x = [train_data_x sample]
+        i += 1
+    end
+
+    train_data_y = Array{Float64}(undef, 2, 0)
+    for i = 1:size(train_data_x)[2]
+        train_data_y = [train_data_y [1.0, 0.0]] # Output 1: Blink = 1, Output 2: No Blink = 0
+    end
+
+    i = 1
+    while isfile(no_blink_path * string(i) * ".csv")
+        sample = BrainFlow.read_file(blink_path * string(i) * ".csv") |> transpose
+        sample = reshape(sample, (:, 1))
+        train_data_x = [train_data_x sample]
+        i += 1
+    end
+
+    for i = 1:(size(train_data_x)[2] - size(train_data_y)[2])
+        train_data_y = [train_data_y [0.0, 1.0]] # Output 1: Blink = 0, Output 2: No Blink = 1
+    end
+
+    both_ends = [endings[1]..., endings[2]...]
+    for i = 1:length(both_ends)
+        train_data_x[800, i] = both_ends[i]
+    end
+
+    train_data = Flux.Data.DataLoader((train_data_x, train_data_y), batchsize=batch_size, shuffle=shuffle, partial=false)
+    
+    return clean_nans(train_data)
+end
+
+function print_loader(loader)
+    for epoch in 1:200
+         for (x, y) in loader  # access via tuple destructuring
+            println("Inputs:")
+            println(IOContext(stdout, :compact => true, :limit => true), x)
+            println(length(x))
+            println("Outputs:")
+            println(IOContext(stdout, :compact => true, :limit => true), y)
+         end
+    end
+end
+
+function save_weights(model, name, losses)
+    model_weights = deepcopy(collect(params(model)))
+    bson(name, Dict(:model_weights => model_weights, :losses => losses))
+end
+
+function load_weights(name)
+    content = BSON.load(name, @__MODULE__)
+    return content[:model_weights], content[:losses]
+end
+
+function loss_and_accuracy(data_loader, model, device)
+    acc = 0
+    ls = 0.0f0
+    num = 0
+    for (x, y) in data_loader
+        x, y = device(x), device(y)
+        ŷ = model(x)
+        ls += Flux.Losses.mse(model(x), y) # agg
+        acc += sum(Flux.onecold(cpu(model(x))) .== Flux.onecold(cpu(y)))
+        num +=  size(x, 2)
+    end
+    return ls / num, acc / num
+end
+
+function confusion_matrix(data_loader, model)
+    blink_count = 0
+    blink_acc = 0
+    no_blink_count = 0
+    no_blink_acc = 0
+    for (x, y) in data_loader
+        model = model |> cpu
+        est = model(x)
+        if y[1, 1] == 1.0
+            blink_count += 1
+            if est[1,1] > est[2,1]
+                blink_acc += 1
+            end
+        else
+            no_blink_count += 1
+            if est[1,1] < est[2,1]
+                no_blink_acc += 1
+            end
+        end
+    end
+    blink_acc /= blink_count
+    no_blink_acc /= no_blink_count
+    
+    # Real Blinks: [:, 1], Real No Blinks: [:, 2], Estimated Blinks: [1, :], Estimated No Blinks: [2, :]
+    return [blink_acc (1 - no_blink_acc); (1 - blink_acc) no_blink_acc]./2
+end
+
+function build_model()
+    return Chain(
+        Dense(800, 400, σ),
+        Dense(400, 200, σ),
+        Dense(200, 2, σ)
+    )
+end
+
+function train(epochs, η = 0.1, batch_size = 5, new = false, shuffle = false)
+    # Enable CUDA on GPU if functional
+    println("Preparing CUDA...")
+    if CUDA.functional()
+        @info "Training on CUDA GPU"
+        CUDA.allowscalar(false)
+        device = gpu
+    else
+        @info "Training on CPU"
+        device = cpu
+    end
+    println("CUDA done!")
+
+    # Load the training data and create the model structure with randomized weights
+
+    println("Loading training data...")
+    train_data = get_loader(shuffle, batch_size)
+    println("Training data loaded!")
+
+    println("Creating model...")
+    model = build_model()
+    println("Model created!")
+
+    if new
+
+        train_losses = Float64[]
+        train_loss, train_acc = loss_and_accuracy(train_data, model |> device, device)
+        train_loss
+        push!(train_losses, train_loss)
+    else
+        println("Loading saved weights...")
+        model_weights, train_losses = load_weights("model.bson")
+        println("Weights loaded!")
+        println("Load weights into the model...")
+        Flux.loadparams!(model, model_weights)
+        println("Weights loaded into the model!")
+    end
+
+    println("Doing model stuff..")
+    model = model |> device
+
+    ps = Flux.params(model)
+    opt = Descent(η)
+
+    println("Done!")
+    train_loss, train_acc = loss_and_accuracy(train_data, model, device)
+
+    println("0 Epochen von $epochs: Loss ist $train_loss, Accuracy ist $train_acc.")
+    clf()
+    plot(train_losses, "b")
+    
+    for epoch in 1:epochs
+        for (x, y) in train_data
+
+            x, y = device(x), device(y) # transfer data to device
+            gs = gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
+            Flux.Optimise.update!(opt, ps, gs) # update parameters
+        end
+
+        # Report on train and test
+        train_loss, train_acc = loss_and_accuracy(train_data, model, device)
+        train_loss
+        push!(train_losses, train_loss)
+        if mod(epoch, 5) == 0
+            train_loss, train_acc = loss_and_accuracy(train_data, model, device)
+            clf()
+            plot(train_losses, "b")
+            println("$(round(epoch)) Epochen von $epochs: Loss ist $train_loss, Accuracy ist $train_acc.")
+        end
+    end
+    cpu(model)
+    model |> cpu
+    train_loss, train_acc = loss_and_accuracy(train_data, model, device)
+    println("Loss: $train_loss, Accuracy: $train_acc")
+    println("Saving weights...")
+    save_weights(model, "model.bson", train_losses)
+    println("Weights saved!")
+end
+
+function anynan(c)
+    for i1 = 1:size(c)[1], i2 = 1:size(c)[2]
+        if isnan(c[i1, i2])
+            println("NaN at [$i1, $i2]!")
+        end
+    end
+end
+
+function bla()
+    confusion_matrix(get_loader(false), JLD2.load("mymodel.jld2")[:"model"])
+end
+
+train(100, 0.005, 10, false, true)
+end # module
