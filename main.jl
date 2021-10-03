@@ -138,9 +138,8 @@ function build_model()
     )
 end
 
-function train(new = false)
+function prepare_cuda()
     # Enable CUDA on GPU if functional
-    println("Preparing CUDA...")
     if CUDA.functional()
         @info "Training on CUDA GPU"
         CUDA.allowscalar(false)
@@ -149,40 +148,56 @@ function train(new = false)
         @info "Training on CPU"
         device = cpu
     end
-    println("CUDA done!")
+    return device
+end
+
+function plot_loss(epoch, frequency, train_data, model, device)
+    if mod(epoch, frequency) == 0
+        train_loss, train_acc = loss_and_accuracy(train_data, model, device)
+        push!(train_losses, train_loss)
+        clf()
+        plot(train_losses, "b")
+        println("$(epoch) Epochen von $(hyper_parameters.training_steps): Loss ist $train_loss, Accuracy ist $train_acc.")
+    end
+end
+
+function new_network()
+    @info "Creating new network"
+    train_loss, train_acc = loss_and_accuracy(train_data, model |> device, device)
+    push!(train_losses, train_loss)
+end
+
+function old_network()
+    @info "Loading old network"
+    model_weights, train_losses = load_weights("model.bson")
+    global train_losses = train_losses
+    return model_weights
+end
+
+function train(new = false)
+    
+    device = prepare_cuda()
+
+    train_data = get_loader()
 
     # Load the training data and create the model structure with randomized weights
 
-    println("Loading training data...")
-    train_data = get_loader()
-    println("Training data loaded!")
-
-    println("Creating model...")
     model = build_model()
-    println("Model created!")
+    
+    global train_losses = Float64[]
 
     if new
-
-        train_losses = Float64[]
-        train_loss, train_acc = loss_and_accuracy(train_data, model |> device, device)
-        train_loss
-        push!(train_losses, train_loss)
+        new_network()
     else
-        println("Loading saved weights...")
-        model_weights, train_losses = load_weights("model.bson")
-        println("Weights loaded!")
-        println("Load weights into the model...")
+        model_weights = old_network()
         Flux.loadparams!(model, model_weights)
-        println("Weights loaded into the model!")
     end
 
-    println("Doing model stuff..")
     model = model |> device
 
     ps = Flux.params(model)
     opt = Descent(hyper_parameters.learning_rate)
 
-    println("Done!")
     train_loss, train_acc = loss_and_accuracy(train_data, model, device)
 
     println("0 Epochen von $(hyper_parameters.training_steps): Loss ist $train_loss, Accuracy ist $train_acc.")
@@ -191,30 +206,20 @@ function train(new = false)
     
     for epoch in 1:hyper_parameters.training_steps
         for (x, y) in train_data
-
             x, y = device(x), device(y) # transfer data to device
             gs = gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
             Flux.Optimise.update!(opt, ps, gs) # update parameters
         end
-
-        # Report on train and test
-        train_loss, train_acc = loss_and_accuracy(train_data, model, device)
-        train_loss
-        push!(train_losses, train_loss)
-        if mod(epoch, 5) == 0
-            train_loss, train_acc = loss_and_accuracy(train_data, model, device)
-            clf()
-            plot(train_losses, "b")
-            println("$(round(hyper_parameters.training_steps)) Epochen von $(hyper_parameters.training_steps): Loss ist $train_loss, Accuracy ist $train_acc.")
-        end
+        plot_loss(epoch, 5, train_data, model, device)
     end
+
     cpu(model)
     model |> cpu
     train_loss, train_acc = loss_and_accuracy(train_data, model, device)
     println("Loss: $train_loss, Accuracy: $train_acc")
-    println("Saving weights...")
+
     save_weights(model, "model.bson", train_losses)
-    println("Weights saved!")
+    @info "Weights saved at \"model.bson\""
 end
 
 function anynan(c)
@@ -236,7 +241,11 @@ mutable struct Args
     shuffle :: Bool
 end
 
+<<<<<<< HEAD
 global hyper_parameters = Args(0.0008, 10, 100, true)
+=======
+global hyper_parameters = Args(0.0008, 100, 1000, true)
+>>>>>>> ca0379d334a28a49ee4443fc7f54931198d59ed8
 
 train(false)
 end # module
