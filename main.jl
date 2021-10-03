@@ -1,5 +1,7 @@
 module EEG
 
+# Testiini
+
 println("Loading BrainFlow...")
 using BrainFlow
 println("Loading Flux...")
