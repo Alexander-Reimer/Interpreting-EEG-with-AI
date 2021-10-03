@@ -161,7 +161,7 @@ function plot_loss(epoch, frequency, train_data, model, device)
     end
 end
 
-function new_network()
+function new_network(train_data, model, device)
     @info "Creating new network"
     train_loss, train_acc = loss_and_accuracy(train_data, model |> device, device)
     push!(train_losses, train_loss)
@@ -181,7 +181,7 @@ function train(new = false)
     model = build_model()
     global train_losses = Float64[]
     if new
-        new_network()
+        new_network(train_data, model, device)
     else
         model_weights = old_network()
         Flux.loadparams!(model, model_weights)
@@ -237,5 +237,5 @@ end
 
 global hyper_parameters = Args(0.008, 10, 500, true)
 
-train(false)
+train(true)
 end # module
