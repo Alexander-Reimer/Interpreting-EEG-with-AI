@@ -1,7 +1,6 @@
 module EEG
 
-# Testiini khbliövl
-#fdd
+# Testiini khbliövfdd
 
 println("Loading BrainFlow...")
 using BrainFlow
