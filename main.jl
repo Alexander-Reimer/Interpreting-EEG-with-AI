@@ -29,9 +29,10 @@ function clean_nans(loader)
     return loader
 end
 
-function get_loader(blink_path="Blink/", no_blink_path="NoBlink/")
+function get_loader(train_portion = 0.9, blink_path="Blink/", no_blink_path="NoBlink/")
     endings = Recover.get_endings()
     train_data_x = Array{Float64}(undef, 800, 0)
+
     i = 1
     while isfile(blink_path * string(i) * ".csv")
         sample = BrainFlow.read_file(blink_path * string(i) * ".csv") |> transpose
@@ -39,6 +40,7 @@ function get_loader(blink_path="Blink/", no_blink_path="NoBlink/")
         train_data_x = [train_data_x sample]
         i += 1
     end
+
 
     train_data_y = Array{Float64}(undef, 2, 0)
     for i = 1:size(train_data_x)[2]
@@ -62,9 +64,21 @@ function get_loader(blink_path="Blink/", no_blink_path="NoBlink/")
         train_data_x[800, i] = both_ends[i]
     end
 
+    l = size(train_data_x)[2]
+    l_train = round(Int, l * train_portion / 2)
+
+    test_data_x = [train_data_x[:, 1:l_train] train_data_x[:, (l-l_train + 1) : l]]
+    test_data_y = [train_data_y[:, 1:l_train] train_data_y[:, (l-l_train + 1) : l]]
+
+    train_data_x = train_data_x[:, (l_train + 1) : l-l_train]
+    train_data_y = train_data_y[:, (l_train + 1) : l-l_train]
+
     train_data = Flux.Data.DataLoader((train_data_x, train_data_y), batchsize=hyper_parameters.batch_size, shuffle=hyper_parameters.shuffle, partial=false)
+    test_data = Flux.Data.DataLoader((test_data_x, test_data_y), batchsize=1, shuffle=hyper_parameters.shuffle, partial=false)
+    println(size(train_data.data[1]))
+    println(size(test_data.data[1]))
     
-    return clean_nans(train_data)
+    return clean_nans(train_data), clean_nans(test_data)
 end
 
 function print_loader(loader)
@@ -133,8 +147,8 @@ end
 function build_model()
     return Chain(
         Dense(800, 400, σ),
-        Dense(400, 200, σ),
-        Dense(200, 2, σ)
+        #Dense(400, 200, σ),
+        Dense(400, 2, σ)
     )
 end
 
@@ -151,39 +165,45 @@ function prepare_cuda()
     return device
 end
 
-function plot_loss(epoch, frequency, train_data, model, device)
+function plot_loss(epoch, frequency, test_data, model, device, train_data)
     if mod(epoch, frequency) == 0
+        test_loss, test_acc = loss_and_accuracy(test_data, model, device)
         train_loss, train_acc = loss_and_accuracy(train_data, model, device)
+
+        push!(test_losses, test_loss)
         push!(train_losses, train_loss)
         clf()
-        plot(train_losses, "b")
-        println("$(epoch) Epochen von $(hyper_parameters.training_steps): Loss ist $train_loss, Accuracy ist $train_acc.")
+        plot(test_losses, "b")
+        plot(train_losses, "r")
+
+        println("$(epoch) Epochen von $(hyper_parameters.training_steps): Loss ist $test_loss, Accuracy ist $test_acc.")
     end
 end
 
 function new_network(train_data, model, device)
     @info "Creating new network"
-    train_loss, train_acc = loss_and_accuracy(train_data, model |> device, device)
-    push!(train_losses, train_loss)
+    test_loss, test_acc = loss_and_accuracy(train_data, model |> device, device)
+    push!(test_losses, test_loss)
 end
 
 function old_network(train_data, model, device)
     @info "Loading old network"
-    model_weights, train_losses = load_weights("model.bson")
-    global train_losses = train_losses
+    model_weights, test_losses = load_weights("model.bson")
+    global test_losses = test_losses
     return model_weights
 end
 
 function train(new = false)
     device = prepare_cuda()
-    train_data = get_loader()
+    train_data, test_data = get_loader()
     # Load the training data and create the model structure with randomized weights
     model = build_model()
+    global test_losses = Float64[]
     global train_losses = Float64[]
     if new
-        new_network(train_data, model, device)
+        new_network(test_data, model, device)
     else
-        model_weights = old_network(train_data, model, device)
+        model_weights = old_network(test_data, model, device)
         Flux.loadparams!(model, model_weights)
     end
 
@@ -192,11 +212,11 @@ function train(new = false)
     ps = Flux.params(model)
     opt = Descent(hyper_parameters.learning_rate)
 
-    train_loss, train_acc = loss_and_accuracy(train_data, model, device)
+    test_loss, test_acc = loss_and_accuracy(test_data, model, device)
 
-    println("0 Epochen von $(hyper_parameters.training_steps): Loss ist $train_loss, Accuracy ist $train_acc.")
+    println("0 Epochen von $(hyper_parameters.training_steps): Loss ist $test_loss, Accuracy ist $test_acc.")
     clf()
-    plot(train_losses, "b")
+    plot(test_losses, "b")
     
     for epoch in 1:hyper_parameters.training_steps
         for (x, y) in train_data
@@ -204,16 +224,17 @@ function train(new = false)
             gs = gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
             Flux.Optimise.update!(opt, ps, gs) # update parameters
         end
-        plot_loss(epoch, 20, train_data, model, device)
+        plot_loss(epoch, 50, test_data, model, device, train_data)
     end
 
     cpu(model)
     model |> cpu
-    train_loss, train_acc = loss_and_accuracy(train_data, model, device)
-    println("Loss: $train_loss, Accuracy: $train_acc")
+    test_loss, test_acc = loss_and_accuracy(test_data, model, device)
+    println("Loss: $test_loss, Accuracy: $test_acc")
 
-    save_weights(model, "model.bson", train_losses)
+    save_weights(model, "model.bson", test_losses)
     @info "Weights saved at \"model.bson\""
+    println(confusion_matrix(test_data, model))
 end
 
 function anynan(c)
@@ -224,9 +245,6 @@ function anynan(c)
     end
 end
 
-function bla()
-    confusion_matrix(get_loader(false), JLD2.load("mymodel.jld2")[:"model"])
-end
 
 mutable struct Args
     learning_rate :: Float64
@@ -235,7 +253,7 @@ mutable struct Args
     shuffle :: Bool
 end
 
-global hyper_parameters = Args(0.008, 10, 500, true)
+global hyper_parameters = Args(0.01, 5, 1000, true)
 
-train(true)
+train(false)
 end # module
