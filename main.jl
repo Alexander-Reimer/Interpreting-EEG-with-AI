@@ -11,7 +11,6 @@ using PyPlot
 println("Loading BSON...")
 using BSON
 using BSON: @load
-#using FFTW
 println("Packages loaded!")
 
 println("Loading Recover...")
@@ -25,21 +24,12 @@ function clean_nans(loader)
             println("NaN at i!")
             loader.data[1][800, i] = 0.0
         end
-        
-        #loader.data[1][800, i] = 0.0
+
     end
     return loader
 end
 
-function are_loaders_equal(a, b)
-    for i = 1:800, i2 = 1:200;
-        if a.data[1][i, i2] !== b.data[1][i, i2];
-            println("Unequal at ($i, $i2)");
-        end;
-    end
-end
-
-function get_loader(shuffle, blink_path="Blink/", no_blink_path="NoBlink/")
+function get_loader(shuffle, batch_size = 5,blink_path="Blink/", no_blink_path="NoBlink/")
     endings = Recover.get_endings()
     train_data_x = Array{Float64}(undef, 800, 0)
     i = 1
@@ -72,7 +62,7 @@ function get_loader(shuffle, blink_path="Blink/", no_blink_path="NoBlink/")
         train_data_x[800, i] = both_ends[i]
     end
 
-    train_data = Flux.Data.DataLoader((train_data_x, train_data_y), batchsize=5, shuffle=shuffle, partial=false)
+    train_data = Flux.Data.DataLoader((train_data_x, train_data_y), batchsize=batch_size, shuffle=shuffle, partial=false)
     
     return clean_nans(train_data)
 end
@@ -85,7 +75,6 @@ function print_loader(loader)
             println(length(x))
             println("Outputs:")
             println(IOContext(stdout, :compact => true, :limit => true), y)
-           # loss += f(x, y) # etc, runs 100 * 20 times
          end
     end
 end
@@ -120,7 +109,6 @@ function confusion_matrix(data_loader, model)
     no_blink_count = 0
     no_blink_acc = 0
     for (x, y) in data_loader
-        #x, y = device(x), device(y)
         model = model |> cpu
         est = model(x)
         if y[1, 1] == 1.0
@@ -137,7 +125,7 @@ function confusion_matrix(data_loader, model)
     end
     blink_acc /= blink_count
     no_blink_acc /= no_blink_count
-
+    
     # Real Blinks: [:, 1], Real No Blinks: [:, 2], Estimated Blinks: [1, :], Estimated No Blinks: [2, :]
     return [blink_acc (1 - no_blink_acc); (1 - blink_acc) no_blink_acc]./2
 end
@@ -150,7 +138,7 @@ function build_model()
     )
 end
 
-function train(epochs, η = 0.1, new = false, shuffle = false)
+function train(epochs, η = 0.1, batch_size = 5, new = false, shuffle = false)
     # Enable CUDA on GPU if functional
     println("Preparing CUDA...")
     if CUDA.functional()
@@ -166,7 +154,7 @@ function train(epochs, η = 0.1, new = false, shuffle = false)
     # Load the training data and create the model structure with randomized weights
 
     println("Loading training data...")
-    train_data = get_loader(shuffle)
+    train_data = get_loader(shuffle, batch_size)
     println("Training data loaded!")
 
     println("Creating model...")
@@ -205,32 +193,20 @@ function train(epochs, η = 0.1, new = false, shuffle = false)
         for (x, y) in train_data
 
             x, y = device(x), device(y) # transfer data to device
-
             gs = gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
-
             Flux.Optimise.update!(opt, ps, gs) # update parameters
         end
 
         # Report on train and test
         train_loss, train_acc = loss_and_accuracy(train_data, model, device)
-        
         train_loss
         push!(train_losses, train_loss)
-        #push!(test_losses, test_loss)
         if mod(epoch, 5) == 0
             train_loss, train_acc = loss_and_accuracy(train_data, model, device)
             clf()
-            #plot([1:5:(epoch)...], train_losses, "b")
             plot(train_losses, "b")
             println("$(round(epoch)) Epochen von $epochs: Loss ist $train_loss, Accuracy ist $train_acc.")
         end
-        #=
-        if mod(epoch, 10) == 0
-            c_m = confusion_matrix(train_data, model)
-            println(c_m[1, :])
-            println(c_m[2, :])
-        end
-        =#
     end
     cpu(model)
     model |> cpu
@@ -241,7 +217,6 @@ function train(epochs, η = 0.1, new = false, shuffle = false)
     println("Weights saved!")
 end
 
-
 function anynan(c)
     for i1 = 1:size(c)[1], i2 = 1:size(c)[2]
         if isnan(c[i1, i2])
@@ -249,7 +224,10 @@ function anynan(c)
         end
     end
 end
+
 function bla()
     confusion_matrix(get_loader(false), JLD2.load("mymodel.jld2")[:"model"])
 end
+
+train(100, 0.005, 10, false, true)
 end # module
