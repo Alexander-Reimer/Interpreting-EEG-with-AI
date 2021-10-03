@@ -167,7 +167,7 @@ function new_network(train_data, model, device)
     push!(train_losses, train_loss)
 end
 
-function old_network()
+function old_network(train_data, model, device)
     @info "Loading old network"
     model_weights, train_losses = load_weights("model.bson")
     global train_losses = train_losses
@@ -183,7 +183,7 @@ function train(new = false)
     if new
         new_network(train_data, model, device)
     else
-        model_weights = old_network()
+        model_weights = old_network(train_data, model, device)
         Flux.loadparams!(model, model_weights)
     end
 
