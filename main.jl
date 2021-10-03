@@ -1,6 +1,5 @@
 module EEG
 
-
 println("Loading BrainFlow...")
 using BrainFlow
 println("Loading Flux...")
@@ -30,7 +29,7 @@ function clean_nans(loader)
     return loader
 end
 
-function get_loader(shuffle, batch_size = 5,blink_path="Blink/", no_blink_path="NoBlink/")
+function get_loader(blink_path="Blink/", no_blink_path="NoBlink/")
     endings = Recover.get_endings()
     train_data_x = Array{Float64}(undef, 800, 0)
     i = 1
@@ -63,7 +62,7 @@ function get_loader(shuffle, batch_size = 5,blink_path="Blink/", no_blink_path="
         train_data_x[800, i] = both_ends[i]
     end
 
-    train_data = Flux.Data.DataLoader((train_data_x, train_data_y), batchsize=batch_size, shuffle=shuffle, partial=false)
+    train_data = Flux.Data.DataLoader((train_data_x, train_data_y), batchsize=hyper_parameters.batch_size, shuffle=hyper_parameters.shuffle, partial=false)
     
     return clean_nans(train_data)
 end
@@ -139,7 +138,7 @@ function build_model()
     )
 end
 
-function train(epochs, η = 0.1, batch_size = 5, new = false, shuffle = false)
+function train(new = false)
     # Enable CUDA on GPU if functional
     println("Preparing CUDA...")
     if CUDA.functional()
@@ -155,7 +154,7 @@ function train(epochs, η = 0.1, batch_size = 5, new = false, shuffle = false)
     # Load the training data and create the model structure with randomized weights
 
     println("Loading training data...")
-    train_data = get_loader(shuffle, batch_size)
+    train_data = get_loader()
     println("Training data loaded!")
 
     println("Creating model...")
@@ -181,16 +180,16 @@ function train(epochs, η = 0.1, batch_size = 5, new = false, shuffle = false)
     model = model |> device
 
     ps = Flux.params(model)
-    opt = Descent(η)
+    opt = Descent(hyper_parameters.learning_rate)
 
     println("Done!")
     train_loss, train_acc = loss_and_accuracy(train_data, model, device)
 
-    println("0 Epochen von $epochs: Loss ist $train_loss, Accuracy ist $train_acc.")
+    println("0 Epochen von $(hyper_parameters.training_steps): Loss ist $train_loss, Accuracy ist $train_acc.")
     clf()
     plot(train_losses, "b")
     
-    for epoch in 1:epochs
+    for epoch in 1:hyper_parameters.training_steps
         for (x, y) in train_data
 
             x, y = device(x), device(y) # transfer data to device
@@ -206,7 +205,7 @@ function train(epochs, η = 0.1, batch_size = 5, new = false, shuffle = false)
             train_loss, train_acc = loss_and_accuracy(train_data, model, device)
             clf()
             plot(train_losses, "b")
-            println("$(round(epoch)) Epochen von $epochs: Loss ist $train_loss, Accuracy ist $train_acc.")
+            println("$(round(hyper_parameters.training_steps)) Epochen von $(hyper_parameters.training_steps): Loss ist $train_loss, Accuracy ist $train_acc.")
         end
     end
     cpu(model)
@@ -230,5 +229,14 @@ function bla()
     confusion_matrix(get_loader(false), JLD2.load("mymodel.jld2")[:"model"])
 end
 
-train(100, 0.005, 10, false, true)
+mutable struct Args
+    learning_rate :: Float64
+    batch_size :: Int
+    training_steps :: Float64
+    shuffle :: Bool
+end
+
+global hyper_parameters = Args(0.0008, 100, 10, true)
+
+train(false)
 end # module
