@@ -235,7 +235,7 @@ mutable struct Args
     shuffle :: Bool
 end
 
-global hyper_parameters = Args(0.0008, 10, 100, true)
+global hyper_parameters = Args(0.0008, 10, 500, true)
 
 train(false)
 end # module
