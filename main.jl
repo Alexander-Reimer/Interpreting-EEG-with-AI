@@ -11,6 +11,8 @@ using PyPlot
 println("Loading BSON...")
 using BSON
 using BSON: @load
+println("Loading FFTW...")
+using FFTW
 println("Packages loaded!")
 
 println("Loading Recover...")
@@ -20,24 +22,51 @@ println("Recover loaded!")
 function clean_nans(loader)
     for i = 1:size(loader.data[1])[2]
         
-        if isnan(loader.data[1][800, i])
+        if isnan(loader.data[1][400, i])
             println("NaN at i!")
-            loader.data[1][800, i] = 0.0
+            loader.data[1][400, i] = 0.0
         end
 
     end
     return loader
 end
 
+function make_fft(data)
+    # Apply fft function to data
+    return fft(data)
+end
+
+function split_double(fft_data)
+    # Cut off the second half of the data because of mirror-effect
+    half = round(Int, length(fft_data) / 2)
+    fft_data = fft_data[1:half]
+    # Double data to compensate
+    fft_data .*= 2
+    return fft_data
+end
+
+function get_magnitudes(fft_data)
+    # Calculate the magnitude of the fft values (complex numbers)
+    return abs.(fft_data)
+end
+
 function get_loader(train_portion = 0.9, blink_path="Blink/", no_blink_path="NoBlink/")
     endings = Recover.get_endings()
-    train_data_x = Array{Float64}(undef, 800, 0)
+    train_data_x = Array{Float64}(undef, 400, 0)
 
     i = 1
     while isfile(blink_path * string(i) * ".csv")
         sample = BrainFlow.read_file(blink_path * string(i) * ".csv") |> transpose
         sample = reshape(sample, (:, 1))
-        train_data_x = [train_data_x sample]
+        sample[800] = endings[1][i]
+        sample_fft = Float64[]
+        for i = 1:200:800
+            fft_single_channel = make_fft(sample[i:(i+199)])
+            fft_single_channel = split_double(fft_single_channel)
+            fft_single_channel = get_magnitudes(fft_single_channel)
+            append!(sample_fft, fft_single_channel)
+        end
+        train_data_x = [train_data_x sample_fft]
         i += 1
     end
 
@@ -51,17 +80,20 @@ function get_loader(train_portion = 0.9, blink_path="Blink/", no_blink_path="NoB
     while isfile(no_blink_path * string(i) * ".csv")
         sample = BrainFlow.read_file(blink_path * string(i) * ".csv") |> transpose
         sample = reshape(sample, (:, 1))
-        train_data_x = [train_data_x sample]
+        sample[800] = endings[1][i]
+        sample_fft = Float64[]
+        for i = 1:200:800
+            fft_single_channel = make_fft(sample[i:(i+199)])
+            fft_single_channel = split_double(fft_single_channel)
+            fft_single_channel = get_magnitudes(fft_single_channel)
+            append!(sample_fft, fft_single_channel)
+        end
+        train_data_x = [train_data_x sample_fft]
         i += 1
     end
 
     for i = 1:(size(train_data_x)[2] - size(train_data_y)[2])
         train_data_y = [train_data_y [0.0, 1.0]] # Output 1: Blink = 0, Output 2: No Blink = 1
-    end
-
-    both_ends = [endings[1]..., endings[2]...]
-    for i = 1:length(both_ends)
-        train_data_x[800, i] = both_ends[i]
     end
 
     l = size(train_data_x)[2]
@@ -146,9 +178,9 @@ end
 
 function build_model()
     return Chain(
-        Dense(800, 400, σ),
-        #Dense(400, 200, σ),
-        Dense(400, 2, σ)
+        Dense(400, 200, σ),
+        Dense(200, 200, σ),
+        Dense(200, 2, σ)
     )
 end
 
@@ -253,7 +285,7 @@ mutable struct Args
     shuffle :: Bool
 end
 
-global hyper_parameters = Args(0.01, 5, 100, true)
+global hyper_parameters = Args(0.00001, 1, 1000, true)
 
-train(false)
+train(true)
 end # module
