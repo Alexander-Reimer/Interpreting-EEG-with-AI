@@ -107,8 +107,6 @@ function get_loader(train_portion = 0.9, blink_path="Blink/", no_blink_path="NoB
 
     train_data = Flux.Data.DataLoader((train_data_x, train_data_y), batchsize=hyper_parameters.batch_size, shuffle=hyper_parameters.shuffle, partial=false)
     test_data = Flux.Data.DataLoader((test_data_x, test_data_y), batchsize=1, shuffle=hyper_parameters.shuffle, partial=false)
-    println(size(train_data.data[1]))
-    println(size(test_data.data[1]))
     
     return clean_nans(train_data), clean_nans(test_data)
 end
