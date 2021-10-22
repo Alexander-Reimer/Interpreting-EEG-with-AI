@@ -40,7 +40,7 @@ end
 
 function get_loader(train_portion = 0.9, blink_path="Blink/", no_blink_path="NoBlink/")
     endings = Recover.get_endings()
-    train_data_x = Array{Float64}(undef, 400, 0)
+    train_data_x = Array{Float64}(undef,  (hyper_parameters.upper_limit - hyper_parameters.lower_limit + 1) * 4, 0)
 
     i = 1
     while isfile(blink_path * string(i) * ".csv")
@@ -52,7 +52,7 @@ function get_loader(train_portion = 0.9, blink_path="Blink/", no_blink_path="NoB
             fft_single_channel = make_fft(sample[i:(i+199)])
             fft_single_channel = split_double(fft_single_channel)
             fft_single_channel = get_magnitudes(fft_single_channel)
-            append!(sample_fft, fft_single_channel)
+            append!(sample_fft, fft_single_channel[hyper_parameters.lower_limit : hyper_parameters.upper_limit])
         end
         train_data_x = [train_data_x sample_fft]
         i += 1
@@ -74,7 +74,7 @@ function get_loader(train_portion = 0.9, blink_path="Blink/", no_blink_path="NoB
             fft_single_channel = make_fft(sample[i:(i+199)])
             fft_single_channel = split_double(fft_single_channel)
             fft_single_channel = get_magnitudes(fft_single_channel)
-            append!(sample_fft, fft_single_channel)
+            append!(sample_fft, fft_single_channel[hyper_parameters.lower_limit : hyper_parameters.upper_limit])
         end
         train_data_x = [train_data_x sample_fft]
         i += 1
@@ -151,10 +151,11 @@ function confusion_matrix(data_loader, model)
 end
 
 function build_model()
+    inputs = (hyper_parameters.upper_limit - hyper_parameters.lower_limit + 1) * 4
     return Chain(
-        Dense(400, 200, σ),
-        Dense(200, 200, σ),
-        Dense(200, 2, σ)
+        Dense(inputs, round(Int, inputs / 2), σ),
+        Dense(round(Int, inputs / 2), round(Int, inputs / 2), σ),
+        Dense(round(Int, inputs / 2), 2, σ)
     )
 end
 
@@ -252,9 +253,12 @@ mutable struct Args
     batch_size :: Int
     training_steps :: Float64
     shuffle :: Bool
+    # cut off fft data (frequencies) below lower_limit or above upper_limit which also determines amount of inputs (inputs = upper_limit - lower_limit)
+    lower_limit :: Int
+    upper_limit :: Int
 end
 
-global hyper_parameters = Args(0.00001, 1, 1000, true)
+global hyper_parameters = Args(0.00001, 1, 1000, true, 7, 13)
 
 train(true)
 end # module
