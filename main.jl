@@ -19,18 +19,6 @@ println("Loading Recover...")
 include("recover_data.jl")
 println("Recover loaded!")
 
-function clean_nans(loader)
-    for i = 1:size(loader.data[1])[2]
-        
-        if isnan(loader.data[1][400, i])
-            println("NaN at i!")
-            loader.data[1][400, i] = 0.0
-        end
-
-    end
-    return loader
-end
-
 function make_fft(data)
     # Apply fft function to data
     return fft(data)
@@ -109,18 +97,6 @@ function get_loader(train_portion = 0.9, blink_path="Blink/", no_blink_path="NoB
     test_data = Flux.Data.DataLoader((test_data_x, test_data_y), batchsize=1, shuffle=hyper_parameters.shuffle, partial=false)
     
     return clean_nans(train_data), clean_nans(test_data)
-end
-
-function print_loader(loader)
-    for epoch in 1:200
-         for (x, y) in loader  # access via tuple destructuring
-            println("Inputs:")
-            println(IOContext(stdout, :compact => true, :limit => true), x)
-            println(length(x))
-            println("Outputs:")
-            println(IOContext(stdout, :compact => true, :limit => true), y)
-         end
-    end
 end
 
 function save_weights(model, name, losses)
@@ -265,14 +241,6 @@ function train(new = false)
     save_weights(model, "model.bson", test_losses)
     @info "Weights saved at \"model.bson\""
     println(confusion_matrix(test_data, model))
-end
-
-function anynan(c)
-    for i1 = 1:size(c)[1], i2 = 1:size(c)[2]
-        if isnan(c[i1, i2])
-            println("NaN at [$i1, $i2]!")
-        end
-    end
 end
 
 
