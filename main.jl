@@ -96,17 +96,17 @@ function get_loader(train_portion = 0.9, blink_path="Blink/", no_blink_path="NoB
     train_data = Flux.Data.DataLoader((train_data_x, train_data_y), batchsize=hyper_parameters.batch_size, shuffle=hyper_parameters.shuffle, partial=false)
     test_data = Flux.Data.DataLoader((test_data_x, test_data_y), batchsize=1, shuffle=hyper_parameters.shuffle, partial=false)
     
-    return clean_nans(train_data), clean_nans(test_data)
+    return train_data, test_data
 end
 
-function save_weights(model, name, losses)
+function save_weights(model, name, test_losses, train_losses)
     model_weights = deepcopy(collect(params(model)))
-    bson(name, Dict(:model_weights => model_weights, :losses => losses))
+    bson(name, Dict(:model_weights => model_weights, :test_losses => test_losses, :train_losses => train_losses))
 end
 
 function load_weights(name)
     content = BSON.load(name, @__MODULE__)
-    return content[:model_weights], content[:losses]
+    return content[:model_weights], content[:test_losses], content[:train_losses]
 end
 
 function loss_and_accuracy(data_loader, model, device)
@@ -186,16 +186,19 @@ function plot_loss(epoch, frequency, test_data, model, device, train_data)
     end
 end
 
-function new_network(train_data, model, device)
+function new_network(test_data, train_data, model, device)
     @info "Creating new network"
-    test_loss, test_acc = loss_and_accuracy(train_data, model |> device, device)
+    test_loss, test_acc = loss_and_accuracy(test_data, model |> device, device)
+    train_loss, train_acc = loss_and_accuracy(train_data, model |> device, device)
     push!(test_losses, test_loss)
+    push!(train_losses, train_loss)
 end
 
 function old_network(train_data, model, device)
     @info "Loading old network"
-    model_weights, test_losses = load_weights("model.bson")
+    model_weights, test_losses, train_losses = load_weights("model.bson")
     global test_losses = test_losses
+    global train_losses = train_losses
     return model_weights
 end
 
@@ -207,7 +210,7 @@ function train(new = false)
     global test_losses = Float64[]
     global train_losses = Float64[]
     if new
-        new_network(test_data, model, device)
+        new_network(test_data, train_data, model, device)
     else
         model_weights = old_network(test_data, model, device)
         Flux.loadparams!(model, model_weights)
@@ -238,7 +241,7 @@ function train(new = false)
     test_loss, test_acc = loss_and_accuracy(test_data, model, device)
     println("Loss: $test_loss, Accuracy: $test_acc")
 
-    save_weights(model, "model.bson", test_losses)
+    save_weights(model, "model.bson", test_losses, train_losses)
     @info "Weights saved at \"model.bson\""
     println(confusion_matrix(test_data, model))
 end
