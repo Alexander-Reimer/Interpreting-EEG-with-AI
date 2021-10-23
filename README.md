@@ -18,13 +18,13 @@ And if you for some reason decided to look through the code / theory and have su
 ## How does this work?
 We are using the programming language Julia for this project.
 
-For the neural network we are using the library [Flux](https://github.com/FluxML/Flux.jl). The network structure so far only consists of dense layers, the activation function we are using is the $\sigma$-function. The structure itself isn't yet determined, we are always changing things like the amount of layers and the amount of neurons in each one (you can find the most recent one by looking in main.jl $\rightarrow$ function `build_model`).
+For the neural network we are using the library [Flux](https://github.com/FluxML/Flux.jl). The network structure so far only consists of dense layers, the activation function we are using is the 𝜎-function. The structure itself isn't yet determined, we are always changing things like the amount of layers and the amount of neurons in each one (you can find the most recent one by looking in main.jl → function `build_model`).
 
 The same goes for the training parameters like batchsize, learning rate, and whether the training data is shuffled after each iteration. You can find those in main.jl → mutable struct `Args`.
 
 Before, the inputs of the neural network were just all voltages of all channels of the last second (4 channels, each 200hz → 4 * 200 = 800 inputs) so that the network has enough data but can also react quickly enough to make real-time control sensible.
 
-But now, we first perform a dicrete Fourier transformation on the 200 samples of each channel and give the output of that to the network. We also cut off all frequencies above an upper limit or below a lower limit. These two values can also be found in main.jl $\rightarrow$ mutable struct `Args`. So in the end, the index of an input neuron corresponds to a certain frequency and the value is the amplitude of it. This means that the amount of input neurons depends on which frequencies you choose (lower and upper limit). For the Fourier transform, we used the package [FFTW](https://github.com/JuliaMath/FFTW.jl).
+But now, we first perform a dicrete Fourier transformation on the 200 samples of each channel and give the output of that to the network. We also cut off all frequencies above an upper limit or below a lower limit. These two values can also be found in main.jl → mutable struct `Args`. So in the end, the index of an input neuron corresponds to a certain frequency and the value is the amplitude of it. This means that the amount of input neurons depends on which frequencies you choose (lower and upper limit). For the Fourier transform, we used the package [FFTW](https://github.com/JuliaMath/FFTW.jl).
 
 To gather the training data, we coded our own little program which you can find at EEG.jl. The EEG device we use is the Ganglion board by OpenBCI with 2 flat electrodes, 2 spike electrodes, and 2 earclips (1 for grounding, 1 for reference). The library we are using for reading the data of the EEG and saving it is [BrainFlow](https://brainflow.org).
 
