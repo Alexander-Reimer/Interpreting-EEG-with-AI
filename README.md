@@ -15,6 +15,18 @@ Of course, if you are interested in this project or have questions, you can feel
 
 And if you for some reason decided to look through the code / theory and have suggestions or have found mistakes, feel free to tell us.
 
+### If you want to execute what we already have,
+
+- clone this repository,
+- start Julia (make sure you're in the repo folder),
+- open the package terminal by pressing `]`,
+- type in `activate .`,
+- type in `instantiate`,
+- exit the package terminal by pressing backspace,
+- type in `include("main.jl")` (note: the first start will take a long time).
+
+To change parameters etc. you have to change the code itself for now (see **How does this work?** for further details).
+
 ## How does this work?
 We are using the programming language Julia for this project.
 
