@@ -47,6 +47,7 @@ The neural network has 2 output neurons: The first one for Blink and the second 
 ### Other packages
 
 Other packages we use are
+
 - [PyPlot](https://github.com/JuliaPy/PyPlot.jl) for plotting the cost development,
 - [BSON](https://github.com/JuliaIO/BSON.jl) for saving and loading the network weights and cost history, and
 - [CUDA](https://github.com/JuliaGPU/CUDA.jl) for utilising the GPU if available.
