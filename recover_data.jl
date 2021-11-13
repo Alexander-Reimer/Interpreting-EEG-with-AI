@@ -1,12 +1,13 @@
 module Recover
 
+#=
+Whenever the EEG data is read out using the BrainFlow package, 
+the very last signal of every training sample gets corrupted (different and seemingly random output every time).
+We still haven't found the reason for it so for now, this is the temporary fix.
+It opens every file, and goes through the underlying text data of the .csv to get the last number.
+=#
 
-#println("Loading BrainFlow...")
 using BrainFlow
-#println("Loading BSON...")
-using BSON
-#println("Packages loaded!")
-
 
 function get_endings_path(path)
     cd(path)
