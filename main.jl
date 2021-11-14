@@ -13,7 +13,6 @@ using BSON
 using BSON: @load
 println("Loading FFTW...")
 using FFTW
-println("Packages loaded!")
 
 println("Loading Recover...")
 include("recover_data.jl")
@@ -234,7 +233,7 @@ function train(new = false)
             gs = gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
             Flux.Optimise.update!(opt, ps, gs) # update parameters
         end
-        plot_loss(epoch, 50, test_data, model, device, train_data)
+        plot_loss(epoch, 5000, test_data, model, device, train_data)
     end
 
     cpu(model)
@@ -258,7 +257,7 @@ mutable struct Args
     upper_limit :: Int
 end
 
-global hyper_parameters = Args(0.00001, 1, 1000, true, 7, 13)
+global hyper_parameters = Args(0.00001, 1, 100000, true, 7, 13)
 
 train(true)
 end # module
