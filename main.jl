@@ -47,7 +47,7 @@ end
 function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = "NoBlink/")
     # Load corrupted endings, see recover_data.jl for more info
     endings = Recover.get_endings()
-    inputs_all_channels = (hyper_parameters.upper_limit - hyper_parameters.lower_limit + 1) * 4
+    inputs_all_channels = 800
     data_x = Array{Float64}(undef, inputs_all_channels, 0)
 
     # Go through all files containing blinks
@@ -65,7 +65,6 @@ function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = 
             #fft_single_channel = split_double(fft_single_channel)
             #fft_single_channel = get_magnitudes(fft_single_channel)
             # Cut off unwanted frequencies
-            fft_single_channel = fft_single_channel[hyper_parameters.lower_limit:hyper_parameters.upper_limit]
             append!(sample_fft, fft_single_channel)
         end
         data_x = [data_x sample_fft]
@@ -92,7 +91,7 @@ function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = 
             #fft_single_channel = split_double(fft_single_channel)
             #fft_single_channel = get_magnitudes(fft_single_channel)
             # Cut off unwanted frequencies
-            append!(sample_fft, fft_single_channel[hyper_parameters.lower_limit:hyper_parameters.upper_limit])
+            append!(sample_fft, fft_single_channel)
         end
         data_x = [data_x sample_fft]
         i += 1
@@ -172,7 +171,7 @@ end
 
 function build_model()
     # Amount of inputs for all channels
-    inputs = (hyper_parameters.upper_limit - hyper_parameters.lower_limit + 1) * 4
+    inputs = 800
     return Chain(
         Dense(inputs, round(Int, inputs / 2), σ),
         Dense(round(Int, inputs / 2), round(Int, inputs / 2), σ),
@@ -282,8 +281,8 @@ mutable struct Args
     upper_limit::Int
 end
 
-global hyper_parameters = Args(0.001, 5, 10000, true, 7, 13)
+global hyper_parameters = Args(0.001, 5, 100, false, 7, 13)
 
 train(true)
-data = get_loader()[2]
+data = get_loader()[1]
 end # Module
