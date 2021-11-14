@@ -14,7 +14,8 @@ end
 
 function read_data(num_of_files, location)
     for i = 1:num_of_files
-        data = BrainFlow.read_file(location * string(i) * ".csv")
+        data = BrainFlow.read_file(location*string(i)*".csv")
+        data =  data[:,3:4]
         figure("Restored Data")
         clf()
         plot(data)
