@@ -44,62 +44,37 @@ function get_magnitudes(fft_data)
     return abs.(fft_data)
 end
 
+function get_eeg_data(path, data_x, data_y, endings, output)
+    sample_number = 1
+    while isfile(path * string(sample_number) * ".csv")
+        sample_data_x = BrainFlow.read_file(path * string(sample_number) * ".csv")
+        sample_data_x = reshape(sample_data_x, (:, 1))
+        sample_data_x[800] = endings[1][sample_number]
+        data_x = [data_x sample_data_x]
+        sample_number += 1
+    end
+
+    for i = 1:sample_number-1
+        data_y = [data_y output]
+    end
+
+    return data_x, data_y
+end
+
 function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = "NoBlink/")
     # Load corrupted endings, see recover_data.jl for more info
     endings = Recover.get_endings()
     inputs_all_channels = 800
+    outputs = 2
     data_x = Array{Float64}(undef, inputs_all_channels, 0)
+    data_y = Array{Float64}(undef, outputs, 0)
 
-    # Go through all files containing blinks
-    i = 1
-    while isfile(blink_path * string(i) * ".csv")
-        sample = BrainFlow.read_file(blink_path * string(i) * ".csv") |> transpose
-        sample = reshape(sample, (:, 1))
-        # Correct last value
-        sample[800] = endings[1][i]
-        sample_fft = Float64[]
-        # in steps of 200 so that every index is the beginning of the next channel (1, 201, 401, 601)
-        for i = 1:200:800
-            # FFT of a single channel
-            fft_single_channel = sample[i:(i+199)]
-            #fft_single_channel = split_double(fft_single_channel)
-            #fft_single_channel = get_magnitudes(fft_single_channel)
-            # Cut off unwanted frequencies
-            append!(sample_fft, fft_single_channel)
-        end
-        data_x = [data_x sample_fft]
-        i += 1
-    end
+    data_x, data_y = get_eeg_data(blink_path, data_x, data_y, endings, [1.0; 0.0])
 
+    data_x, data_y = get_eeg_data(no_blink_path, data_x, data_y, endings, [0.0, 1.0])
 
-    data_y = Array{Float64}(undef, 2, 0)
-    for i = 1:size(data_x)[2]
-        data_y = [data_y [1.0, 0.0]] # [Blink NoBlink], so if blink -> [1, 0]
-    end
-
-    # Go through all files containing not blinks
-    i = 1
-    while isfile(no_blink_path * string(i) * ".csv")
-        sample = BrainFlow.read_file(blink_path * string(i) * ".csv") |> transpose
-        sample = reshape(sample, (:, 1))
-        sample[800] = endings[2][i]
-        sample_fft = Float64[]
-        # in steps of 200 so that every index is the beginning of the next channel (1, 201, 401, 601)
-        for i = 1:200:800
-            # FFT of a single channel
-            fft_single_channel = sample[i:(i+199)]
-            #fft_single_channel = split_double(fft_single_channel)
-            #fft_single_channel = get_magnitudes(fft_single_channel)
-            # Cut off unwanted frequencies
-            append!(sample_fft, fft_single_channel)
-        end
-        data_x = [data_x sample_fft]
-        i += 1
-    end
-
-    for i = 1:(size(data_x)[2]-size(data_y)[2])
-        data_y = [data_y [0.0, 1.0]] # [Blink NoBlink], so if not a blink -> [0, 1]
-    end
+    total_amount = round(Int, size(data_x)[2] / 2)
+    amount_train = round(Int, total_amount * train_portion)
 
     # total amount of samples
     l = size(data_x)[2]
@@ -181,7 +156,7 @@ end
 
 function prepare_cuda()
     # Enable CUDA on GPU if functional
-    if CUDA.functional()
+    if CUDA.functional() && 2 == 3
         @info "Training on CUDA GPU"
         CUDA.allowscalar(false)
         device = gpu
@@ -215,7 +190,7 @@ function new_network(test_data, train_data, model, device)
     push!(train_losses, train_loss)
 end
 
-function old_network(train_data, model, device)
+function old_network()
     @info "Loading old network"
     model_weights, test_losses, train_losses = load_weights("model.bson")
     global test_losses = test_losses
@@ -226,7 +201,7 @@ end
 function train(new = false)
     device = prepare_cuda()
     # Load the training data and create the model structure with randomized weights
-    train_data, test_data = get_loader()
+    train_data, test_data = get_loader() |> device
     model = build_model()
     global test_losses = Float64[]
     global train_losses = Float64[]
@@ -234,7 +209,7 @@ function train(new = false)
     if new
         new_network(test_data, train_data, model, device)
     else
-        model_weights = old_network(test_data, model, device)
+        model_weights = old_network()
         Flux.loadparams!(model, model_weights)
     end
 
@@ -256,7 +231,7 @@ function train(new = false)
             gs = gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
             Flux.Optimise.update!(opt, ps, gs) # update parameters
         end
-        plot_loss(epoch, 1000, test_data, model, device, train_data)
+        plot_loss(epoch, 100, test_data, model, device, train_data)
     end
 
     # Move model back to CPU (if it already was, it just stays)
@@ -281,8 +256,8 @@ mutable struct Args
     upper_limit::Int
 end
 
-global hyper_parameters = Args(0.001, 5, 100, false, 7, 13)
+global hyper_parameters = Args(0.001, 5, 500, true, 7, 13)
 
-train(true)
-data = get_loader()[1]
+train(false)
+
 end # Module

@@ -14,7 +14,7 @@ end
 
 function read_data(num_of_files, location)
     for i = 1:num_of_files
-        data = BrainFlow.read_file(location*string(i)*".csv")
+        data = BrainFlow.read_file(location * string(i) * ".csv")
         figure("Restored Data")
         clf()
         plot(data)
@@ -23,18 +23,18 @@ function read_data(num_of_files, location)
 end
 
 function main(board_shim)
-    data = Array{Float64, 2}
-    for i in 1:10
+    data = Array{Float64,2}
+    for i = 1:10
         sleep(1)
         data = get_some_board_data(board_shim, 200)
-        BrainFlow.write_file(data, "NoBlink/"*string(i)*".csv", "w")
+        BrainFlow.write_file(data, "NoBlink/" * string(i) * ".csv", "w")
         figure("No Blink")
         clf()
         plot(data)
 
         sleep(1)
         data = get_some_board_data(board_shim, 200)
-        BrainFlow.write_file(data, "Blink/"*string(i)*".csv", "w")
+        BrainFlow.write_file(data, "Blink/" * string(i) * ".csv", "w")
         figure("Blink")
         clf()
         plot(data)
@@ -48,7 +48,9 @@ board_shim = BrainFlow.BoardShim(BrainFlow.SYNTHETIC_BOARD, params)
 BrainFlow.prepare_session(board_shim)
 BrainFlow.start_stream(board_shim)
 =#
+println("Blinks:")
 read_data(100, "Blink/")
+println("NoBlinks:")
 read_data(100, "NoBlink/")
 #=
 BrainFlow.release_session(board_shim)
