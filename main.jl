@@ -49,7 +49,7 @@ function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = 
     # Load corrupted endings, see recover_data.jl for more info
     endings = Recover.get_endings()
     inputs_all_channels = (hyper_parameters.upper_limit - hyper_parameters.lower_limit + 1) * 4
-    train_data_x = Array{Float64}(undef, inputs_all_channels, 0)
+    data_x = Array{Float64}(undef, inputs_all_channels, 0)
 
     # Go through all files containing blinks
     i = 1
@@ -69,14 +69,14 @@ function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = 
             fft_single_channel = fft_single_channel[hyper_parameters.lower_limit:hyper_parameters.upper_limit]
             append!(sample_fft, fft_single_channel)
         end
-        train_data_x = [train_data_x sample_fft]
+        data_x = [data_x sample_fft]
         i += 1
     end
 
 
-    train_data_y = Array{Float64}(undef, 2, 0)
-    for i = 1:size(train_data_x)[2]
-        train_data_y = [train_data_y [1.0, 0.0]] # [Blink NoBlink], so if blink -> [1, 0]
+    data_y = Array{Float64}(undef, 2, 0)
+    for i = 1:size(data_x)[2]
+        data_y = [data_y [1.0, 0.0]] # [Blink NoBlink], so if blink -> [1, 0]
     end
 
     # Go through all files containing not blinks
@@ -84,7 +84,7 @@ function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = 
     while isfile(no_blink_path * string(i) * ".csv")
         sample = BrainFlow.read_file(blink_path * string(i) * ".csv") |> transpose
         sample = reshape(sample, (:, 1))
-        sample[800] = endings[1][i]
+        sample[800] = endings[2][i]
         sample_fft = Float64[]
         # in steps of 200 so that every index is the beginning of the next channel (1, 201, 401, 601)
         for i = 1:200:800
@@ -95,27 +95,27 @@ function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = 
             # Cut off unwanted frequencies
             append!(sample_fft, fft_single_channel[hyper_parameters.lower_limit:hyper_parameters.upper_limit])
         end
-        train_data_x = [train_data_x sample_fft]
+        data_x = [data_x sample_fft]
         i += 1
     end
 
-    for i = 1:(size(train_data_x)[2]-size(train_data_y)[2])
-        train_data_y = [train_data_y [0.0, 1.0]] # [Blink NoBlink], so if not a blink -> [0, 1]
+    for i = 1:(size(data_x)[2]-size(data_y)[2])
+        data_y = [data_y [0.0, 1.0]] # [Blink NoBlink], so if not a blink -> [0, 1]
     end
 
     # total amount of samples
-    l = size(train_data_x)[2]
+    l = size(data_x)[2]
     # multiplying with train portion and dividing by two because it is used twice (one for test data, one for train data)
     l_train = round(Int, l * train_portion / 2)
 
-    test_data_x = [train_data_x[:, 1:l_train] train_data_x[:, (l-l_train+1):l]]
-    test_data_y = [train_data_y[:, 1:l_train] train_data_y[:, (l-l_train+1):l]]
+    train_data_x = [data_x[:, 1:l_train] data_x[:, (l-l_train+1):l]]
+    train_data_y = [data_y[:, 1:l_train] data_y[:, (l-l_train+1):l]]
 
-    train_data_x = train_data_x[:, (l_train+1):l-l_train]
-    train_data_y = train_data_y[:, (l_train+1):l-l_train]
+    test_data_x = data_x[:, (l_train+1):l-l_train]
+    test_data_y = data_y[:, (l_train+1):l-l_train]
 
     train_data = Flux.Data.DataLoader((train_data_x, train_data_y), batchsize = hyper_parameters.batch_size, shuffle = hyper_parameters.shuffle, partial = false)
-    test_data = Flux.Data.DataLoader((test_data_x, test_data_y), batchsize = 1, shuffle = hyper_parameters.shuffle, partial = false)
+    test_data = Flux.Data.DataLoader((test_data_x, test_data_y), batchsize = hyper_parameters.batch_size, shuffle = hyper_parameters.shuffle, partial = false)
 
     return train_data, test_data
 end
@@ -283,7 +283,8 @@ mutable struct Args
     upper_limit::Int
 end
 
-global hyper_parameters = Args(0.00001, 1, 1000, true, 7, 13)
+global hyper_parameters = Args(0.001, 5, 300, true, 7, 13)
 
 train(true)
+
 end # Module
