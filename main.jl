@@ -156,7 +156,7 @@ end
 
 function prepare_cuda()
     # Enable CUDA on GPU if functional
-    if CUDA.functional() && 2 == 3
+    if CUDA.functional()
         @info "Training on CUDA GPU"
         CUDA.allowscalar(false)
         device = gpu
@@ -186,8 +186,8 @@ function new_network(test_data, train_data, model, device)
     @info "Creating new network"
     test_loss, test_acc = loss_and_accuracy(test_data, model |> device, device)
     train_loss, train_acc = loss_and_accuracy(train_data, model |> device, device)
-    push!(test_losses, test_loss)
-    push!(train_losses, train_loss)
+    push!(test_losses, cpu(test_loss))
+    push!(train_losses, cpu(train_loss))
 end
 
 function old_network()
@@ -201,13 +201,13 @@ end
 function train(new = false)
     device = prepare_cuda()
     # Load the training data and create the model structure with randomized weights
-    train_data, test_data = get_loader() |> device
+    train_data, test_data = get_loader()
     model = build_model()
     global test_losses = Float64[]
     global train_losses = Float64[]
     # if new = true, create a new network
     if new
-        new_network(test_data, train_data, model, device)
+        new_network(test_data, train_data, model, cpu)
     else
         model_weights = old_network()
         Flux.loadparams!(model, model_weights)
@@ -265,8 +265,10 @@ parameters = old_network()
 Flux.loadparams!(model, parameters)
 
 train_data, test_data = get_loader()
-data = test_data.data[1]
-sample = data[:,16]
 
-println(model(sample))
+for i = 1:100
+    data = test_data.data[1]
+    sample = data[:,16]
+    @time model(sample)
+end
 end # Module
