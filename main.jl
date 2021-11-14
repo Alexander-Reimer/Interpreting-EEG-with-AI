@@ -62,7 +62,6 @@ function get_eeg_data(path, data_x, data_y, endings, output)
 end
 
 function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = "NoBlink/")
-#=  
     # Load corrupted endings, see recover_data.jl for more info
     endings = Recover.get_endings()
     inputs_all_channels = 800
@@ -78,44 +77,6 @@ function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = 
     amount_train = round(Int, total_amount * train_portion)
 
     # total amount of samples
-    l = size(data_x)[2]
-    # multiplying with train portion and dividing by two because it is used twice (one for test data, one for train data)
-    l_train = round(Int, l * train_portion / 2)
-
-    train_data_x = [data_x[:, 1:l_train] data_x[:, (l-l_train+1):l]]
-    train_data_y = [data_y[:, 1:l_train] data_y[:, (l-l_train+1):l]]
-
-    test_data_x = data_x[:, (l_train+1):l-l_train]
-    test_data_y = data_y[:, (l_train+1):l-l_train]
-
-    train_data = Flux.Data.DataLoader((train_data_x, train_data_y), batchsize = hyper_parameters.batch_size, shuffle = hyper_parameters.shuffle, partial = false)
-    test_data = Flux.Data.DataLoader((test_data_x, test_data_y), batchsize = hyper_parameters.batch_size, shuffle = hyper_parameters.shuffle, partial = false)
-
-    return train_data, test_data
-
-    =#
-    data_x = Array{Float64}(undef, 399, 0)
-    for i = 1:100
-        data = BrainFlow.read_file(blink_path*string(i)*".csv")
-        data = reshape(data[:, 3:4], (:,1))
-        data = data[1:length(data)-1]
-        data_x = [data_x data]
-    end
-    for i = 1:100
-        data = BrainFlow.read_file(no_blink_path*string(i)*".csv")
-        data = reshape(data[:, 3:4], (:,1))
-        data = data[1:length(data)-1]
-        data_x = [data_x data]
-    end
-
-    data_y = Array{Float64}(undef, 2, 0) 
-    for i = 1:100
-        data_y = [data_y [1,0]]
-    end
-    for i = 101:200
-        data_y = [data_y [0,1]]
-    end
-
     l = size(data_x)[2]
     # multiplying with train portion and dividing by two because it is used twice (one for test data, one for train data)
     l_train = round(Int, l * train_portion / 2)
@@ -185,7 +146,7 @@ end
 
 function build_model()
     # Amount of inputs for all channels
-    inputs = 399
+    inputs = 800
     return Chain(
         Dense(inputs, round(Int, inputs / 2), σ),
         Dense(round(Int, inputs / 2), round(Int, inputs / 2), σ),
@@ -295,16 +256,17 @@ mutable struct Args
     upper_limit::Int
 end
 
-global hyper_parameters = Args(0.001, 5, 1000, false, 7, 13)
+global hyper_parameters = Args(0.001, 5, 100, false, 7, 13)
 
-#train(true)
+train(true)
+
 model = build_model()
-params = old_network()
-Flux.loadparams!(model, params)
+parameters = old_network()
+Flux.loadparams!(model, parameters)
 
 train_data, test_data = get_loader()
 data = test_data.data[1]
 sample = data[:,16]
 
-print(model(sample))
+println(model(sample))
 end # Module
