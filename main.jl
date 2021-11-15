@@ -26,8 +26,8 @@ include("recover_data.jl")
 println("Recover loaded!")
 
 function make_fft(data)
-    # Apply fft function to data
-    return fft(data)
+    # Apply fft functions to data
+    return get_magnitudes(split_double(fft(data)))
 end
 
 function split_double(fft_data)
@@ -50,6 +50,7 @@ function get_eeg_data(path, data_x, data_y, endings, output)
         sample_data_x = BrainFlow.read_file(path * string(sample_number) * ".csv")
         sample_data_x = reshape(sample_data_x, (:, 1))
         sample_data_x[800] = endings[1][sample_number]
+        sample_data_x = [make_fft(sample_data_x[1:200])..., make_fft(sample_data_x[201:400])..., make_fft(sample_data_x[401:600])..., make_fft(sample_data_x[601:800])...]
         data_x = [data_x sample_data_x]
         sample_number += 1
     end
@@ -64,7 +65,7 @@ end
 function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = "NoBlink/")
     # Load corrupted endings, see recover_data.jl for more info
     endings = Recover.get_endings()
-    inputs_all_channels = 800
+    inputs_all_channels = 400
     outputs = 2
     data_x = Array{Float64}(undef, inputs_all_channels, 0)
     data_y = Array{Float64}(undef, outputs, 0)
@@ -146,7 +147,7 @@ end
 
 function build_model()
     # Amount of inputs for all channels
-    inputs = 800
+    inputs = 400
     return Chain(
         Dense(inputs, round(Int, inputs / 2), σ),
         Dense(round(Int, inputs / 2), round(Int, inputs / 2), σ),
@@ -256,7 +257,7 @@ mutable struct Args
     upper_limit::Int
 end
 
-global hyper_parameters = Args(0.001, 5, 100, false, 7, 13)
+global hyper_parameters = Args(0.001, 5, 500, true, 7, 13)
 
 train(true)
 
@@ -266,9 +267,13 @@ Flux.loadparams!(model, parameters)
 
 train_data, test_data = get_loader()
 
-for i = 1:100
-    data = test_data.data[1]
-    sample = data[:,16]
-    @time model(sample)
+for i = 1:20
+    sample = test_data.data[1][:,i]
+    y = model(sample)
+    if ((y[1] > y[2]) && (test_data.data[2][1, i] == 1.0)) || ((y[1] < y[2]) && (test_data.data[2][2, i] == 1.0))
+        println("Correct!")
+    else
+        println("Incorrect!")
+    end
 end
 end # Module
