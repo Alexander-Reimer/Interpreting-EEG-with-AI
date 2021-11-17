@@ -248,14 +248,22 @@ function train(new = false)
     println(confusion_matrix(test_data, model))
 end
 
-function test()
-    while true
+function test(model)
+    BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
+    params = BrainFlowInputParams()
+    board_shim = BrainFlow.BoardShim(BrainFlow.SYNTHETIC_BOARD, params)
+    BrainFlow.prepare_session(board_shim)
+    BrainFlow.start_stream(board_shim)
+    sleep(1)
+    for i = 1:100
         sample = EEG.get_some_board_data(board_shim, 200)
         sample = reshape(sample, (:, 1))
         sample = [make_fft(sample[1:200])..., make_fft(sample[201:400])..., make_fft(sample[401:600])..., make_fft(sample[601:800])...]
         y = model(sample)
-        print(y[1] > y[2])
+        println(y[1] > y[2])
+        sleep(0.01)
     end
+    BrainFlow.release_session(board_shim)
 end
 
 mutable struct Args
@@ -271,7 +279,11 @@ end
 global hyper_parameters = Args(0.001, 5, 500, true, 7, 13)
 
 train(true)
-
+#model = build_model()
+#parameters = old_network()
+#Flux.loadparams!(model, parameters)
+#test(model)
+#=
 model = build_model()
 parameters = old_network()
 Flux.loadparams!(model, parameters)
@@ -287,5 +299,5 @@ for i = 1:20
         println("Incorrect!")
     end
 end
-
+=#
 end # Module
