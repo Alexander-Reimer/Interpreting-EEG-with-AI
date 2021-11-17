@@ -82,6 +82,7 @@ function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = 
     # multiplying with train portion and dividing by two because it is used twice (one for test data, one for train data)
     l_train = round(Int, l * train_portion / 2)
 
+    # dividing data into test and train data
     train_data_x = [data_x[:, 1:l_train] data_x[:, (l-l_train+1):l]]
     train_data_y = [data_y[:, 1:l_train] data_y[:, (l-l_train+1):l]]
 
@@ -276,4 +277,5 @@ for i = 1:20
         println("Incorrect!")
     end
 end
+
 end # Module
