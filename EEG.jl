@@ -49,10 +49,12 @@ board_shim = BrainFlow.BoardShim(BrainFlow.SYNTHETIC_BOARD, params)
 BrainFlow.prepare_session(board_shim)
 BrainFlow.start_stream(board_shim)
 =#
+
 println("Blinks:")
 read_data(100, "Blink/")
 println("NoBlinks:")
 read_data(100, "NoBlink/")
+
 #=
 BrainFlow.release_session(board_shim)
 =#

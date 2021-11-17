@@ -1,4 +1,4 @@
-module EEG
+module AI
 
 println("Loading BrainFlow...")
 # For reading the EEG training samples
@@ -22,6 +22,7 @@ using FFTW
 
 println("Loading Recover...")
 # For loading corrupted endings, see recover_data.jl for more info
+include("EEG.jl")
 include("recover_data.jl")
 println("Recover loaded!")
 
@@ -247,6 +248,15 @@ function train(new = false)
     println(confusion_matrix(test_data, model))
 end
 
+function test()
+    while true
+        sample = EEG.get_some_board_data(board_shim, 200)
+        sample = reshape(sample, (:, 1))
+        sample = [make_fft(sample[1:200])..., make_fft(sample[201:400])..., make_fft(sample[401:600])..., make_fft(sample[601:800])...]
+        y = model(sample)
+        print(y[1] > y[2])
+    end
+end
 
 mutable struct Args
     learning_rate::Float64
