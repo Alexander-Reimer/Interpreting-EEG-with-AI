@@ -1,4 +1,4 @@
-module EEG
+module AI
 
 println("Loading BrainFlow...")
 # For reading the EEG training samples
@@ -22,6 +22,7 @@ using FFTW
 
 println("Loading Recover...")
 # For loading corrupted endings, see recover_data.jl for more info
+include("EEG.jl")
 include("recover_data.jl")
 println("Recover loaded!")
 
@@ -82,6 +83,7 @@ function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = 
     # multiplying with train portion and dividing by two because it is used twice (one for test data, one for train data)
     l_train = round(Int, l * train_portion / 2)
 
+    # dividing data into test and train data
     train_data_x = [data_x[:, 1:l_train] data_x[:, (l-l_train+1):l]]
     train_data_y = [data_y[:, 1:l_train] data_y[:, (l-l_train+1):l]]
 
@@ -246,6 +248,23 @@ function train(new = false)
     println(confusion_matrix(test_data, model))
 end
 
+function test(model)
+    BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
+    params = BrainFlowInputParams()
+    board_shim = BrainFlow.BoardShim(BrainFlow.SYNTHETIC_BOARD, params)
+    BrainFlow.prepare_session(board_shim)
+    BrainFlow.start_stream(board_shim)
+    sleep(1)
+    for i = 1:100
+        sample = EEG.get_some_board_data(board_shim, 200)
+        sample = reshape(sample, (:, 1))
+        sample = [make_fft(sample[1:200])..., make_fft(sample[201:400])..., make_fft(sample[401:600])..., make_fft(sample[601:800])...]
+        y = model(sample)
+        println(y[1] > y[2])
+        sleep(0.01)
+    end
+    BrainFlow.release_session(board_shim)
+end
 
 mutable struct Args
     learning_rate::Float64
@@ -260,7 +279,11 @@ end
 global hyper_parameters = Args(0.001, 5, 500, true, 7, 13)
 
 train(true)
-
+#model = build_model()
+#parameters = old_network()
+#Flux.loadparams!(model, parameters)
+#test(model)
+#=
 model = build_model()
 parameters = old_network()
 Flux.loadparams!(model, parameters)
@@ -276,4 +299,5 @@ for i = 1:20
         println("Incorrect!")
     end
 end
+=#
 end # Module
