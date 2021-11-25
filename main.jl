@@ -279,10 +279,13 @@ end
 global hyper_parameters = Args(0.001, 5, 500, true, 7, 13)
 
 train(true)
-#model = build_model()
-#parameters = old_network()
-#Flux.loadparams!(model, parameters)
-#test(model)
+#=
+model = build_model()
+parameters = old_network()
+Flux.loadparams!(model, parameters)
+test(model)
+=#
+
 #=
 model = build_model()
 parameters = old_network()
