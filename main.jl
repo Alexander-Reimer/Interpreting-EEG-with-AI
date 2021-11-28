@@ -250,8 +250,10 @@ end
 
 function test(model)
     BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
-    params = BrainFlowInputParams()
-    board_shim = BrainFlow.BoardShim(BrainFlow.SYNTHETIC_BOARD, params)
+    params = BrainFlowInputParams(
+        serial_port = "/dev/ttyACM0"
+    )
+    board_shim = BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
     BrainFlow.prepare_session(board_shim)
     BrainFlow.start_stream(board_shim)
     sleep(1)
