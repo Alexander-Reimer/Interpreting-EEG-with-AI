@@ -249,6 +249,7 @@ function train(new = false)
 end
 
 function test(model)
+    counter = 200
     BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
     params = BrainFlowInputParams(
         serial_port = "/dev/ttyACM0"
@@ -258,19 +259,24 @@ function test(model)
     #BrainFlow.release_session(board_shim)
     BrainFlow.prepare_session(board_shim)
     BrainFlow.start_stream(board_shim)
+    println("")
     sleep(1)
-    for i = 1:20
+    for i = 1:1000
+        counter-= 20
         sample = EEG.get_some_board_data(board_shim, 200)
         clf()
         plot(sample)
         sample = reshape(sample, (:, 1))
         #sample = [make_fft(sample[1:200])..., make_fft(sample[201:400])..., make_fft(sample[401:600])..., make_fft(sample[601:800])...]
         y = model(sample)
-        if y[1]>y[2]
-            println("Im the GOAT")
+        if y[1]>y[2] + 0.2
+            counter += 100
+            println("hgizugz")
         end
         #push!(samples, sample)
-        sleep(0.75)
+        sleep(0.5)
+        print("\b\b\b\b\b")
+        print(counter)
     end
     BrainFlow.release_session(board_shim)
 
