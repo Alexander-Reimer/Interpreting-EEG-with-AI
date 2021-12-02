@@ -1,33 +1,43 @@
-\documentclass[11pt,a4paper]{article}
+\documentclass{scrartcl}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{microtype}
-\usepackage{lmodern}
+%\usepackage{lmodern}
 \usepackage[ngerman]{babel}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{geometry}
-\geometry{
-	left=2.5cm,
-	right=2.5cm,
-	top=2.5cm,
-	bottom=2cm,
-}
+%\geometry{
+%	left=2.5cm,
+%	right=2.5cm,
+%	top=2.5cm,
+%	bottom=2cm,
+%}
 \usepackage{multicol}
 \usepackage{tabularx}
 \usepackage{array}
 \usepackage{csquotes}
 \usepackage{lipsum}
 \usepackage{siunitx}
-\sisetup{
-	group-minimum-digits=4
-}
+%\sisetup{
+%	group-minimum-digits=4
+%}
 \usepackage{cancel}
 %\usepackage{mathtools} %für Mathclap
 
 \usepackage{titling} %for \thetitle etc.
+\title{Erkennung ereigniskorellierter Potenziale eines Elektroenzephalogramms durch eine KI }
+\date{\today}
+\author{Alexander Reimer \and Matteo Friedrich}
 \begin{document}
-    
+	\maketitle
+    \begin{abstract}
+		In diesem Projekt wollen wir einen Roboter mithilfe bloßer Gedankenkraft steuern.
+		
+		Um Daten über das Gehirn zu bekommen, nutzen wir einen Elektroenzephalographen, kurz EEG, welches durch Elektroden an der Kopfhaut die Spannungen innerhalb des Gehirns misst. Dies werten wir mithilfe eines Neuronalen Netzes aus, welches wir vorher darauf trainiert haben, Muster in diesen Daten zu erkennen. So können wir bestimmte Ereignisse anhand der EEG-Daten ableiten, z.B. ob jemand geblinzelt hat oder sich gerade konzentriert.
+		
+		Das Ziel ist es dann, durch das Erkennen verschiedener dieser sogenannten ereigniskorrelierten Potentialen (EKPs) einen Roboter nur mit Gedanken steuern zu können. 
+	\end{abstract}
 \end{document}
