@@ -1,33 +1,16 @@
 \documentclass{scrartcl}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage{microtype}
-%\usepackage{lmodern}
-\usepackage[ngerman]{babel}
-\usepackage{amsmath}
-\usepackage{amsfonts}
-\usepackage{amssymb}
-\usepackage{graphicx}
-\usepackage{geometry}
-%\geometry{
-%	left=2.5cm,
-%	right=2.5cm,
-%	top=2.5cm,
-%	bottom=2cm,
-%}
-\usepackage{multicol}
-\usepackage{tabularx}
-\usepackage{array}
-\usepackage{csquotes}
-\usepackage{lipsum}
-\usepackage{siunitx}
-%\sisetup{
-%	group-minimum-digits=4
-%}
-\usepackage{cancel}
-%\usepackage{mathtools} %für Mathclap
 
-\usepackage{titling} %for \thetitle etc.
+% Für schöneren Blocksatz
+\usepackage{microtype}
+% Für deutsche Sprache
+\usepackage[ngerman]{babel}
+% Für deutsche Zitate / Anführungszeichen
+\usepackage{csquotes}
+% Für klickbare links (Kasten werden nicht mitgedruckt)
+\usepackage{hyperref}
+
 \title{Erkennung ereigniskorellierter Potenziale eines Elektroenzephalogramms durch eine KI }
 \date{\today}
 \author{Alexander Reimer \and Matteo Friedrich}
@@ -40,4 +23,83 @@
 		
 		Das Ziel ist es dann, durch das Erkennen verschiedener dieser sogenannten ereigniskorrelierten Potentialen (EKPs) einen Roboter nur mit Gedanken steuern zu können. 
 	\end{abstract}
+	\newpage
+	\tableofcontents
+	\newpage
+	\section{Einleitung}
+	In diesem Projekt wollen wir einen Roboter mithilfe bloßer Gedankenkraft steuern.
+	\section{Methode und Vorgehensweise}
+
+	\subsection{Materialien} \label{Materialien}
+
+	\begin{itemize}
+		\item EEG
+		\begin{itemize}
+			\item 4 Channel Ganglion Board von OpenBCI $\star$
+			\item 2x Spike Electrodes  $\star$
+			\item 2x Flat Electrodes $\star$
+			\item Electrode Gel 
+		\end{itemize}
+
+		\item Roboter
+		\begin{itemize}
+			\item Lego Mindstorms EV3 Brick
+			\item 2x EV3 großer Motor
+			\item Raspberry Pi 4B 8GB
+			\item Diverse Legoteile
+		\end{itemize}
+
+		\item Software
+		\begin{itemize}
+			\item Flux.jl für das neuronale Netz
+			\item BrainFlow.jl als Schnittstelle zum EEG
+			\item FFTW.jl für die Fast Fourier Transformation
+			\item CUDA.jl zum effektiven Nutzen einer NVIDIA GPU
+			\item PyPlot.jl zum plotten
+			\item BSON.jl zum Speichern und Laden von Netzwerken
+		\end{itemize}
+	\end{itemize}
+
+	\subsection{Vorgehensweise}
+
+	Unser Projekt lässt sich grob in 3 Teile unterscheiden. 
+
+	Zum einem gibt es den neurobiologischen Teil. Dieser besteht aus der Messung von Gehirnaktivität und der Umwandlung dieser Aktivität in für uns nutzbare Daten. 
+
+	Der zweite Teil besteht aus der Verarbeitung dieser Signale. Hierfür nutzen wir ein neuronales Netz, welches Muster in den Gehirnaktivitäten erkennen kann. 
+
+	Der letzte Teil von unserem Projekt beinhaltet die Konstruktion und Steuerung eines EV3 Roboters. Je nachdem, was das Neuronale Netz ausgibt, soll sich dieser Roboter anders verhalten und so über Gedanken steuerbar sein. 
+
+
+	\subsubsection{Elektroenzephalographie}
+
+	Bei der Elektroenzephalographie werden Elektroden an der Kopfoberfläche platziert. Diese können die sehr kleinen Spannungen messen, die durch Reize im Gehirn entstehen und durch den Schädel dringen. Diese Spannungen werden nicht von einzelnen Nervenzellen erzeugt, sondern geben die Summe aller Lokalen Spannungen wieder. Man kann also auch nur ungefähr, je nach Anzahl der vorhandenen Elektroden, sagen wo genau im Gehirn ein bestimmter Reiz ausgelöst wurde. 
+
+	Unser EEG-Gerät, das Ganglion Board, hat vier Elektroden, mit einer zeitlichen Auflösung von jeweils 200 Herz (200 Messungen pro Sekunde). Diese Elektroden haben wir am Okzipitallappen platziert. Grund dafür ist, dass wir mit unserem Gerät primär Alphawellen (Wellen im Bereich zwischen 7 und 13 Herz) gut erkennen können und dieser dort besonders ausgeprägt sind. 
+
+	Unser EEG-Gerät besteht aus einem Klettband mit Löchern für die Elektroden, einer Platine, in welche die Elektroden eingesteckt werden, und einem USB-Dongle, mit welchem die Signale der Platine kabellos empfangen werden können. 
+
+	Um die Signale in Julia empfangen zu können haben wir BrainFlow benutzt.
+
+	\subsubsection{Neuronales Netz}
+
+	Um ein neuronales Netzwerk zu erstellen haben wir Flux benutzt. Wir haben immer wieder mit der Struktur experimentiert, momentan ist sie … 
+
+	Zum Trainieren haben wir Supervised Learning benutzt.
+
+	\subsubsection{Roboter}
+
+	\section{Ergebnisse}
+
+	Zuerst haben wir versucht, eine KI zu trainieren, welche erkennen kann, ob eine Person gerade geblinzelt hat oder nicht. Diese könnte man zum Beispiel nutzen, indem man einen Roboter immer dann nach vorne fahren lässt, wenn eine Versuchsperson blinzelt. Hierbei gibt es zwei sofort erkennbare Probleme. Zum einen ist Blinzeln ein Menschlicher Reflex, den man nicht abstellen kann. Das heißt, dass es in unserem Beispiel mit dem Roboter nicht möglich wäre den Roboter langfristig stehen bleiben zu lassen, weil man irgendwann blinzeln müsste. Außerdem erkennen wir beim Blinzeln keine Gehirnaktivitäten, sondern nur … 
+
+	\section{Diskussion}
+
+	\section{Danksagung}
+
+	\subsection{Finanzierung} \label{Foerderverein}
+
+	Danke an den Förderverein \enquote{Gesellschaft der Freunde des Gymnasium Eversten e.V.} für die Finanzierung des EEG-Geräts. Alle finanzierten Teile sind in der \hyperref[Materialien]{Materialliste} mit $\star$ gekennzeichnet.
+
+	\section{Quellen \& Referenzen}
 \end{document}
