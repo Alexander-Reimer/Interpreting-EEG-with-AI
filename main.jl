@@ -251,7 +251,7 @@ end
 function test(model)
     BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
     params = BrainFlowInputParams(
-        serial_port = "/dev/ttyACM0"
+        serial_port = "/dev/cu.usbmodem11"
     )
     board_shim = BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
     BrainFlow.prepare_session(board_shim)
@@ -281,12 +281,12 @@ end
 global hyper_parameters = Args(0.001, 5, 500, true, 7, 13)
 
 train(true)
-#=
+
 model = build_model()
 parameters = old_network()
 Flux.loadparams!(model, parameters)
 test(model)
-=#
+
 
 #=
 model = build_model()
