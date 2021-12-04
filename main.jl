@@ -51,7 +51,7 @@ function get_eeg_data(path, data_x, data_y, endings, output)
         sample_data_x = BrainFlow.read_file(path * string(sample_number) * ".csv")
         sample_data_x = reshape(sample_data_x, (:, 1))
         sample_data_x[800] = endings[1][sample_number]
-        sample_data_x = [make_fft(sample_data_x[1:200])..., make_fft(sample_data_x[201:400])..., make_fft(sample_data_x[401:600])..., make_fft(sample_data_x[601:800])...]
+        #sample_data_x = [make_fft(sample_data_x[1:200])..., make_fft(sample_data_x[201:400])..., make_fft(sample_data_x[401:600])..., make_fft(sample_data_x[601:800])...]
         data_x = [data_x sample_data_x]
         sample_number += 1
     end
@@ -66,7 +66,7 @@ end
 function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = "NoBlink/")
     # Load corrupted endings, see recover_data.jl for more info
     endings = Recover.get_endings()
-    inputs_all_channels = 400
+    inputs_all_channels = 800 # #400
     outputs = 2
     data_x = Array{Float64}(undef, inputs_all_channels, 0)
     data_y = Array{Float64}(undef, outputs, 0)
@@ -149,7 +149,7 @@ end
 
 function build_model()
     # Amount of inputs for all channels
-    inputs = 400
+    inputs = 800 #400
     return Chain(
         Dense(inputs, round(Int, inputs / 2), σ),
         Dense(round(Int, inputs / 2), round(Int, inputs / 2), σ),
@@ -249,23 +249,38 @@ function train(new = false)
 end
 
 function test(model)
+    counter = 200
     BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
     params = BrainFlowInputParams(
         serial_port = "/dev/cu.usbmodem11"
     )
     board_shim = BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
+    samples = []
+    #BrainFlow.release_session(board_shim)
     BrainFlow.prepare_session(board_shim)
     BrainFlow.start_stream(board_shim)
     sleep(1)
+    println("Starting!")
+    println("")
     for i = 1:100
+        counter-= 20
         sample = EEG.get_some_board_data(board_shim, 200)
+        #clf()
+        #plot(sample)
         sample = reshape(sample, (:, 1))
-        sample = [make_fft(sample[1:200])..., make_fft(sample[201:400])..., make_fft(sample[401:600])..., make_fft(sample[601:800])...]
+        #sample = [make_fft(sample[1:200])..., make_fft(sample[201:400])..., make_fft(sample[401:600])..., make_fft(sample[601:800])...]
         y = model(sample)
-        println(y[1] > y[2])
-        sleep(0.01)
+        if y[1]>y[2] + 0.5
+            counter += 100
+            println("hgizugz")
+        end
+        #push!(samples, sample)
+        sleep(0.25)
+        #print("\b\b\b\b\b")
+        println(counter)
     end
     BrainFlow.release_session(board_shim)
+
 end
 
 mutable struct Args
@@ -278,10 +293,12 @@ mutable struct Args
     upper_limit::Int
 end
 
-global hyper_parameters = Args(0.001, 5, 500, true, 7, 13)
+global hyper_parameters = Args(0.001, 2, 100, true, 7, 13)
 
 train(true)
 
+
+#device = prepare_cuda()
 model = build_model()
 parameters = old_network()
 Flux.loadparams!(model, parameters)
