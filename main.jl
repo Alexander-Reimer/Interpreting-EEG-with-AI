@@ -159,7 +159,7 @@ end
 
 function prepare_cuda()
     # Enable CUDA on GPU if functional
-    if CUDA.functional() && 4 == 5
+    if CUDA.functional()
         @info "Training on CUDA GPU"
         CUDA.allowscalar(false)
         device = gpu
@@ -259,24 +259,25 @@ function test(model)
     #BrainFlow.release_session(board_shim)
     BrainFlow.prepare_session(board_shim)
     BrainFlow.start_stream(board_shim)
-    println("")
     sleep(1)
-    for i = 1:1000
+    println("Starting!")
+    println("")
+    for i = 1:100
         counter-= 20
         sample = EEG.get_some_board_data(board_shim, 200)
-        clf()
-        plot(sample)
+        #clf()
+        #plot(sample)
         sample = reshape(sample, (:, 1))
         #sample = [make_fft(sample[1:200])..., make_fft(sample[201:400])..., make_fft(sample[401:600])..., make_fft(sample[601:800])...]
         y = model(sample)
-        if y[1]>y[2] + 0.2
+        if y[1]>y[2] + 0.5
             counter += 100
             println("hgizugz")
         end
         #push!(samples, sample)
-        sleep(0.5)
-        print("\b\b\b\b\b")
-        print(counter)
+        sleep(0.25)
+        #print("\b\b\b\b\b")
+        println(counter)
     end
     BrainFlow.release_session(board_shim)
 
@@ -292,9 +293,9 @@ mutable struct Args
     upper_limit::Int
 end
 
-global hyper_parameters = Args(0.001, 5, 500, true, 7, 13)
+global hyper_parameters = Args(0.001, 2, 100, true, 7, 13)
 
-#train(true)
+#train(false)
 
 
 #device = prepare_cuda()
