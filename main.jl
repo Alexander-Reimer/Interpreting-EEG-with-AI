@@ -252,7 +252,7 @@ function test(model)
     counter = 200
     BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
     params = BrainFlowInputParams(
-        serial_port = "/dev/ttyACM0"
+        serial_port = "/dev/cu.usbmodem11"
     )
     board_shim = BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
     samples = []
@@ -295,7 +295,7 @@ end
 
 global hyper_parameters = Args(0.001, 2, 100, true, 7, 13)
 
-#train(false)
+train(true)
 
 
 #device = prepare_cuda()
