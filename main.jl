@@ -265,19 +265,20 @@ function test(model)
     for i = 1:100
         counter-= 20
         sample = EEG.get_some_board_data(board_shim, 200)
-        #clf()
-        #plot(sample)
+        clf()
+        plot(sample)
         sample = reshape(sample, (:, 1))
         #sample = [make_fft(sample[1:200])..., make_fft(sample[201:400])..., make_fft(sample[401:600])..., make_fft(sample[601:800])...]
         y = model(sample)
-        if y[1]>y[2] + 0.5
+        println(y[1], "    ", y[2])
+        if y[1]>y[2] + 0.2
             counter += 100
-            println("hgizugz")
+            #println("hgizugz")
         end
         #push!(samples, sample)
         sleep(0.25)
         #print("\b\b\b\b\b")
-        println(counter)
+        #println(counter)
     end
     BrainFlow.release_session(board_shim)
 
@@ -295,7 +296,7 @@ end
 
 global hyper_parameters = Args(0.001, 2, 100, true, 7, 13)
 
-train(true)
+#train(false)
 
 
 #device = prepare_cuda()
