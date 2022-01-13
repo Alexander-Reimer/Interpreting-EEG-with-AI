@@ -27,6 +27,11 @@
 % Für wrapfigure (Text um Bilder herum)
 \usepackage{wrapfig}
 
+% Für custom captions
+\usepackage{caption}
+\captionsetup{textfont={footnotesize}, labelfont={footnotesize, bf}, position=below, format=plain}
+
+%\setcapindent{0pt}
 
 \title{Erkennung ereigniskorellierter Potenziale eines Elektroenzephalogramms durch eine KI}
 \date{\today}
@@ -61,14 +66,18 @@
 	
 	Wir haben es geschafft eine KI zu programmieren, die in der Lage ist, anhand der EEG-Daten richtig zu erkennen, ob eine bestimmte Testperson gerade geblinzelt hat oder nicht. Diese korrekte Klassifizierung der Daten ist jedoch nur möglich, wenn die Test- und Trainingsdaten unter den exakt gleichen Voraussetzungen aufgenommen wurden (das heißt gleiche Person, gleiche Umgebung etc.) Diese Problematik könnten wir wahrscheinlich durch das Sammeln von mehr und verschiedenen Daten lösen. Leider hatten wir dafür aber noch nicht genug Zeit gehabt.	
 
-	\section{Einleitung}
+	\newpage
 
-	Ziel des Projektes ist es, zuerst ein BCI -- Brain-Computer Interface – zu entwickeln, welches verschiedene EKPs erkennen kann. Dieses wollen wir dann testen, indem wir es zur Steuerung eines Roboters nutzen.
+	\section{Einleitung}
+ 
+	Ziel des Projektes ist es, zuerst ein BCI -- Brain-Computer Interface -- zu entwickeln, welches verschiedene EKPs erkennen kann. Dieses wollen wir dann testen, indem wir es zur Steuerung eines Roboters nutzen.
 
 	Die Idee eines BCI ist nicht neu, sondern wird intensiv erforscht. Aufgrund bereits durchgeführter Experimente ist bekannt, dass BCIs umsetzbar sind. \cite{BCIChaudhary}
 	
 	Wir hoffen, neben dem Erlangen von Erfahrung in diesem interessanten Bereich auch selbst dazu beizutragen. Dies wollen wir erreichen durch das Entwickeln einer allgemeinen Anwendung, bei der kein vorheriges Trainieren für eine fremde Person benötigt wird, das Umsetzen mit günstiger, für viele bezahlbarer Hardware, sowie ein performantes Programm, welches leicht für die eigenen Zwecke anpassbar ist.
-	
+
+	\newpage
+
 	\section{Methode und Vorgehensweise}
 
 	\subsection{Materialien} \label{Materialien}
@@ -146,21 +155,22 @@
 	Dies wollen wir nicht machen, da die Konditionierung Zeit benötigt, nicht unser Ziel einer allgemeinen Anwendbarkeit erfüllt und voraussichtlich bessere Ausrüstung erfordert als wir haben.
 
 	Zuerst probieren wir deshalb die Erkennung von EKPs, da diese deutlich leichter zu klassifizieren sind und wir so erstmal das Konzept eines Neuronalen Netzes in einem solchen Kontext ausprobieren können. Denn wenn unser neuronales Netz EKPs noch nicht sicher erkennen kann, wären komplexere Zusammenhänge ohne vorherige Konditionierung erst recht nicht möglich.
-
-	Unser EEG-Gerät besteht aus einem Klettband mit Löchern für die Elektroden, einer Platine, in welche die Elektroden eingesteckt werden, und einem USB-Dongle, mit welchem die Signale der Platine kabellos empfangen werden können.
-
-	\begin{wrapfigure}{r}{0.5\textwidth}
+	
+	\begin{wrapfigure}{l}{0.5\textwidth}
 		\centering
 		\includegraphics[width=0.5\textwidth]{pictures/elektroden-platzierungen.png}
 		\caption{10-20 System mit den von uns genutzten Elektroden rot und Earclips orange gefärbt}
 	\end{wrapfigure}
 
+	Unser EEG-Gerät besteht aus einem Klettband mit Löchern für die Elektroden, einer Platine, in welche die Elektroden eingesteckt werden, und einem USB-Dongle, mit welchem die Signale der Platine kabellos empfangen werden können.
+
 	Insgesamt haben wir zwei Earclips, die an den Ohren befestigt werden und zum Filtern von Störungen dienen, und vier Messelektroden, mit einer zeitlichen Auflösung von jeweils 200 Herz (200 Messungen pro Sekunde). Zwei dieser Elektroden haben wir auf der Stirn platziert, zwei jeweils links und rechts auf dem Schädel, etwas über dem Ohr.
 
+	Also kriegen wir $4 * 200 = 800$ Signale pro Sekunde.
+	
+	Bevor wir diese in das Neuronale Netzwerk geben, verarbeiten wir sie aber erstmal mithilfe der sogenannten Fourier Transformation. Diese kann die verschiedenen zugrundeliegenden Frequenzen einer Zahlenfolge grob extrahieren, indem diese in Sinus-Kurven zerlegt wird.
 
-	Insgesamt kriegen wir also 4 * 200 = 800 Signale pro Sekunde. Bevor wir diese in das Neuronale Netzwerk geben, verarbeiten wir sie aber erstmal mithilfe der sogenannten Fourier Transformation. Diese kann die verschiedenen zugrundeliegenden Frequenzen einer Zahlenfolge grob extrahieren, indem diese in Sinus-Kurven zerlegt wird.
-
-	Daraus folgt ein Array (eine Liste) an Werten. Der Index bestimmt, für welche Frequenz der Wert gilt (erster Wert: 1 Herz, zweiter Wert: 2 Herz, etc.) und der Wert gibt an, womit die entsprechende Sinus-Funktion multipliziert werden muss, um die originale Funktion wiederzuerlangen. 
+	Daraus folgt ein Array (eine Liste) an Werten. Der Index bestimmt, für welche Frequenz der Wert gilt (erster Wert: 1 Herz, zweiter Wert: 2 Herz, etc.) und der Wert gibt an, womit die entsprechende Sinus-Funktion multipliziert werden muss, um die originale Funktion wiederzuerlangen. \cite{3b1b:fft}
 
 	So lässt sich bestimmen, welche Frequenzen am stärksten vorkommen. Außerdem können dann Frequenzen herausgefiltert werden, indem die entsprechenden Indices ignoriert werden.
 
@@ -353,7 +363,8 @@
 
 	\printbibliography[title=Literatur, keyword=Literatur]
 
-	\printbibliography[title=Videos, keyword=Videos]
-
 	\printbibliography[title=Programme, keyword=Programme]
+
+	\printbibliography[title=Videos, keyword=YTVideos]
+
 \end{document}
