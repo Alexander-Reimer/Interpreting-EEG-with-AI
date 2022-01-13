@@ -48,9 +48,14 @@ end
 function get_eeg_data(path, data_x, data_y, endings, output)
     sample_number = 1
     while isfile(path * string(sample_number) * ".csv")
-        sample_data_x = BrainFlow.read_file(path * string(sample_number) * ".csv")
+        sample_data_x = BrainFlow.read_file(path * string(sample_number) * ".csv")[:, 1:2]
+
+        for i = 1:size(sample_data_x)[2]
+            BrainFlow.remove_environmental_noise(view(sample_data_x, :, i), 200, BrainFlow.FIFTY)
+        end
+
         sample_data_x = reshape(sample_data_x, (:, 1))
-        sample_data_x[800] = endings[1][sample_number]
+        #sample_data_x[800] = endings[1][sample_number]
         #sample_data_x = [make_fft(sample_data_x[1:200])..., make_fft(sample_data_x[201:400])..., make_fft(sample_data_x[401:600])..., make_fft(sample_data_x[601:800])...]
         data_x = [data_x sample_data_x]
         sample_number += 1
@@ -66,7 +71,7 @@ end
 function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = "NoBlink/")
     # Load corrupted endings, see recover_data.jl for more info
     endings = Recover.get_endings()
-    inputs_all_channels = 800 # #400
+    inputs_all_channels = 400
     outputs = 2
     data_x = Array{Float64}(undef, inputs_all_channels, 0)
     data_y = Array{Float64}(undef, outputs, 0)
@@ -149,10 +154,11 @@ end
 
 function build_model()
     # Amount of inputs for all channels
-    inputs = 800 #400
+    inputs = 400
     return Chain(
         Dense(inputs, round(Int, inputs / 2), σ),
         Dense(round(Int, inputs / 2), round(Int, inputs / 2), σ),
+        #Dense(round(Int, inputs / 4), round(Int, inputs / 16), σ),
         Dense(round(Int, inputs / 2), 2, σ)
     )
 end
@@ -174,13 +180,18 @@ function plot_loss(epoch, frequency, test_data, model, device, train_data)
     if mod(epoch, frequency) == 0
         test_loss, test_acc = loss_and_accuracy(test_data, model, device)
         train_loss, train_acc = loss_and_accuracy(train_data, model, device)
-
+    
         push!(test_losses, test_loss)
         push!(train_losses, train_loss)
+        push!(test_accs, test_acc)
+        push!(train_accs, train_acc)
+    
         clf()
-        plot(test_losses, "b")
-        plot(train_losses, "r")
-
+        plot(test_losses, color="blue")
+        plot(test_accs, color="blue", linestyle="dashed")
+        plot(train_losses, color="red")
+        plot(train_accs, color="red", linestyle="dashed")
+    
         println("$(epoch) Epochen von $(hyper_parameters.training_steps): Loss ist $test_loss, Accuracy ist $test_acc.")
     end
 end
@@ -202,12 +213,19 @@ function old_network()
 end
 
 function train(new = false)
+    figure("Blinzeln Trainieren")
+    xlabel("Epochen in 100er Schritten")
+    ylabel("")
+
     device = prepare_cuda()
     # Load the training data and create the model structure with randomized weights
     train_data, test_data = get_loader()
     model = build_model()
     global test_losses = Float64[]
     global train_losses = Float64[]
+    global test_accs = Float64[]
+    global train_accs = Float64[]
+
     # if new = true, create a new network
     if new
         new_network(test_data, train_data, model, cpu)
@@ -224,8 +242,9 @@ function train(new = false)
 
     test_loss, test_acc = loss_and_accuracy(test_data, model, device)
 
+    @info "Training"
     println("0 Epochen von $(hyper_parameters.training_steps): Loss ist $test_loss, Accuracy ist $test_acc.")
-    clf()
+
     plot(test_losses, "b")
 
     for epoch = 1:hyper_parameters.training_steps
@@ -294,16 +313,16 @@ mutable struct Args
     upper_limit::Int
 end
 
-global hyper_parameters = Args(0.001, 2, 100, true, 7, 13)
+global hyper_parameters = Args(0.001, 2, 1000, true, 7, 13)
 
-#train(false)
+#train(true)
 
 
 #device = prepare_cuda()
-model = build_model()
-parameters = old_network()
-Flux.loadparams!(model, parameters)
-test(model)
+#model = build_model()
+#parameters = old_network()
+#Flux.loadparams!(model, parameters)
+#test(model)
 
 
 #=
