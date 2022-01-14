@@ -156,9 +156,9 @@
 
 	Zuerst probieren wir deshalb die Erkennung von EKPs, da diese deutlich leichter zu klassifizieren sind und wir so erstmal das Konzept eines Neuronalen Netzes in einem solchen Kontext ausprobieren können. Denn wenn unser neuronales Netz EKPs noch nicht sicher erkennen kann, wären komplexere Zusammenhänge ohne vorherige Konditionierung erst recht nicht möglich.
 	
-	\begin{wrapfigure}{l}{0.5\textwidth}
+	\begin{wrapfigure}{l}{0.35\textwidth}
 		\centering
-		\includegraphics[width=0.5\textwidth]{pictures/elektroden-platzierungen.png}
+		\includegraphics[width=0.35\textwidth]{pictures/elektroden-platzierungen.png}
 		\caption{10-20 System mit den von uns genutzten Elektroden rot und Earclips orange gefärbt}
 	\end{wrapfigure}
 
@@ -278,31 +278,39 @@
 
 	Da immer die nächsten Layer und der Output Layer benötigt werden, ergibt es Sinn, diese Optimierung beim Output Layer zu starten und dann rückwärts die \mbox{$\delta$-Werte} für jeden Layer zu berechnen und für die nächsten Berechnungen zu speichern -- daher auch der Name Backpropagation. \cite{MITNeuronale}
 
+	\begin{figure}[h!]
+		\includegraphics[width=\textwidth]{pictures/Abbildung-des-Programms.png}
+		\caption{Funktionsweise des Programms}
+	\end{figure}
+	
 	\threesub{Flux}
 
 	Wir haben in unserem letzten Projekt bereits ein Neuronales Netzwerk mit dieser Funktionsweise selbstprogrammiert, um es besser verstehen zu können. \cite{AIComposer} Für dieses Projekt haben wir allerdings das Package Flux benutzt, welches die gleichen Ergebnisse liefern sollte, jedoch mit deutlich besserer Performance, da es sehr stark optimiert wurde.
+
 
 	\subsubsection{Roboter}
 
 	Für unseren Roboter haben wir uns entschieden, Lego Mindstorms EV3 Motoren zu benutzen, die von einem EV3-Brick gesteuert werden, der wiederum von einem Raspberry Pi 3B gesteuert wird. Der Grund dafür, dass wir keine Motoren direkt mit dem Raspberry Pi steuern, ist, dass wir schon alle Teile für einen EV3 Roboter haben. Somit müssten wir entweder neue Motoren kaufen oder passende Adapter finden, welche meist nur mit C und Python funktionieren und teuer sind.
 
-	\begin{figure}[h]
-		\includegraphics[width=\textwidth]{pictures/roboter-funktionsweise.png}
-		\caption{Struktur des Zusammenspiels zwischen Programm und Roboter}
+	\begin{figure}[h!]
+		\includegraphics[width=1\textwidth]{pictures/roboter-funktionsweise.png}
+		\caption{Ablauf von Gehirnaktivität zur Motorbewegung}
 	\end{figure}
 
 	Wir haben dafür das Packages ev3dev.jl benutzt, welches wir bereits für die Robotik-AG programmiert hatten. Deshalb ist der Roboter bereits fertig, obwohl das Neuronale Netz noch nicht so weit ist.
 
 	Mehr technische Details zu der Umsetzung lassen sich beim GitHub Repository des Packages finden \cite{ev3dev}.
 
-	\subsection{Funktionsweise des Programms}
+	%\newpage
+	%\subsection{Funktionsweise des Programms}
 
-	\begin{figure}[h]
-		\includegraphics[width=\textwidth]{pictures/Abbildung-des-Programms.png}
-		\caption{Funktionsweise des Programms}
-	\end{figure}
+	%\begin{figure}[h!]
+	%	\includegraphics[width=\textwidth]{pictures/Abbildung-des-Programms.png}
+	%	\caption{Funktionsweise des Programms}
+	%\end{figure}
 	
-	
+	\newpage
+
 	\section{Ergebnisse}
 
 	Zuerst haben wir versucht, eine KI zu trainieren, welche erkennen kann, ob eine Person gerade geblinzelt hat oder nicht. Diese könnte man zum Beispiel nutzen, indem man einen Roboter immer dann nach vorne fahren lässt, wenn eine Versuchsperson blinzelt.
