@@ -1,4 +1,5 @@
 *.bson
+fft_plot.jl
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
