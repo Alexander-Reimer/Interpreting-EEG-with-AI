@@ -228,7 +228,7 @@
 		\label{EEG-FFT}
 	\end{figure}
 
-	Wie man in Abbildung \ref{EEG-FFT} sehen kann, ist dabei selbst mit den blossen Augen ein Unterschied zwischen Geblinzelt und Nicht Geblinzelt in allen Frequenzen zu sehen, vor allem bei den niedrigeren Frequenzen. Grund dafür ist wahrscheinlich, dass die Qualität unseres EEG beschränkt ist und es höhere Frequenzbereiche deswegen nicht so gut aufzeichnen kann, da diese nicht so leicht durch den Schädel dringen können.
+	Wie man in Abbildung \ref{EEG-FFT} sehen kann, ist dabei selbst mit den blossen Augen ein Unterschied zwischen Geblinzelt und Nicht Geblinzelt in allen Frequenzen zu sehen, vor allem bei den niedrigeren Frequenzen.% Grund dafür ist wahrscheinlich, dass die Qualität unseres EEG beschränkt ist und es höhere Frequenzbereiche deswegen nicht so gut aufzeichnen kann, da diese nicht so leicht durch den Schädel dringen können.
 
 	Der plötzliche Anstieg bei 50 Herz ist aufgrund der Verstrahlung der Umgebung, die meist besonders die Frequenz von 50 Herz betrifft \cite{Praktikum}.
 
@@ -338,7 +338,7 @@
 		\includegraphics[width=\textwidth]{pictures/Abbildung-des-Programms.png}
 		\caption{Funktionsweise des Programms}
 	\end{figure}
-	
+
 
 	\threesub{Flux}
 
@@ -350,7 +350,8 @@
 	Für unseren Roboter haben wir uns entschieden, Lego Mindstorms EV3 Motoren zu benutzen, die von einem EV3-Brick gesteuert werden, der wiederum von einem Raspberry Pi 3B gesteuert wird. Der Grund dafür, dass wir keine Motoren direkt mit dem Raspberry Pi steuern, ist, dass wir schon alle Teile für einen EV3 Roboter haben. Somit müssten wir entweder neue Motoren kaufen oder passende Adapter finden, welche meist nur mit C und Python funktionieren und teuer sind.
 
 	\begin{figure}[h!]
-		\includegraphics[width=1\textwidth]{pictures/roboter-funktionsweise.png}
+		\centering
+		\includegraphics[width=0.8\textwidth]{pictures/roboter-funktionsweise.png}
 		\caption{Ablauf von Gehirnaktivität zur Motorbewegung}
 	\end{figure}
 
@@ -359,7 +360,8 @@
 	Mehr technische Details zu der Umsetzung lassen sich beim GitHub Repository des Packages finden \cite{ev3dev}.
 
 	\begin{figure}[h!]
-		\includegraphics[width=\textwidth]{pictures/roboter-annotated.png}
+		\centering
+		\includegraphics[width=0.75\textwidth]{pictures/roboter-annotated.png}
 		\caption{Unser Roboter (ohne Raspberry Pi, der über den EV3-Brick gehört)}
 	\end{figure}
 
@@ -372,6 +374,7 @@
 	%\end{figure}
 	
 	\newpage
+	\newpage
 
 	\section{Ergebnisse}
 
@@ -383,11 +386,12 @@
 
 	Unsere Trainingsdaten bestehen dann aus 200 dieser Datensätzen, 100 davon mit Blinzeln und 100 ohne. Unser Netzwerk haben wir aber nur mit 90\% dieser Datensätze (180) trainiert, damit wir mit den restlichen 20 kontrollieren konnten, ob das Netzwerk auch unbekannte Daten richtig verarbeiten kann.
 
-	Für den Aufbau der Hidden Layer des Netzwerkes haben wir uns entschieden, da wir mehrere verschiedene Ansätze ausprobiert haben und diese Struktur konsistent die besten Ergebnisse geliefert hat.
+	Für den Aufbau der Hidden Layer des Netzwerkes haben wir uns entschieden, da wir mehrere verschiedene Ansätze ausprobiert haben und diese Struktur konsistent die besten Ergebnisse geliefert hat. Die Struktur ist zu sehen in Abbildung \ref{NetzStruktur}
 
 	\begin{figure}[h!]
-		\includegraphics[width=\textwidth]{pictures/netzwerk-struktur.png}
+		\includegraphics[width=0.75\textwidth]{pictures/netzwerk-struktur.png}
 		\caption{Struktur unseres Neuronalen Netzwerks}
+		\label{NetzStruktur}
 	\end{figure}
 
 	Das Ergebnis war positiv:
@@ -400,7 +404,7 @@
 
 	Wie man an Abbildung \ref{training-nofft} sehen kann, erreichte das Neuronale Netzwerk in diesem Fall in nur 1000 Epochen (ca. 5 Minuten Rechenzeit) eine Genauigkeit von 95\%, bei anderen Durchläufen erhielten wir auch 100\%.
 
-	Bei dem Versuch mit Frequenzfiltern durch FFT (jedoch mit 100 Inputs, da die Fast Fourier Transformation bei einer zeitlichen Auflösung von 200 Herz nur 1 - 100 Herz berechnen kann) erhielten wir bei der gleichen Zahl an Wiederholungen (\enquote{Epochen}) ähnliche Ergebnisse (s. Abbildung \ref{training-fft}).
+	Bei dem Versuch mit Frequenzfiltern durch FFT war die Struktur ähnlich, die Menge an Neuronen in jedem Layer wurden jedoch halbiert, da es nur 100 Inputs gibt, weil die Fast Fourier Transformation bei einer zeitlichen Auflösung von 200 Herz nur 1 - 100 Herz berechnen kann). Wir erhielten bei der gleichen Zahl an Wiederholungen (\enquote{Epochen}) ähnliche Ergebnisse (s. Abbildung \ref{training-fft}).
 
 	\begin{figure}[h!]
 		\includegraphics[width=0.9\textwidth]{pictures/training-fft2.png}
@@ -410,7 +414,13 @@
 
 	Dies heißt, dass FFT auf jeden Fall die Ergebnisse nicht verschlechtert. Jedoch lässt sich auch nicht genau sagen, inwiefern sie besser als keine ist, wenn überhaupt. Denn die kleinen Unterschiede, die man oft sieht, wie hier auch, stammen meist davon, dass jedes Neuronale Netzwerk zufällig initialisiert wird und somit, selbst mit dem ansonsten identischen Verfahren, einen leichten Unterschied in den Ergebnissen zeigen wird.
 
-	Es gab aber noch ein größeres Problem: Die Testdaten konten sicher erkannt werden, aber als wir es mit weiteren Daten in einem Live-Test versuchten, hat das Netzwerk meist komplett versagt.
+	Es gab aber noch ein größeres Problem: Die Testdaten konnten sicher erkannt werden, aber als wir es mit neuen Daten von anderen Personen und in anderen Räumen versuchten, hat das Netzwerk meist komplett versagt.
+
+	Das Ziel der allgemeinen Anwendung ist also noch nicht gegeben. 
+	
+	Die Kosten der benutzten Hardware halten sich jedoch noch in Grenzen: Beim Kauf hat die gesamte EEG-Ausstattung ca. 550€ gekostest.
+
+	Die Performance des Programms kann außerdem zwar noch verbessert werden, jedoch dauern 1000 Epochen auf unseren persönlichen Systemen bereits lediglich 3 Minuten. 
 
 
 	\section{Diskussion}
