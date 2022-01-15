@@ -12,7 +12,7 @@
 \usepackage{csquotes}
 
 % Für Quellenangaben
-\usepackage{biblatex}
+\usepackage[sorting=none, defernumbers=true]{biblatex}
 \addbibresource{sources.bib}
 
 % Für klickbare links (Kasten werden nicht mitgedruckt)
@@ -31,20 +31,20 @@
 \usepackage{caption}
 \captionsetup{textfont={footnotesize}, labelfont={footnotesize, bf}, position=below, format=plain}
 
-%\setcapindent{0pt}
-
 \title{Erkennung ereigniskorellierter Potenziale eines Elektroenzephalogramms durch eine KI}
 \date{\today}
 \author{Alexander Reimer \and Matteo Friedrich}
+
 \begin{document}
 
 	\newcommand{\sig}{\textrm{sig}}
 	\newcommand{\netin}{\textrm{netzinput}}
 
 	\newcommand{\threesub}[1]{
-		\vspace{1ex}
-	\noindent \textbf{#1}
-	\vspace{0.5ex}}
+	\vspace{1.5ex}
+	\noindent {\textbf{#1}}
+	\vspace{0.5ex}
+	}
 
 	\maketitle
 
@@ -88,15 +88,17 @@
 			\item 4 Channel Ganglion Board von OpenBCI $\star$
 			\item 2x Spike Electrodes  $\star$
 			\item 2x Flat Electrodes $\star$
+			\item Klettband für die Elektroden $\star$
+			\item 2x Earclips $\star$
+			\item Plastik-Hülle für das Ganglion Board
 		\end{itemize}
 
 		\item Roboter
 		\begin{itemize}
 			\item Lego Mindstorms EV3 Brick
-			\item 2x EV3 großer Motor
-			\item 2x EV3 mittlerer Motor
-			\item SD-Karte (8 GB)
 			\item Raspberry Pi 3B 8GB
+			\item 2x EV3 großer Motor
+			\item SD-Karte (8 GB)
 			\item Diverse Legoteile
 		\end{itemize}
 
@@ -148,9 +150,9 @@
 
 	Bei der Elektroenzephalographie werden Elektroden an der Kopfoberfläche platziert. Diese können sehr kleine Spannungsdifferenzen messen, die durch Reize im Gehirn entstehen und durch den Schädel dringen. Diese Spannungen werden nicht von einzelnen Nervenzellen erzeugt, sondern geben die Summe aller lokalen Spannungen wieder. Man kann also auch nur ungefähr sagen, wo genau im Gehirn ein bestimmter Reiz ausgelöst wurde, je mehr Elektroden desto höher die Genauigkeit. \cite{wiki:Elektroenzephalografie}
 
-	Wir untersuchen dabei Ereigniskorrelierte Potentiale (EKPs). Dies sind bestimmte Spannungsschwankungen (\enquote{Potentiale}), welche in Zusammenhang mit einem beobachtbaren Ereignis stehen, wie z.B. Blinzeln oder Armbewegungen.
+	Wir untersuchen dabei Ereigniskorrelierte Potentiale (EKPs). Dies sind bestimmte Spannungsschwankungen (\enquote{Potentiale}), welche in Zusammenhang mit einem beobachtbaren Ereignis stehen, wie z.B. Blinzeln oder Armbewegungen. \cite{Birbaumer2010} \cite{Praktikum}
 
-	Weiter ist es möglich, nur durch Gedanken eine Steuerung auszuführen. Dies funktioniert jedoch meist durch Instrumentelle oder Klassische Konditionierung, also durch das Bestrafen und Belohnen auf Basis der Messungen des EEG. So kann das Gehirn darauf trainiert werden, auf Verlangen eine bestimmte, vorher festgelegte Aktivität auszulösen, die dann gemessen und ausgewertet werden kann. 
+	Weiter ist es möglich, nur durch Gedanken eine Steuerung auszuführen. Dies funktioniert jedoch meist durch Instrumentelle oder Klassische Konditionierung, also durch das Bestrafen und Belohnen auf Basis der Messungen des EEG. So kann das Gehirn darauf trainiert werden, auf Verlangen eine bestimmte, vorher festgelegte Aktivität auszulösen, die dann gemessen und ausgewertet werden kann.  \cite{BCIChaudhary}
 
 	Dies wollen wir nicht machen, da die Konditionierung Zeit benötigt, nicht unser Ziel einer allgemeinen Anwendbarkeit erfüllt und voraussichtlich bessere Ausrüstung erfordert als wir haben.
 
@@ -351,11 +353,11 @@
 
 	Als wir das trainierte Neuronale Netzwerk für Blinzeln mit Daten testeten, die unter anderen Umständen entstanden (anderer Raum, andere Person, etc.), sank die Zuverlässigkeit der Ergebnisse drastisch, auch wenn sie besser als zufällig war.
 
-	Grund dafür ist vermutlich, dass das Netzwerk nur mit Daten trainiert / getestet wurde, die alle kurz nacheinander von der gleichen Person unter gleichen Umständen aufgenommen wurden.
+	Grund dafür ist vermutlich, dass das Netzwerk nur mit Daten trainiert / getestet wurde, die alle kurz nacheinander von der gleichen Person unter gleichen Umständen aufgenommen wurden. 
 
 	Um dieses Problem zu lösen, wollen wir also versuchen, mehr Trainingsdaten zu sammeln, die unter verschiedenen Bedingungen aufgenommen wurden, um unser Ziel der allgemeinen Nutzbarkeit erfüllen zu können. Außerdem könnte eine Verbesserung der Signalqualität des EEG ebenfalls zur besseren Konsistenz der Daten beitragen. Umgesetzt könnte dies werden durch z.B. die Verwendung eines Elektrodengels, bessere Platzierung der Elektroden und ein besseres Filtern von Rauschen in den Daten.
 
-	Zudem wollen wir in Zukunft versuchen, mithilfe unseres Neuronalen Netzes bereits bei allen Menschen vorhandene, selbstkontrollierbare Gehirnaktivität zu finden und sicher zu erkennen, jedoch ohne vorherige Konditionierung. Solche Gehirnaktivität könnte z.B. der allgemeine Gedanke an “Rechts” sein, was womöglich mit erhöhter Aktivität auf der linken Hirnhälfte in Verbindung stehen könnte. 
+	Zudem wollen wir in Zukunft versuchen, mithilfe unseres Neuronalen Netzes bereits bei allen Menschen vorhandene, selbstkontrollierbare Gehirnaktivität zu finden und sicher zu erkennen, jedoch ohne vorherige Konditionierung. Solche Gehirnaktivität könnte z.B. der allgemeine Gedanke an \enquote{Rechts} sein, was womöglich mit erhöhter Aktivität auf der linken Hirnhälfte in Verbindung stehen könnte. 
 
 	\section{Danksagung}
 
@@ -365,14 +367,16 @@
 
 	\subsection{Unterstützung}
 
-	Danke an Professor Everling von der Universität...
+	Danke an Professor Everling vom \enquote{The Brain and Mind Institute} der Western University in Kanada. \footnote{\href{https://www.uwo.ca/bmi/investigators/stefan-everling.html}{https://www.uwo.ca/bmi/investigators/stefan-everling.html}}
+
+	Danke an Ino Saathoff, der für uns die Hülle der EEG-Platine mit seinem 3D-Drucker erstellt hat.
+
+	Danke an Ino und Oliver Samkovskij, die zusammen mit uns den Roboter gebaut haben.
 
 	\section{Quellen \& Referenzen}
 
-	\printbibliography[title=Literatur, keyword=Literatur]
+	\printbibliography[title={Literatur/Videos}, keyword={Literatur}]
 
 	\printbibliography[title=Programme, keyword=Programme]
-
-	\printbibliography[title=Videos, keyword=YTVideos]
 
 \end{document}
