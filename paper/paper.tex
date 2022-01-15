@@ -259,7 +259,7 @@
 		a_{j} = \sig\left(\sum_{L} (a_{L} * W_{Lj}) + b_{j}\right)
 		\]}
 		
-	\noindent wobei $a_j$ = die Aktivierung des Neurons $j$, $L$ = der nächste Layer, $a_L$ = alle Aktivierungen des Layers $L$ , $W_{Lj}$ = alle Gewichte zwischen dem Neuron $j$ und den Neuronen des Layers $L$, und $b_j$ = der Bias des Neurons $j$.
+	\noindent wobei $a_j$ = die Aktivierung des Neurons $j$, $L$ = der nächste Layer, $a_L$ = alle Aktivierungen des Layers $L$ , $W_{Lj}$ = alle Gewichte zwischen dem Neuron $j$ und den Neuronen des Layers $L$, und $b_j$ = der Bias des Neurons $j$. \cite{brotcrunsher:forwardpass}
 	
 	\threesub{Loss/Cost} 
 
@@ -285,9 +285,9 @@
 
 	Doch wie verändert man nun die Aktivierungen des Output Layers? Es müssen alle Gewichte und Biases davor angepasst werden. Um nun zu wissen, wie ein Gewicht verändert werden muss, gibt es folgende Funktion:
 
-	\[
+	{\Large \[
 		\Delta W_{ij} = \epsilon * \delta_i * a_j
-	\]
+	\]}
 
 	wobei $\Delta W_{ij}$ = um wie viel das Gewicht $W$ zwischen den Neuronen $j$ und $i$ verändert werden muss, $\epsilon$ = die Lernrate (meist ein kleiner Wert wie 0.001), $\delta_i \approx$ die Ableitung der Cost des Neuronen $i$ im Verhältnis zum Weight $W_{ij}$, und $a_j$ = die Aktivierung des Neurons $j$. Was dabei oft verwirrend ist: $j$ bezeichnet das Neuron, welches zuerst kommt, und $i$ das Neuron, welches danach kommt (Reihenfolge im Forward-Pass), obwohl es bei $W_{ij}$ andersherum steht.
 
@@ -295,20 +295,20 @@
 
 	Um nun $\delta_i$ für den Output Layer zu berechnen, gibt es folgende Gleichung: 
 
-	\[
+	{\Large \[
 		\delta_i = \sig '\left({\netin}_i\right) * (a_i (\textrm{soll}) - a_i (\textrm{ist})) 
-	\]
+	\]}
 
 	wobei $\sig '(x)$ = die Ableitung von $\sig(x)$, also $\sig'(x) = \sig(x) * (1 - \sig(x))$, $\netin_i$ = der Netzinput des Neurons $i$ , $a_i(\textrm{soll})$ = die Aktivierung, die das Neuron haben sollte (also das gleiche wie $y$), und $a_i(\textrm{ist})$ = die Aktivierung, die das Neuron hat.
 
 	Mit dieser Formel wird berechnet, welche Aktivierung das Neuron haben sollte, was an $a_i(\textrm{soll}) - a_i(\textrm{ist}))$ erkennbar ist. Die Aktivierungsfunktion mit dem Netz Input wird als Faktor mit einberechnet, da möglichst nur die Gewichte stark verändert werden sollen, die bei dem Trainingsdatensatz eine hohe Aktivierung haben, also durch diese Inputs besonders angesprochen werden. So werden zum Beispiel beim Sortieren nur die Neuronen miteinander verknüpft, die für ein bestimmtes Muster verantwortlich sind. Für die Neuronen der Hidden Layers muss man alle $\delta$'s des nächsten Layers mit den von dem Neuron dorthin führenden Weights multiplizieren und dann summieren. Dadurch werden die Änderungen, die die Aktivierungen dieser Neuronen brauchen ($\delta$), zusammengerechnet, da natürlich die Aktivierungen im nächsten Layer unterschiedliche Änderungen in dem gleichen Neuron benötigen. Durch die Multiplikation mit den dahin führenden Weights werden diese Änderungen gewichtet, da sie auf einige Neuronen größere Auswirkungen haben als auf andere. Wie beim Output Layer auch wird diese Summe noch mit $\sig'(\netin)$ multipliziert, um die Aktivierung durch bestimmte Muster angesprochener Neuronen noch weiter zu erhöhen und weniger/kaum angesprochener Neuronen zu senken, sodass die Ergebnisse besser und eindeutiger werden. Die Formel:
 
-	{\Large \[sig'({netzinput}_i) * \sum_{L}{\left(\delta_L\ast W_{Li}\right)}\]}
+	{\Large \[\sig'({\netin}_i) * \sum_{L}{\left(\delta_L\ast W_{Li}\right)}\]}
 		
 	\noindent wobei $L$ = der nächste Layer, $\delta_L$ = alle $\delta$'s des Layers $L$, und $W_{Li}$ = alle Weights, die ein Neuron des nächsten Layers und Neuron $i$ verbinden.
 
 
-	Da immer die nächsten Layer und der Output Layer benötigt werden, ergibt es Sinn, diese Optimierung beim Output Layer zu starten und dann rückwärts die \mbox{$\delta$-Werte} für jeden Layer zu berechnen und für die nächsten Berechnungen zu speichern -- daher auch der Name Backpropagation. \cite{MITNeuronale}
+	Da immer die nächsten Layer und der Output Layer benötigt werden, ergibt es Sinn, diese Optimierung beim Output Layer zu starten und dann rückwärts die \mbox{$\delta$-Werte} für jeden Layer zu berechnen und für die nächsten Berechnungen zu speichern -- daher auch der Name Backpropagation. \cite{MITNeuronale} \cite{3b1b:fft} \cite{brotcrunsher:backwardpass}
 
 	\begin{figure}[h!]
 		\includegraphics[width=\textwidth]{pictures/Abbildung-des-Programms.png}
@@ -403,7 +403,7 @@
 
 	\subsection{Unterstützung}
 
-	Danke an Professor Everling vom \enquote{The Brain and Mind Institute} der Western University in Kanada. \footnote{\href{https://www.uwo.ca/bmi/investigators/stefan-everling.html}{https://www.uwo.ca/bmi/investigators/stefan-everling.html}}
+	Danke an Professor Everling vom \enquote{The Brain and Mind Institute} der Western University in Kanada, der uns geholfen hat, einen Ansatz in diesem komplizierten Thema zu finden. \footnote{\href{https://www.uwo.ca/bmi/investigators/stefan-everling.html}{https://www.uwo.ca/bmi/investigators/stefan-everling.html}}
 
 	Danke an Ino Saathoff, der für uns die Hülle der EEG-Platine mit seinem 3D-Drucker erstellt hat.
 
@@ -411,7 +411,9 @@
 
 	\section{Quellen \& Referenzen}
 
-	\printbibliography[title={Literatur/Videos}, keyword={Literatur}]
+	\printbibliography[title={Literatur}, keyword={Literatur}, notkeyword={YTVideos}]
+
+	\printbibliography[title={Videos}, keyword={YTVideos}]
 
 	\printbibliography[title=Programme, keyword=Programme]
 
