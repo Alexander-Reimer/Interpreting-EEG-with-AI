@@ -5,8 +5,7 @@ This is a project by Alexander Reimer and Matteo Friedrich.
 We are trying to teach a neural network to interpret event-related potentials of the human brain. For this we use EEG data which we are gathering with our 4 channel Ganglion board from OpenBCI.
 
 Currently, we are at the beginning so we are just training the network to recognize blinks for now. But the endgoal is for a human to control a roboter real-time using this.
-
-When the project is finished, we want to participate in the German STEM-competition Jugend Forscht with it.
+We want to participate in the German STEM-competition Jugend Forscht 2022 with it.
 
 ## How do I use this?
 We are still in the development stages, so for now, this isn't at all user friendly or well documented or commented as we mostly communicate in person or online and it's only the two of us working on the code.
