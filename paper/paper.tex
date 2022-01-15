@@ -87,12 +87,12 @@
 
 	In diesem Projekt wollen wir einen Roboter mithilfe bloßer Gedankenkraft steuern.
 
-	Um Daten über das Gehirn zu bekommen, nutzen wir einen Elektroenzephalographen, kurz EEG, welches durch Elektroden an der Kopfhaut die Spannungsdifferenz innerhalb des Gehirns misst. Dies werten wir mithilfe eines Neuronalen Netzes aus, welches wir vorher darauf trainiert haben, Muster in diesen Daten zu erkennen. So können wir bestimmte Ereignisse anhand der EEG-Daten ableiten, z.B. ob jemand geblinzelt hat oder sich gerade konzentriert.
+	Um Daten über das Gehirn zu bekommen, nutzen wir einen Elektroenzephalographen, kurz EEG, welcher durch Elektroden an der Kopfhaut die Spannungsdifferenz innerhalb des Gehirns misst. Dies werten wir mithilfe eines Neuronalen Netzes aus, welches wir vorher darauf trainiert haben, Muster in diesen Daten zu erkennen. So können wir bestimmte Ereignisse anhand der EEG-Daten ableiten, z.B. ob jemand geblinzelt hat oder sich gerade konzentriert.
 	
-	Das Ziel ist es dann, durch das Erkennen verschiedener dieser sogenannten ereigniskorrelierten Potentialen (EKPs) einen Roboter nur mit Gedanken steuern zu können.
+	Das Ziel ist es dann, durch das Erkennen verschiedener dieser sogenannten ereigniskorrelierten Potentiale (EKPs) einen Roboter nur mit Gedanken steuern zu können.
 	
 	
-	Wir haben es geschafft eine KI zu programmieren, die in der Lage ist, anhand der EEG-Daten richtig zu erkennen, ob eine bestimmte Testperson gerade geblinzelt hat oder nicht. Diese korrekte Klassifizierung der Daten ist jedoch nur möglich, wenn die Test- und Trainingsdaten unter den exakt gleichen Voraussetzungen aufgenommen wurden (das heißt gleiche Person, gleiche Umgebung etc.) Diese Problematik könnten wir wahrscheinlich durch das Sammeln von mehr und verschiedenen Daten lösen. Leider hatten wir dafür aber noch nicht genug Zeit gehabt.	
+	Wir haben es geschafft eine KI zu programmieren, die in der Lage ist, anhand der EEG-Daten richtig zu erkennen, ob eine bestimmte Testperson gerade geblinzelt hat oder nicht. Diese korrekte Klassifizierung der Daten ist jedoch nur möglich, wenn die Test- und Trainingsdaten unter den exakt gleichen Voraussetzungen aufgenommen wurden (das heißt gleiche Person, gleiche Umgebung, etc.) Diese Problematik könnten wir wahrscheinlich durch das Sammeln von mehr und verschiedenen Daten, sowie das Umpositionieren der Elektroden lösen. Leider hatten wir dafür aber noch nicht genug Zeit gehabt.	
 
 	\section{Einleitung}
  
@@ -162,6 +162,15 @@
 
 	\end{itemize}
 
+	\begin{figure}[h!]
+		\includegraphics[width=0.5\textwidth]{pictures/EEG-Alex-annotated.png}
+		\includegraphics[width=0.35\textwidth]{pictures/Ganglion-Board-annotated.png}
+		\caption{Das EEG und Zubehör}
+		\label{EEG-Zubehor}
+	\end{figure}
+
+	Unser EEG-Gerät besteht aus einem Klettband mit Löchern für die Elektroden, einer Platine (Ganglion Board), in welche die Elektroden eingesteckt werden, einer Kunststoff-Hülle zum Schutz des Ganglion Boards, und einem USB-Dongle, mit welchem die Signale der Platine kabellos empfangen werden können (s. Abbildung \ref{EEG-Zubehor}).
+
 	\subsection{Vorgehensweise}
 
 	Unser Projekt lässt sich grob in 3 Teile unterscheiden.
@@ -180,35 +189,50 @@
 
 	Weiter ist es möglich, nur durch Gedanken eine Steuerung auszuführen. Dies funktioniert jedoch meist durch Instrumentelle oder Klassische Konditionierung, also durch das Bestrafen und Belohnen auf Basis der Messungen des EEG. So kann das Gehirn darauf trainiert werden, auf Verlangen eine bestimmte, vorher festgelegte Aktivität auszulösen, die dann gemessen und ausgewertet werden kann.  \cite{BCIChaudhary}
 
-	Dies wollen wir nicht machen, da die Konditionierung Zeit benötigt, nicht unser Ziel einer allgemeinen Anwendbarkeit erfüllt und voraussichtlich bessere Ausrüstung erfordert als wir haben.
+	Dies wollen wir nicht machen, da die Konditionierung Zeit benötigt, nicht unser Ziel einer allgemeinen Anwendbarkeit erfüllt und voraussichtlich bessere Ausrüstung erfordert.
 
 	Zuerst probieren wir deshalb die Erkennung von EKPs, da diese deutlich leichter zu klassifizieren sind und wir so erstmal das Konzept eines Neuronalen Netzes in einem solchen Kontext ausprobieren können. Denn wenn unser neuronales Netz EKPs noch nicht sicher erkennen kann, wären komplexere Zusammenhänge ohne vorherige Konditionierung erst recht nicht möglich.
+
+	Spezifisch probieren wir das Blinzeln aus, da dies in den EEG-Daten sogar von Menschen sehr einfach erkannt werden kann, wie man in Abbildung \ref{EEG-Blinzeln} sehen kann.
 	
-	\begin{wrapfigure}{l}{0.35\textwidth}
+	\begin{figure}[h]
+		\includegraphics{pictures/blinzeln_ekp_beispiel_pyplot_annotated.png}
+		\caption{Ausschnitt eines EEGs mit Blinzeln}
+		\label{EEG-Blinzeln}
+	\end{figure}
+
+	Insgesamt haben wir zwei Earclips, die an den Ohren befestigt werden und zum Filtern von Störungen dienen, und vier Messelektroden, mit einer zeitlichen Auflösung von jeweils 200 Herz (200 Messungen pro Sekunde). Zwei dieser Elektroden haben wir auf der Stirn platziert, zwei jeweils links und rechts auf dem Schädel, etwas über dem Ohr, da dies die Standard-Aufstellung in der Dokumentation ist (s. Abbildung \ref{10-20-System}). \cite{OpenBCI} Wir planen, sie basierend auf unseren Ergebnissen wo nötig anzupassen.
+
+	\begin{figure}[h!]
 		\centering
-		\includegraphics[width=0.35\textwidth]{pictures/elektroden-platzierungen.png}
+		\includegraphics[width=0.5\textwidth]{pictures/elektroden-platzierungen.png}
 		\caption{10-20 System mit den von uns genutzten Elektroden rot und Earclips orange gefärbt}
-	\end{wrapfigure}
-
-	Unser EEG-Gerät besteht aus einem Klettband mit Löchern für die Elektroden, einer Platine, in welche die Elektroden eingesteckt werden, und einem USB-Dongle, mit welchem die Signale der Platine kabellos empfangen werden können.
-
-	Insgesamt haben wir zwei Earclips, die an den Ohren befestigt werden und zum Filtern von Störungen dienen, und vier Messelektroden, mit einer zeitlichen Auflösung von jeweils 200 Herz (200 Messungen pro Sekunde). Zwei dieser Elektroden haben wir auf der Stirn platziert, zwei jeweils links und rechts auf dem Schädel, etwas über dem Ohr.
+		\label{10-20-System}
+	\end{figure}
 
 	Also kriegen wir $4 * 200 = 800$ Signale pro Sekunde.
 	
-	Bevor wir diese in das Neuronale Netzwerk geben, verarbeiten wir sie aber erstmal mithilfe der sogenannten Fourier Transformation. Diese kann die verschiedenen zugrundeliegenden Frequenzen einer Zahlenfolge grob extrahieren, indem diese in Sinus-Kurven zerlegt wird.
+	Uns wurde von Professor Everling empfohlen, die Fourier Transformation zur Vorbereitung der Daten für das Neuronale Netz zu nutzen. 
+	
+	Die Fourier Tranformation kann die verschiedenen zugrundeliegenden Frequenzen einer Zahlenfolge extrahieren, indem diese in Sinus-Kurven zerlegt wird.
 
 	Daraus folgt ein Array (eine Liste) an Werten. Der Index bestimmt, für welche Frequenz der Wert gilt (erster Wert: 1 Herz, zweiter Wert: 2 Herz, etc.) und der Wert gibt an, womit die entsprechende Sinus-Funktion multipliziert werden muss, um die originale Funktion wiederzuerlangen. \cite{3b1b:fft}
 
 	So lässt sich bestimmen, welche Frequenzen am stärksten vorkommen. Außerdem können dann Frequenzen herausgefiltert werden, indem die entsprechenden Indices ignoriert werden.
 
-	Abbildung: Beispiel FFT von Sinuskurven mit 3 Hz, 5 Hz, 12 Hz
+	Wir haben dazu spezifisch die Fast Fourier Transformation (FFT) des Julia-Pakets FFTW genutzt. Zuerst haben wir die Sinnhaftigkeit einer Fourier Transformation für unser Projekt getestet, indem wir sie auf unsere Daten angewandt und dies in einem Plot ausgegeben haben.
 
-	Um die Signale in Julia empfangen, in Dateien speichern, und laden zu können, haben wir BrainFlow benutzt.
+	\begin{figure}[h!]
+		\includegraphics[width=\textwidth]{pictures/Die_FFTs_der_EEG-Daten.png}
+		\caption{Die FFT unserer EEG-Daten}
+		\label{EEG-FFT}
+	\end{figure}
 
-	%\begin{figure}
-	%	\includegraphics{}
-	%\end{figure}
+	Wie man in Abbildung \ref{EEG-FFT} sehen kann, ist dabei selbst mit den blossen Augen ein Unterschied zwischen Geblinzelt und Nicht Geblinzelt in allen Frequenzen zu sehen, vor allem bei den niedrigeren Frequenzen. Grund dafür ist wahrscheinlich, dass die Qualität unseres EEG beschränkt ist und es höhere Frequenzbereiche deswegen nicht so gut aufzeichnen kann, da diese nicht so leicht durch den Schädel dringen können.
+
+	Der plötzliche Anstieg bei 50 Herz ist aufgrund der Verstrahlung der Umgebung, die meist besonders die Frequenz von 50 Herz betrifft \cite{Praktikum}.
+
+	Aufgrund dieses Tests haben wir uns entschieden, auch auszuprobieren, das Neuronale Netzwerk mit EEG-Daten zu trainieren, welche vorher mit der Fast Fourier Transformation verarbeitet wurden.
 
 	\subsubsection{Neuronales Netz}
 
@@ -221,14 +245,6 @@
 	Jedes Neuron besitzt eine Aktivierung (Activation), die als Zahl zwischen 0 und 1 angegeben werden kann, und einen Bias (Verzerrung), der eine beliebige Zahl sein kann. Die Neuronen verschiedener Layer sind alle durch sogenannte Gewichte (Weights) verbunden, die ebenfalls einen beliebigen Wert haben können. 
 
 	Die Outputs sind dann lediglich die Aktivierungen der Neuronen im Output Layer.
-	
-	\threesub{Was ist ein neuronales Netzwerk?}
-
-	Zuerst wollten wir die Grundstruktur eines neuronalen Netzwerkes programmieren. Ein neuronales Netzwerk besteht aus drei Teilen: dem Input Layer, den Hidden Layers und dem Output Layer.
-
-	Der Input Layer ist nur eine Liste aus Zahlen zwischen 0 und 1. Er gibt an, welche Eingaben (Inputs) das Netzwerk bekommen soll, z. B. die Grauwerte der Pixel eines Bildes.
-
-	Die Hidden Layers sind eine Ansammlung von in mehrere Layer (Schichten) unterteilten Neuronen. Jedes Neuron besitzt eine Aktivierung (Activation), die als Zahl zwischen 0 und 1 angegeben werden kann, und einen Bias (Verzerrung), der eine beliebige Zahl sein kann. Die Neuronen verschiedener Layer sind alle durch sogenannte Gewichte (Weights) verbunden, die ebenfalls einen beliebigen Wert haben können.  
 
 	\threesub{Forward Pass}
 
@@ -238,6 +254,7 @@
 		\centering
 		\includegraphics[width=0.4\textwidth]{pictures/sig_func.png}
 		\caption{Graph der Sigmoidfunktion}
+		\label{sig_func}
 	\end{wrapfigure}
 
 	Um aus diesem Netz Input nun die Aktivierung zu berechnen, benötigt man eine Aktivierungsfunktion, die dafür sorgt, dass die Aktivierung zwischen 0 und 1 liegt. Wir haben dafür eine Sigmoidfunktion benutzt, die eine Zahl nimmt und einen Wert zwischen 0 und 1 ausgibt. Dies wird dann für jedes Neuron in jedem Layer wiederholt. Da man aber immer die Aktivierungen des vorherigen Layers benötigt, muss man das ganze vom Input Layer zum Output Layer machen. Daher auch der Name Forward Pass. Die Interpretation der Outputs hängt von den Trainingsdaten ab. (s. Backwardpass). Die allgemeine Formel für die Aktivierung eines Neurons lautet also:
@@ -277,7 +294,10 @@
 
 	\noindent wobei $C_0$ = die Cost des Output Layers, $L$ = der letzte Layer (Output Layer), $a_L$ = die Aktivierungen des Layers $L$, und $y$ = die richtigen Outputs für die Inputs, mit denen die Aktivierungen berechnet wurden. 
 	
-	Um die Cost zu berechnen muss man also für alle Output Neuronen die Differenz der gegebenen und der richtigen Aktivierungen bilden. Danach muss man diese Differenzen quadrieren und am Ende alle Ergebnisse aufsummieren. Dies kann man für alle Trainingsdatensätze wiederholen und von allen Costs den Durchschnitt nehmen, um die allgemeine Performance eines Netzwerkes zu überprüfen. Diese Art der Cost-Funktion wird Mean Squared Error (MSE) genannt. Zusammenfassend kann man also sagen, dass die Cost die Abweichung von den berechneten und den richtigen Outputs angibt.
+	Um die Cost zu berechnen muss man also für alle Output Neuronen die Differenz der gegebenen und der richtigen Aktivierungen bilden. Danach muss man diese Differenzen quadrieren und am Ende alle Ergebnisse aufsummieren. Dies kann man für alle Trainingsdatensätze wiederholen und von allen Costs den Durchschnitt nehmen, um die allgemeine Performance eines Netzwerkes zu überprüfen. Diese Art der Cost-Funktion wird Mean Squared Error (MSE) genannt. 
+	
+	Zusammenfassend kann man also sagen, dass die Cost die Abweichung von den berechneten und den richtigen Outputs angibt.
+	
 	Aufgrund des Trainingsdatensatzes weiß man nun, wie der Output Layer verändert werden
 	muss.
 
@@ -301,7 +321,11 @@
 
 	wobei $\sig '(x)$ = die Ableitung von $\sig(x)$, also $\sig'(x) = \sig(x) * (1 - \sig(x))$, $\netin_i$ = der Netzinput des Neurons $i$ , $a_i(\textrm{soll})$ = die Aktivierung, die das Neuron haben sollte (also das gleiche wie $y$), und $a_i(\textrm{ist})$ = die Aktivierung, die das Neuron hat.
 
-	Mit dieser Formel wird berechnet, welche Aktivierung das Neuron haben sollte, was an $a_i(\textrm{soll}) - a_i(\textrm{ist}))$ erkennbar ist. Die Aktivierungsfunktion mit dem Netz Input wird als Faktor mit einberechnet, da möglichst nur die Gewichte stark verändert werden sollen, die bei dem Trainingsdatensatz eine hohe Aktivierung haben, also durch diese Inputs besonders angesprochen werden. So werden zum Beispiel beim Sortieren nur die Neuronen miteinander verknüpft, die für ein bestimmtes Muster verantwortlich sind. Für die Neuronen der Hidden Layers muss man alle $\delta$'s des nächsten Layers mit den von dem Neuron dorthin führenden Weights multiplizieren und dann summieren. Dadurch werden die Änderungen, die die Aktivierungen dieser Neuronen brauchen ($\delta$), zusammengerechnet, da natürlich die Aktivierungen im nächsten Layer unterschiedliche Änderungen in dem gleichen Neuron benötigen. Durch die Multiplikation mit den dahin führenden Weights werden diese Änderungen gewichtet, da sie auf einige Neuronen größere Auswirkungen haben als auf andere. Wie beim Output Layer auch wird diese Summe noch mit $\sig'(\netin)$ multipliziert, um die Aktivierung durch bestimmte Muster angesprochener Neuronen noch weiter zu erhöhen und weniger/kaum angesprochener Neuronen zu senken, sodass die Ergebnisse besser und eindeutiger werden. Die Formel:
+	Mit dieser Formel wird berechnet, welche Aktivierung das Neuron haben sollte, was an $a_i(\textrm{soll}) - a_i(\textrm{ist}))$ erkennbar ist. Die Aktivierungsfunktion mit dem Netz Input wird als Faktor mit einberechnet, da möglichst nur die Gewichte stark verändert werden sollen, die bei dem Trainingsdatensatz eine hohe Aktivierung haben, also durch diese Inputs besonders angesprochen werden. So werden zum Beispiel beim Sortieren nur die Neuronen miteinander verknüpft, die für ein bestimmtes Muster verantwortlich sind.
+	
+	Für die Neuronen der Hidden Layers muss man alle $\delta$'s des nächsten Layers mit den von dem Neuron dorthin führenden Weights multiplizieren und dann summieren. Dadurch werden die Änderungen, die die Aktivierungen dieser Neuronen brauchen ($\delta$), zusammengerechnet, da natürlich die Aktivierungen im nächsten Layer unterschiedliche Änderungen in dem gleichen Neuron benötigen.
+	
+	Durch die Multiplikation mit den dahin führenden Weights werden diese Änderungen gewichtet, da sie auf einige Neuronen größere Auswirkungen haben als auf andere. Wie beim Output Layer auch wird diese Summe noch mit $\sig'(\netin)$ multipliziert, um die Aktivierung durch bestimmte Muster angesprochener Neuronen noch weiter zu erhöhen und weniger/kaum angesprochener Neuronen zu senken, sodass die Ergebnisse besser und eindeutiger werden. Die Formel hiefür lautet:
 
 	{\Large \[\sig'({\netin}_i) * \sum_{L}{\left(\delta_L\ast W_{Li}\right)}\]}
 		
@@ -353,47 +377,67 @@
 
 	Zuerst haben wir versucht, eine KI zu trainieren, welche erkennen kann, ob eine Person gerade geblinzelt hat oder nicht. Diese könnte man zum Beispiel nutzen, indem man einen Roboter immer dann nach vorne fahren lässt, wenn eine Versuchsperson blinzelt.
 
-	Wir haben uns für ein neuronales Netzwerk entschieden, welches als Input eine Sekunde an EEG-Daten nimmt, da sich die Auswirkungen von Blinzeln ungefähr für diesen Zeitraum in den EEG-Daten abbilden. 
+	Wir haben uns für ein neuronales Netzwerk entschieden, welches als Input eine Sekunde an EEG-Daten nimmt, da sich die Auswirkungen von Blinzeln ungefähr für diesen Zeitraum in den EEG-Daten abbilden. Bei diesem Versuch haben wir keien Fourier Transformation benutzt.
 
 	Als Outputs haben wir uns für zwei Neuronen entschieden. Dabei stehen die Werte jeweils für die Sicherheit des Netzwerkes, dass geblinzelt oder nicht geblinzelt wurde.
 
-	Unsere Trainingsdaten bestehen dann aus 200 dieser Datensätzen, 100 davon mit Blinzeln und 100 ohne. Unser Netzwerk haben wir aber nur mit 90\% dieser Datensätze (180) trainiert, damit wir mit den restlichen 20 kontrollieren konnten, ob das Netzwerk auch  unbekannte Daten richtig verarbeiten kann.
+	Unsere Trainingsdaten bestehen dann aus 200 dieser Datensätzen, 100 davon mit Blinzeln und 100 ohne. Unser Netzwerk haben wir aber nur mit 90\% dieser Datensätze (180) trainiert, damit wir mit den restlichen 20 kontrollieren konnten, ob das Netzwerk auch unbekannte Daten richtig verarbeiten kann.
 
 	Für den Aufbau der Hidden Layer des Netzwerkes haben wir uns entschieden, da wir mehrere verschiedene Ansätze ausprobiert haben und diese Struktur konsistent die besten Ergebnisse geliefert hat.
 
-	\begin{figure}[h]
+	\begin{figure}[h!]
 		\includegraphics[width=\textwidth]{pictures/netzwerk-struktur.png}
 		\caption{Struktur unseres Neuronalen Netzwerks}
 	\end{figure}
 
-	Bei dem Versuch mit Frequenzfiltern durch FFT (selbe Struktur, jedoch mit 50 Inputs, da wir auf 1 bis 50 Herz beschränkt haben) erhielten wir sehr schlechte Ergebnisse, es war kein deutlicher Unterschied zum Zufall erkennbar.
+	Das Ergebnis war positiv:
 
-	Plot der Cost- \& Accuracy-Entwicklung!
-
-	Ohne FFT nur mit den rohen Daten haben wir es jedoch geschafft, eine Genauigkeit von 100\% für Testdaten zu erzielen, mit denen das neuronale Netz nicht trainiert wurde.
-
-	Plot der Cost- \& Accuracy-Entwicklung!
-
-	Wir glauben, dass dafür die Methode unserer Datensammlung verantwortlich ist. Denn wir nehmen die EEG-Daten von Blinzeln direkt an der Stirn, über den Augen, auf. Da das Auge ein Dipol ist (zwei unterschiedlich geladenen Seiten hat) und beim Blinzeln der Augapfel sich automatisch mit der negativ geladenen Vorderseite nach oben (in Richtung der Elektroden) dreht, entsteht so ein direkter elektrischer Ausschlag – jedoch ohne eine bestimmte Frequenz.
-	
-	Die Frequenzen haben also keinen direkten Zusammenhang mit dem Blinzeln. Deshalb kann unser neuronales Netzwerk kein Blinzeln erkennen, wenn es nur die Stärke der Frequenzen als Inputs erhält.
-
-	\begin{figure}[h]
-		\includegraphics{pictures/blinzeln_ekp_beispiel_pyplot_annotated.png}
-		\caption{Ausschnitt eines EEGs mit Blinzeln}
+	\begin{figure}[h!]
+		\includegraphics[width=\textwidth]{pictures/training-nofft.png}
+		\caption{Der Cost- und Genauigkeitsverlauf der Test- und Trainingsdaten beim Trainieren des Netwerkes ohne FFT}
+		\label{training-nofft}
 	\end{figure}
+
+	Wie man an Abbildung \ref{training-nofft} sehen kann, erreichte das Neuronale Netzwerk in diesem Fall in nur 1000 Epochen (ca. 5 Minuten Rechenzeit) eine Genauigkeit von 95\%, bei anderen Durchläufen erhielten wir auch 100\%.
+
+	Bei dem Versuch mit Frequenzfiltern durch FFT (jedoch mit 100 Inputs, da die Fast Fourier Transformation bei einer zeitlichen Auflösung von 200 Herz nur 1 - 100 Herz berechnen kann) erhielten wir bei der gleichen Zahl an Wiederholungen (\enquote{Epochen}) ähnliche Ergebnisse (s. Abbildung \ref{training-fft}).
+
+	\begin{figure}[h!]
+		\includegraphics[width=0.9\textwidth]{pictures/training-fft2.png}
+		\caption{Der Cost- und Genauigkeitsverlauf der Test- und Trainingsdaten beim Trainieren des Netwerkes mit FFT}
+		\label{training-fft}
+	\end{figure}
+
+	Dies heißt, dass FFT auf jeden Fall die Ergebnisse nicht verschlechtert. Jedoch lässt sich auch nicht genau sagen, inwiefern sie besser als keine ist, wenn überhaupt. Denn die kleinen Unterschiede, die man oft sieht, wie hier auch, stammen meist davon, dass jedes Neuronale Netzwerk zufällig initialisiert wird und somit, selbst mit dem ansonsten identischen Verfahren, einen leichten Unterschied in den Ergebnissen zeigen wird.
+
+	Es gab aber noch ein größeres Problem: Die Testdaten konten sicher erkannt werden, aber als wir es mit weiteren Daten in einem Live-Test versuchten, hat das Netzwerk meist komplett versagt.
+
 
 	\section{Diskussion}
 
-	Das Problem mit der Anwendung von FFT wollen wir lösen, indem wir die Elektroden an einer anderen Stelle am Schädel platzieren, wahrscheinlich am Okzipitalen Kortex, da dort Alpha-Wellen (Wellen im Bereich von 7 – 13 Herz) am stärksten ausgeprägt sind und unser EEG diese am zuverlässigsten messen kann.
+	Ein großes Problem, welches wir lösen wollen, ist die oben genannte Tatsache, dass das Neuronale Netzwerk für neue Daten fast nutzlos ist. Wir haben bereits einige Ideen, wie wir dies verbessern können:
 
-	Als wir das trainierte Neuronale Netzwerk für Blinzeln mit Daten testeten, die unter anderen Umständen entstanden (anderer Raum, andere Person, etc.), sank die Zuverlässigkeit der Ergebnisse drastisch, auch wenn sie besser als zufällig war.
+	Wir glauben, dass hauptsächlich die fehlende Diversität der Daten verantwortlich ist. Denn alle Trainings- und Testdaten wurden im selben Raum, am selben Tag, von der selben Person aufgenommen. Somit lernt das Neuronale Netzwerk nicht, zwischen tatsächlichen Unterschieden in den Daten und unwichtigen Unterschieden, die z.B. durch andere Hintergrundstrahlung oder Person verursacht werden, zu differenzieren.
 
-	Grund dafür ist vermutlich, dass das Netzwerk nur mit Daten trainiert / getestet wurde, die alle kurz nacheinander von der gleichen Person unter gleichen Umständen aufgenommen wurden. 
+	Um dieses Problem zu lösen, wollen wir also versuchen, mehr Trainingsdaten zu sammeln, die unter verschiedenen Bedingungen aufgenommen wurden, um unser Ziel der allgemeinen Nutzbarkeit erfüllen zu können. Dafür haben sich bereits Freunde freiwillig erklärt. 
 
-	Um dieses Problem zu lösen, wollen wir also versuchen, mehr Trainingsdaten zu sammeln, die unter verschiedenen Bedingungen aufgenommen wurden, um unser Ziel der allgemeinen Nutzbarkeit erfüllen zu können. Außerdem könnte eine Verbesserung der Signalqualität des EEG ebenfalls zur besseren Konsistenz der Daten beitragen. Umgesetzt könnte dies werden durch z.B. die Verwendung eines Elektrodengels, bessere Platzierung der Elektroden und ein besseres Filtern von Rauschen in den Daten.
+	Außerdem vermuten wir auch Probleme mit der Platzierung der Elektroden. Denn wir nehmen die EEG-Daten von Blinzeln direkt an der Stirn, über den Augen, auf. Da das Auge ein Dipol ist (zwei unterschiedlich geladene Seiten hat) und beim Blinzeln der Augapfel sich automatisch mit der negativ geladenen Vorderseite nach oben (in Richtung der Elektroden) dreht, könnte so ein direkter elektrischer Ausschlag entstehen -- ohne eine bestimmte Frequenz. Wir denken, dies könnte andere Signale, die vom Gehirn kommen, etwas \enquote{übertönen}.
 
-	Zudem wollen wir in Zukunft versuchen, mithilfe unseres Neuronalen Netzes bereits bei allen Menschen vorhandene, selbstkontrollierbare Gehirnaktivität zu finden und sicher zu erkennen, jedoch ohne vorherige Konditionierung. Solche Gehirnaktivität könnte z.B. der allgemeine Gedanke an \enquote{Rechts} sein, was womöglich mit erhöhter Aktivität auf der linken Hirnhälfte in Verbindung stehen könnte. 
+	Darum wollen wir die Elektroden eher im Bereich des Okzipitalen Kortexes platzieren. Dort sollte es optimal sein, denn dort sind außerdem die Alpha-Wellen des Gehirn besonders stark ausgeprägt, und wie Abbildung \ref{EEG-FFT} gezeigt hat, ist vor allem dieser niedrige Frequenzbereich von Bedeutung.
+
+	%Eine weiteredass ein weiteres Problem die hohen Zahlen sein könnten, denn aufgrund der Sigmoidfunktion \enquote{lernt} das Netzwerk, sie mit den Weights zwischen Input und erstem Layer runterzuskalieren, da das Netzwerk sonst im zweiten Layer überall 1 als Aktivierung haben würde, wie man aus Abbildung \ref{sig_func} erschließen kann.
+
+	%Jedoch haben Computer oft Probleme damit, sehr kleine Zahlen präzise abzuspeichern und zu verarbeiten, was zu Ungenauigkeiten geführt haben könnte.
+
+	%Wir wollen das Problem mit der Anwendung von FFT möglichst schnell lösen, indem wir den Hauptcode unserem funktionierenden FFT-Code angleichen und weitere Aktivierungsfunktionen recherchieren, oder aber die Werte (wenn sich 10000 durch weiteres Testen als bestehender Faktor zeigt) einfach mit 10000 dividieren.
+
+	%Außerdem gilt das Problem mit der Polarisierung des Auges immer noch. Dies wollen wir lösen, indem  wir die Elektroden an einer anderen Stelle am Schädel platzieren, wahrscheinlich am Okzipitalen Kortex, da dort Alpha-Wellen (Wellen im Bereich von 7 – 13 Herz) am stärksten ausgeprägt sind und unser EEG diese am zuverlässigsten messen kann.
+
+%	Ein weiteres Problem, ergab sich, als wir das trainierte Neuronale Netzwerk für Blinzeln mit Daten testeten, die unter anderen Umständen entstanden waren (anderer Raum, andere Person, etc.). Denn dann sank die Zuverlässigkeit der Ergebnisse drastisch, auch wenn sie leicht besser als zufällig war.
+
+	Sobald wir komplett neue Daten sicher erkennen können, wollen wir das Programm mit Blinzeln direkt den Roboter steuern lassen.
+
+	Zudem wollen wir in Zukunft versuchen, mithilfe unseres Neuronalen Netzes bereits bei allen Menschen vorhandene, selbstkontrollierbare Gehirnaktivität zu finden und sicher zu erkennen, jedoch ohne vorherige Konditionierung. Solche Gehirnaktivität könnte z.B. der allgemeine Gedanke an \enquote{Rechts} sein, was womöglich mit erhöhter Aktivität auf der linken Hirnhälfte in Verbindung stehen könnte.
 
 	\section{Danksagung}
 
@@ -407,7 +451,7 @@
 
 	Danke an Ino Saathoff, der für uns die Hülle der EEG-Platine mit seinem 3D-Drucker erstellt hat.
 
-	Danke an Ino und Oliver Samkovskij, die zusammen mit uns den Roboter gebaut haben.
+	Danke an Oliver Samkovskij und Ino, die zusammen mit uns den Roboter gebaut haben.
 
 	\section{Quellen \& Referenzen}
 

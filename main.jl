@@ -56,7 +56,7 @@ function get_eeg_data(path, data_x, data_y, endings, output)
 
         sample_data_x = reshape(sample_data_x, (:, 1))
         #sample_data_x[800] = endings[1][sample_number]
-        #sample_data_x = [make_fft(sample_data_x[1:200])..., make_fft(sample_data_x[201:400])..., make_fft(sample_data_x[401:600])..., make_fft(sample_data_x[601:800])...]
+        sample_data_x = [make_fft(sample_data_x[1:200])..., make_fft(sample_data_x[201:400])...]
         data_x = [data_x sample_data_x]
         sample_number += 1
     end
@@ -68,10 +68,10 @@ function get_eeg_data(path, data_x, data_y, endings, output)
     return data_x, data_y
 end
 
-function get_loader(train_portion = 0.9, blink_path = "Blink/", no_blink_path = "NoBlink/")
+function get_loader(train_portion = 0.9, blink_path = "Blink/first_samples-before_01-15-2022/", no_blink_path = "NoBlink/first_samples-before_01-15-2022/")
     # Load corrupted endings, see recover_data.jl for more info
     endings = Recover.get_endings()
-    inputs_all_channels = 400
+    inputs_all_channels = 200 #400
     outputs = 2
     data_x = Array{Float64}(undef, inputs_all_channels, 0)
     data_y = Array{Float64}(undef, outputs, 0)
@@ -154,7 +154,7 @@ end
 
 function build_model()
     # Amount of inputs for all channels
-    inputs = 400
+    inputs = 200 #400
     return Chain(
         Dense(inputs, round(Int, inputs / 2), σ),
         Dense(round(Int, inputs / 2), round(Int, inputs / 2), σ),
@@ -176,21 +176,34 @@ function prepare_cuda()
     return device
 end
 
-function plot_loss(epoch, frequency, test_data, model, device, train_data)
+function plot_loss(epoch, frequency, test_data, model, device, train_data; label=false)
     if mod(epoch, frequency) == 0
+        if label
+            test_loss_l = "Testdaten Cost"
+            test_acc_l = "Testdaten Genauigkeit"
+            train_loss_l = "Trainingsdaten Cost"
+            train_acc_l = "Trainingsdaten Genauigkeit"
+        else
+            test_loss_l = ""
+            test_acc_l = ""
+            train_loss_l = ""
+            train_acc_l = ""
+        end
+    
         test_loss, test_acc = loss_and_accuracy(test_data, model, device)
         train_loss, train_acc = loss_and_accuracy(train_data, model, device)
     
         push!(test_losses, test_loss)
         push!(train_losses, train_loss)
-        push!(test_accs, test_acc)
-        push!(train_accs, train_acc)
+        push!(test_accs, test_acc * 100)
+        push!(train_accs, train_acc * 100)
     
-        clf()
-        plot(test_losses, color="blue")
-        plot(test_accs, color="blue", linestyle="dashed")
-        plot(train_losses, color="red")
-        plot(train_accs, color="red", linestyle="dashed")
+        #clf()
+        ax1.plot(test_losses, color = "red", label=test_loss_l)
+        ax1.plot(train_losses, color = "red", linestyle = "dashed", label=train_loss_l)
+
+        ax2.plot(test_accs, color = "blue", label=test_acc_l)
+        ax2.plot(train_accs, color = "blue", linestyle = "dashed", label=train_acc_l)
     
         println("$(epoch) Epochen von $(hyper_parameters.training_steps): Loss ist $test_loss, Accuracy ist $test_acc.")
     end
@@ -200,8 +213,11 @@ function new_network(test_data, train_data, model, device)
     @info "Creating new network"
     test_loss, test_acc = loss_and_accuracy(test_data, model |> device, device)
     train_loss, train_acc = loss_and_accuracy(train_data, model |> device, device)
+
     push!(test_losses, cpu(test_loss))
     push!(train_losses, cpu(train_loss))
+    push!(test_accs, cpu(test_acc) * 100)
+    push!(train_accs, cpu(train_acc) * 100)
 end
 
 function old_network()
@@ -213,10 +229,19 @@ function old_network()
 end
 
 function train(new = false)
-    figure("Blinzeln Trainieren")
+    global fig, ax1 = subplots()
     xlabel("Epochen in 100er Schritten")
-    ylabel("")
 
+    ylabel("Cost", color = "red")
+    ax1.tick_params(axis = "y", color = "red", labelcolor = "red")
+
+    global ax2 = twinx() # autoscalex_on=false
+    ax2.set_ylim(ymin = 0, ymax = 100, auto=false)
+
+    ylabel("Genauigkeit in %", color = "blue")
+    ax2.tick_params(axis = "y", color = "blue", labelcolor = "blue")
+
+    fig.tight_layout()
     device = prepare_cuda()
     # Load the training data and create the model structure with randomized weights
     train_data, test_data = get_loader()
@@ -241,11 +266,15 @@ function train(new = false)
     opt = Descent(hyper_parameters.learning_rate)
 
     test_loss, test_acc = loss_and_accuracy(test_data, model, device)
+    train_loss, train_acc = loss_and_accuracy(train_data, model, device)
 
     @info "Training"
     println("0 Epochen von $(hyper_parameters.training_steps): Loss ist $test_loss, Accuracy ist $test_acc.")
 
-    plot(test_losses, "b")
+    #plot(test_losses, "b")
+
+    println(test_losses)
+    println(test_accs)
 
     for epoch = 1:hyper_parameters.training_steps
         for (x, y) in train_data
@@ -265,6 +294,12 @@ function train(new = false)
     save_weights(model, "model.bson", test_losses, train_losses)
     @info "Weights saved at \"model.bson\""
     println(confusion_matrix(test_data, model))
+
+    plot_loss(100, 100, test_data, model, device, train_data, label = true)
+
+    #fig.legend(loc = "center right")
+    fig.tight_layout()
+    #ax2.legend()
 end
 
 function test(model)

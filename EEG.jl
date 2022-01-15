@@ -57,6 +57,8 @@ function main(board_shim)
 end
 
 
+#=
+
 BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
 # params = BrainFlowInputParams() # Synthetic board
 #= params = BrainFlowInputParams(
@@ -73,6 +75,7 @@ BrainFlow.start_stream(board_shim)
 println(get_some_board_data(board_shim, 200))
 main(board_shim)
 BrainFlow.release_session(board_shim)
+=#
 
 #=
 println("Blinks:")
