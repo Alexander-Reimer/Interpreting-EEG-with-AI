@@ -48,19 +48,26 @@ end
 function get_eeg_data(path, data_x, data_y, endings, output)
     sample_number = 1
     while isfile(path * string(sample_number) * ".csv")
-        sample_data_x = BrainFlow.read_file(path * string(sample_number) * ".csv")[:, 1:2]
-
+        # Read recorded EEG data
+        sample_data_x = BrainFlow.read_file(path * string(sample_number) * ".csv")
+        # Remove 3rd and 4th channel as they are a lot worse than 1st and 2nd and aren't necessary
+        sample_data_x = sample_data_x[:, 1:2]
+        # Filter 50 Hz frequencies to remove environmental noise
         for i = 1:size(sample_data_x)[2]
             BrainFlow.remove_environmental_noise(view(sample_data_x, :, i), 200, BrainFlow.FIFTY)
         end
 
         sample_data_x = reshape(sample_data_x, (:, 1))
         #sample_data_x[800] = endings[1][sample_number]
+
+        # Perform FFT on data, once per channel
         sample_data_x = [make_fft(sample_data_x[1:200])..., make_fft(sample_data_x[201:400])...]
+        # Append to existing data
         data_x = [data_x sample_data_x]
         sample_number += 1
     end
 
+    # Append given "output" to data_y ([1.0, 0.0] for Blink and [0.0, 1.0] for NoBlink)
     for i = 1:sample_number-1
         data_y = [data_y output]
     end
@@ -70,9 +77,11 @@ end
 
 function get_loader(train_portion = 0.9, blink_path = "Blink/first_samples-before_01-15-2022/", no_blink_path = "NoBlink/first_samples-before_01-15-2022/")
     # Load corrupted endings, see recover_data.jl for more info
-    endings = Recover.get_endings()
-    inputs_all_channels = 200 #400
-    outputs = 2
+    # Not used right now as the 3. and 4. channel data isn't used at the moment
+    #endings = Recover.get_endings()
+
+    inputs_all_channels = 100 * 2 # FFT --> 100 per channel, only 1. & 2. channel
+    outputs = 2 # amount of output neurons
     data_x = Array{Float64}(undef, inputs_all_channels, 0)
     data_y = Array{Float64}(undef, outputs, 0)
 
@@ -80,11 +89,9 @@ function get_loader(train_portion = 0.9, blink_path = "Blink/first_samples-befor
 
     data_x, data_y = get_eeg_data(no_blink_path, data_x, data_y, endings, [0.0, 1.0])
 
-    total_amount = round(Int, size(data_x)[2] / 2)
-    amount_train = round(Int, total_amount * train_portion)
-
     # total amount of samples
     l = size(data_x)[2]
+
     # multiplying with train portion and dividing by two because it is used twice (one for test data, one for train data)
     l_train = round(Int, l * train_portion / 2)
 
@@ -126,6 +133,7 @@ function loss_and_accuracy(data_loader, model, device)
 end
 
 function confusion_matrix(data_loader, model)
+    # Create a confusion matrix for 
     blink_count = 0
     blink_acc = 0
     no_blink_count = 0
