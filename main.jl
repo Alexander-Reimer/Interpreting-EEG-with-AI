@@ -78,7 +78,7 @@ end
 function get_loader(train_portion = 0.9, blink_path = "Blink/first_samples-before_01-15-2022/", no_blink_path = "NoBlink/first_samples-before_01-15-2022/")
     # Load corrupted endings, see recover_data.jl for more info
     # Not used right now as the 3. and 4. channel data isn't used at the moment
-    #endings = Recover.get_endings()
+    endings = Recover.get_endings()
 
     inputs_all_channels = 100 * 2 # FFT --> 100 per channel, only 1. & 2. channel
     outputs = 2 # amount of output neurons
@@ -252,7 +252,7 @@ function train(new = false)
     fig.tight_layout()
     device = prepare_cuda()
     # Load the training data and create the model structure with randomized weights
-    train_data, test_data = get_loader()
+    train_data, test_data = get_loader(0.9, "Blink/01-26-2022/", "NoBlink/01-26-2022/")
     model = build_model()
     global test_losses = Float64[]
     global train_losses = Float64[]
@@ -314,7 +314,7 @@ function test(model)
     counter = 200
     BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
     params = BrainFlowInputParams(
-        serial_port = "/dev/cu.usbmodem11"
+        serial_port = "COM3"
     )
     board_shim = BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
     samples = []
@@ -324,16 +324,24 @@ function test(model)
     sleep(1)
     println("Starting!")
     println("")
+    blink_vals = []
+    no_blink_vals = []
     for i = 1:100
-        counter-= 20
+        counter -= 20
         sample = EEG.get_some_board_data(board_shim, 200)
         clf()
-        plot(sample)
+        #plot(sample)
         sample = reshape(sample, (:, 1))
-        #sample = [make_fft(sample[1:200])..., make_fft(sample[201:400])..., make_fft(sample[401:600])..., make_fft(sample[601:800])...]
+        sample = [make_fft(sample[1:200])..., make_fft(sample[201:400])...]
         y = model(sample)
         println(y[1], "    ", y[2])
-        if y[1]>y[2] + 0.2
+        push!(blink_vals, y[1])
+        push!(no_blink_vals, y[2])
+    
+        #clf()
+        plot(blink_vals, "green")
+        plot(no_blink_vals, "red")
+        if y[1] > y[2] + 0.2
             counter += 100
             #println("hgizugz")
         end
@@ -361,11 +369,11 @@ global hyper_parameters = Args(0.001, 2, 1000, true, 7, 13)
 #train(true)
 
 
-#device = prepare_cuda()
-#model = build_model()
-#parameters = old_network()
-#Flux.loadparams!(model, parameters)
-#test(model)
+device = prepare_cuda()
+model = build_model()
+parameters = old_network()
+Flux.loadparams!(model, parameters)
+test(model)
 
 
 #=
