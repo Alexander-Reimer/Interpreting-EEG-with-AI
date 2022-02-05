@@ -173,7 +173,7 @@ end
 
 function prepare_cuda()
     # Enable CUDA on GPU if functional
-    if CUDA.functional()
+    if CUDA.functional() && 3 == 1+1
         @info "Training on CUDA GPU"
         CUDA.allowscalar(false)
         device = gpu
@@ -244,7 +244,7 @@ function train(new = false)
     ax1.tick_params(axis = "y", color = "red", labelcolor = "red")
 
     global ax2 = twinx() # autoscalex_on=false
-    ax2.set_ylim(ymin = 0, ymax = 100, auto=false)
+    ax2.set_ylim(ymin = 0, ymax = 100, auto = false)
 
     ylabel("Genauigkeit in %", color = "blue")
     ax2.tick_params(axis = "y", color = "blue", labelcolor = "blue")
@@ -252,7 +252,8 @@ function train(new = false)
     fig.tight_layout()
     device = prepare_cuda()
     # Load the training data and create the model structure with randomized weights
-    train_data, test_data = get_loader(0.9, "Blink/01-26-2022/", "NoBlink/01-26-2022/")
+    #train_data, test_data = get_loader(0.9, "Blink/01-26-2022/", "NoBlink/01-26-2022/")
+    train_data, test_data = get_loader(0.9, "Blink/first_samples-before_01-15-2022/", "NoBlink/first_samples-before_01-15-2022/")
     model = build_model()
     global test_losses = Float64[]
     global train_losses = Float64[]
@@ -334,7 +335,7 @@ function test(model)
         sample = reshape(sample, (:, 1))
         sample = [make_fft(sample[1:200])..., make_fft(sample[201:400])...]
         y = model(sample)
-        println(y[1], "    ", y[2])
+        println(y[1], "    ", y[2], "       ", y[1] + y[2])
         push!(blink_vals, y[1])
         push!(no_blink_vals, y[2])
     
@@ -369,13 +370,13 @@ global hyper_parameters = Args(0.001, 2, 1000, true, 7, 13)
 #train(true)
 
 
-#=
+
 device = prepare_cuda()
 model = build_model()
 parameters = old_network()
 Flux.loadparams!(model, parameters)
 test(model)
-=#
+
 
 #=
 model = build_model()
