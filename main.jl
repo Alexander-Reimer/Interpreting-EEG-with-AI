@@ -369,12 +369,13 @@ global hyper_parameters = Args(0.001, 2, 1000, true, 7, 13)
 #train(true)
 
 
+#=
 device = prepare_cuda()
 model = build_model()
 parameters = old_network()
 Flux.loadparams!(model, parameters)
 test(model)
-
+=#
 
 #=
 model = build_model()
