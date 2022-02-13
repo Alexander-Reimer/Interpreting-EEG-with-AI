@@ -2,6 +2,17 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 
+% Für Seitenränder
+\usepackage{geometry}
+%\geometry{
+%	top=2.5cm,
+%	left=2.5cm,
+%	right=2.5cm,
+%	bottom=2cm,
+%	includefoot
+%	footskip=0.25cm
+%}
+
 % Für schöneren Blocksatz
 \usepackage{microtype}
 
@@ -50,11 +61,11 @@
 
 
 \usepackage{fancyhdr}
-\fancyhf{}
 \pagestyle{fancy}
+
+\fancyhf{}
 \fancyhead[R]{JUGEND FORSCHT -- PROJEKTBERICHT}
 \fancyfoot[C]{\thepage}
-
 
 % Für Seitenränder
 % \usepackage{geometry}
@@ -71,6 +82,10 @@
 \affil[]{\textbf{\LARGE Gymnasium Eversten Oldenburg} \\ \vspace{10mm} \textbf{\Large Betreuer: Herr Dr. Glade \& Herr Husemeyer}}
 
 \begin{document}
+
+	%\setlength{\footskip}{100pt}
+
+	%\renewcommand{\footruleskip}{3cm}
 
 	\newcommand{\sig}{\textrm{sig}}
 	\newcommand{\netin}{\textrm{netzinput}}
@@ -102,7 +117,7 @@
 	Wir haben es geschafft eine KI zu programmieren, die in der Lage ist, anhand der EEG-Daten richtig zu erkennen, ob eine bestimmte Testperson gerade geblinzelt hat oder nicht. Die korrekte Klassifizierung der Daten ist jedoch nur möglich, wenn die Test- und Trainingsdaten unter den exakt gleichen Voraussetzungen aufgenommen wurden (das heißt gleiche Person, gleiche Umgebung, etc.). Diese Problematik könnten wir wahrscheinlich durch das Sammeln von mehr und verschiedenen Daten, sowie das Umpositionieren der Elektroden lösen. Leider hatten wir dafür aber noch nicht genug Zeit gehabt.	
 
 	\section{Einleitung}
- 
+
 	Ziel des Projektes ist es, zuerst ein BCI -- Brain-Computer-Interface -- zu entwickeln, welches verschiedene EKPs erkennen kann. Dieses wollen wir dann testen, indem wir es zur Steuerung eines Roboters nutzen.
 
 	Die Idee eines BCI ist nicht neu, sondern wird intensiv erforscht. Aufgrund bereits durchgeführter Experimente ist bekannt, dass BCIs umsetzbar sind. \cite{BCIChaudhary}
@@ -462,6 +477,8 @@
 
 	Zudem wollen wir in Zukunft versuchen, mithilfe unseres neuronalen Netzes bereits bei allen Menschen vorhandene, selbst kontrollierbare Gehirnaktivität zu finden und sicher zu erkennen, jedoch ohne vorherige Konditionierung. Solche Gehirnaktivität könnte z.B. der allgemeine Gedanke an \enquote{Rechts} sein, was womöglich mit erhöhter Aktivität auf der linken Hirnhälfte in Verbindung stehen könnte.
 
+	\newpage
+	
 	\section{Danksagung}
 
 	\subsection{Finanzierung} \label{Foerderverein}
