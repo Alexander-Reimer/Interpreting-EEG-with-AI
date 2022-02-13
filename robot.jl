@@ -1,7 +1,9 @@
+include("main.jl")
+using BrainFlow
+
 ev3dev_path = "../ev3dev.jl/ev3dev.jl"
 include(ev3dev_path)
 setup("Z:/Programming/EEG/mount/sys/class/")
-include("main.jl")
 
 #left_middle = Motor(:outC)
 #right_middle = Motor(:outA)
@@ -16,31 +18,40 @@ end
 
 drive(robot, 0)
 
-function test2(model)
-    AI.BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
-    params = AI.BrainFlowInputParams(
+function test2(modelo)
+    
+    BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
+    params = BrainFlowInputParams(
         serial_port = "COM3"
-    )
-    board_shim = AI.BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
+        )
+        board_shim = BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
+    
+    try
+        BrainFlow.release_session(board_shim)
+    catch
+        nothing
+    end
     samples = []
     #BrainFlow.release_session(board_shim)
-    AI.BrainFlow.prepare_session(board_shim)
-    AI.BrainFlow.start_stream(board_shim)
+    BrainFlow.prepare_session(board_shim)
+    BrainFlow.start_stream(board_shim)
     sleep(1)
     println("Starting!")
     println("")
     blink_vals = []
     no_blink_vals = []
-    for i = 1:100
-        sample = AI.EEG.get_some_board_data(board_shim, 200)
+    for i = 1:200
+        sample = EEG.get_some_board_data(board_shim, 200)
+        #clf()
+        #plot(sample)
         sample = [make_fft(sample[1:200])..., make_fft(sample[201:400])...]
     
-        y = AI.model(sample)
+        y = model(sample)
     
         push!(blink_vals, y[1])
         push!(no_blink_vals, y[2])
     
-        if y[2] > y[1]# + 0.08
+        if y[1] > y[2]# + 0.08
             drive(robot, 70)
         else
             drive(robot, 0)
@@ -49,7 +60,6 @@ function test2(model)
         clf()
         plot(blink_vals, "green")
         plot(no_blink_vals, "red")
-
         #=
         sample = reshape(sample, (:, 1))
         println(y[1], "    ", y[2])
@@ -68,12 +78,15 @@ function test2(model)
         #print("\b\b\b\b\b")
         #println(counter)
     end
-    AI.BrainFlow.release_session(board_shim)
+    BrainFlow.release_session(board_shim)
+    drive(robot, 0)
 end
-#=
+
+#train(true)
+
+
 device = prepare_cuda()
 model = build_model()
 parameters = old_network()
 Flux.loadparams!(model, parameters)
 test2(model)
-=#

@@ -1,4 +1,4 @@
-module AI
+#module AI
 
 println("Loading BrainFlow...")
 # For reading the EEG training samples
@@ -252,9 +252,9 @@ function train(new = false)
     fig.tight_layout()
     device = prepare_cuda()
     # Load the training data and create the model structure with randomized weights
-    #train_data, test_data = get_loader(0.9, "Blink/01-26-2022/", "NoBlink/01-26-2022/")
-    train_data, test_data = get_loader(0.9, "Blink/first_samples-before_01-15-2022/", "NoBlink/first_samples-before_01-15-2022/")
-    model = build_model()
+    train_data, test_data = get_loader(0.9, "Blink/01-26-2022/", "NoBlink/01-26-2022/")
+    #train_data, test_data = get_loader(0.9, "Blink/first_samples-before_01-15-2022/", "NoBlink/first_samples-before_01-15-2022/")
+    global model = build_model()
     global test_losses = Float64[]
     global train_losses = Float64[]
     global test_accs = Float64[]
@@ -370,13 +370,13 @@ global hyper_parameters = Args(0.001, 2, 1000, true, 7, 13)
 #train(true)
 
 
-
+#=
 device = prepare_cuda()
 model = build_model()
 parameters = old_network()
 Flux.loadparams!(model, parameters)
-test(model)
-
+#test(model)
+=#
 
 #=
 model = build_model()
@@ -395,4 +395,4 @@ for i = 1:20
     end
 end
 =#
-end # Module
+#end # Module

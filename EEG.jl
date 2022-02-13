@@ -63,7 +63,7 @@ end
 
 
 
-
+#=
 BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
 
 # params = BrainFlowInputParams() # Synthetic board
@@ -95,5 +95,5 @@ read_data(100, "NoBlink/")
 BrainFlow.release_session(board_shim)
 =#
 #read_data(10, "Blink/")
-
+=#
 end
