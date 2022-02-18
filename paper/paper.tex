@@ -2,16 +2,21 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 
+% Standard ams packages
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+
 % Für Seitenränder
 \usepackage{geometry}
-%\geometry{
-%	top=2.5cm,
-%	left=2.5cm,
-%	right=2.5cm,
-%	bottom=2cm,
-%	includefoot
-%	footskip=0.25cm
-%}
+\geometry{
+	top=2.5cm,
+	left=2.5cm,
+	right=2.5cm,
+	bottom=2cm,
+	includefoot,
+	footskip=13.6pt
+}
 
 % Für schöneren Blocksatz
 \usepackage{microtype}
@@ -43,6 +48,9 @@
 
 % Für wrapfigure (Text um Bilder herum)
 \usepackage{wrapfig}
+
+% Für Einheiten
+\usepackage{siunitx}
 
 % Für custom captions
 \usepackage{caption}
@@ -120,11 +128,9 @@
 
 	Ziel des Projektes ist es, zuerst ein BCI -- Brain-Computer-Interface -- zu entwickeln, welches verschiedene EKPs erkennen kann. Dieses wollen wir dann testen, indem wir es zur Steuerung eines Roboters nutzen.
 
-	Die Idee eines BCI ist nicht neu, sondern wird intensiv erforscht. Aufgrund bereits durchgeführter Experimente ist bekannt, dass BCIs umsetzbar sind. \cite{BCIChaudhary}
+	Die Idee eines BCI ist nicht neu, sondern wird intensiv erforscht. Aufgrund bereits durchgeführter Experimente ist bekannt, dass BCIs umsetzbar sind \cite{BCIChaudhary}.
 	
-	Wir hoffen, neben dem Erlangen von Erfahrung in diesem interessanten Bereich auch selbst dazu beizutragen. Dies wollen wir erreichen durch das Entwickeln einer allgemeinen Anwendung, bei der kein vorheriges Trainieren für eine fremde Person benötigt wird, das Umsetzen mit günstiger, für viele bezahlbarer Hardware, sowie ein performantes Programm, welches leicht für die eigenen Zwecke anpassbar ist.
-
-	\newpage
+	Wir hoffen, neben dem Erlangen von Erfahrung in diesem interessanten Bereich auch selbst dazu beizutragen. Dies wollen wir erreichen durch das Entwickeln einer allgemeinen Anwendung, bei der kein vorheriges Trainieren für eine fremde Person benötigt wird, das Umsetzen mit günstiger, für viele bezahlbare Hardware, sowie ein performantes Programm, welches leicht für die eigenen Zwecke anpassbar ist.
 
 	\section{Methode und Vorgehensweise}
 
@@ -147,9 +153,15 @@
 			\item Raspberry Pi 3B 8\,GB
 			\item 2x EV3 großer Motor
 			\item SD-Karte (8\,GB)
-			\item Diverse LEGO Teile
+			\item diverse LEGO Teile
 		\end{itemize}
 
+		\item Computer: Aorus 15P
+		\begin{itemize}
+			\item CPU: i7-11800H
+			\item GPU: RTX 3060
+			\item RAM: 16\,GB
+		\end{itemize}
 		\item Software
 		\begin{itemize}
 			\item Flux.jl für das neuronale Netz
@@ -209,7 +221,13 @@
 
 	Wir untersuchen dabei ereigniskorrelierte Potentiale (EKPs). Dies sind bestimmte Spannungsschwankungen (\enquote{Potentiale}), welche in Zusammenhang mit einem beobachtbaren Ereignis stehen, wie z.B. Blinzeln oder Armbewegungen. \cite{Birbaumer2010} \cite{Praktikum}
 
-	Dabei haben wir uns für das Blinzeln entschieden, da wir es im Graphen zumindest mit bloßen Augen deutlich besser erkennen konnten als Armbewegungen.
+	Dabei haben wir uns für das Blinzeln entschieden, da wir es im Graphen zumindest mit bloßen Augen deutlich besser erkennen konnten als Armbewegungen (s. Abbildung \ref{EEG-Blinzeln}).
+
+	\begin{figure}[h]
+		\includegraphics{pictures/blinzeln_ekp_beispiel_pyplot_annotated.png}
+		\caption{Ausschnitt eines EEG mit Blinzeln}
+		\label{EEG-Blinzeln}
+	\end{figure}
 
 	Für unser Projekt nutzen wir zwar die Ausrüstung für EEG, aber genau genommen wird das Blinzeln mithilfe von Elektromyographie (EMG) erkannt, denn aufgrund der Platzierung der zwei verwendeten Elektroden direkt über den Augen werden nicht die Spannungsdifferenzen des Gehirns gemessen, sondern die für das Blinzeln verantwortlichen Augenmuskeln \cite{wiki:EMG}.
 
@@ -217,18 +235,13 @@
 
 	%Da wir nun wissen, dass diese Komponenten im Kern funktionieren, wollen wir die Elektroden am Hinterkopf, genauer dem Okzipitale Kortex, platzieren, sodass wir tatsächlich die Potentiale des Gehirns messen und somit unser Ziel der Deutung eines Elektroenzephalogramms erreichen können.
 
-	Weiter ist es möglich, nur durch Gedanken eine Steuerung auszuführen. Dies funktioniert jedoch meist durch instrumentelle oder klassische Konditionierung, also durch das Bestrafen und Belohnen auf Basis der Messungen des EEG. So kann das Gehirn darauf trainiert werden, auf Verlangen eine bestimmte, vorher festgelegte Aktivität auszulösen (), die dann gemessen und ausgewertet werden kann. \cite{BCIChaudhary}
+	Weiter ist es möglich, nur durch Gedanken eine Steuerung auszuführen. Dies funktioniert jedoch meist durch instrumentelle oder klassische Konditionierung, also durch das Bestrafen und Belohnen auf Basis der Messungen des EEG. So kann das Gehirn darauf trainiert werden, auf Verlangen eine bestimmte, vorher festgelegte Aktivität auszulösen, die dann gemessen und ausgewertet werden kann. \cite{BCIChaudhary}
 
 	Darauf wollen wir erstmal verzichten, da die Konditionierung Zeit benötigen und nicht unser Ziel einer allgemeinen Anwendbarkeit erfüllen würde.
-	
-	\begin{figure}[h]
-		\includegraphics{pictures/blinzeln_ekp_beispiel_pyplot_annotated.png}
-		\caption{Ausschnitt eines EEG mit Blinzeln}
-		\label{EEG-Blinzeln}
-	\end{figure}
 
-	Insgesamt haben wir zwei Earclips, die an den Ohren befestigt werden und zum Filtern von Störungen dienen, und vier Messelektroden, mit einer zeitlichen Auflösung von jeweils 200 Hertz (200 Messungen pro Sekunde). 
-	Zwei dieser Elektroden haben wir auf der Stirn platziert, zwei jeweils links und rechts auf dem Schädel, etwas über dem Ohr, da dies die Standard-Aufstellung in der Dokumentation ist (s. Abbildung \ref{10-20-System}) \cite{OpenBCI}. Wir planen, sie basierend auf unseren Ergebnissen wo nötig anzupassen. %!!!
+	Insgesamt haben wir zwei Earclips, die an den Ohren befestigt werden und zum Filtern von Störungen dienen, und vier Messelektroden, mit einer zeitlichen Auflösung von jeweils 200 Hertz (200 Messungen pro Sekunde).
+
+	Zwei dieser Elektroden haben wir auf der Stirn platziert (links: Elektrode 1, rechts: Elektrode 2), zwei jeweils links (Elektrode 3) und rechts (Elektrode 4) auf dem Schädel, etwas über und vor dem Ohr (s. Abbildung \ref{10-20-System}). Wir haben uns für diese Platzierung entschieden, da die Elektroden so direkt über Muskeln sitzen, die beim Blinzeln bewegt werden. %!!!
 
 	\begin{figure}[h!]
 		\centering
@@ -237,33 +250,53 @@
 		\label{10-20-System}
 	\end{figure}
 
-	\newpage
+	Uns ist nach der Aufnahme der Trainingsdaten aufgefallen, dass die Elektroden 3 und 4 deutlich schlechtere Signalqualität hatten als Elektroden 1 und 2, vermutlich weil wir für Elektroden 1 und 2 Flat Electrodes, für Elektroden 3 und 4 aber Spike Electrodes benutzt haben, und die Elektroden 3 und 4 weiter von den Augen entfernt sind.
 
-	Also kriegen wir $4 * 200 = 800$ Signale pro Sekunde.
-	
-	Uns wurde von Professor Everling empfohlen, die Anwendung der Fourier Transformation zur Vorbereitung der Daten für das neuronale Netz zu bedenken.
-	
-	Die Fourier Transformation kann die verschiedenen zugrundeliegenden Frequenzen einer Zahlenfolge extrahieren, indem diese in Sinus-Kurven zerlegt wird.
+	Deswegen haben wir uns entschieden, nur die Elektroden 1 und 2 zu verwenden.
 
-	Daraus folgt ein Array (eine Liste) an Werten. Der Index bestimmt, für welche Frequenz der Wert gilt (erster Wert: 1 Hertz, zweiter Wert: 2 Hertz, etc.) und der Wert gibt die Amplitude dieser Sinus-Kurve an. So könnten die Daten auch rekonstruiert werden. \cite{3b1b:fft}
+	Also kriegen wir $2 * 200 = 400$ Signale pro Sekunde.
+
+	\subsubsection{Fourier-Analyse}
+	
+	Uns wurde von Professor Everling empfohlen, die Anwendung der Fourier-Analyse zur Vorbereitung der Daten für das neuronale Netz zu bedenken.
+	
+	Die Fourier-Analyse kann die verschiedenen zugrundeliegenden Frequenzen von Datenfolgen, Funktion, und mehr bestimmen, indem diese in Sinus-Kurven zerlegt wird, sie dient also zur Spektralanalyse.
+
+	Wir nutzen dafür die Fast Fourier Transformation (FFT), welche lediglich eine komplexere aber effizientere Form der Diskreten Fourier Transformation (DFT) ist \cite{FFT-DFT}.
+
+	Grund für die Verwendung einer DFT ist, dass wir ein zeitdiskretes endliches Signal haben, also eine endliche Anzahl (200 pro Elektrode) an Datenpunkten, die auf konkrete Zeitpunkte bezogen sind, und keine unendlichen (iterativen) Funktionen.
+
+	Aus der FFT folgt ein Array (eine Liste) an Werten. Der Index dieser Liste bestimmt, für welche Frequenz der Wert gilt (erster Wert: 1 Hertz, zweiter Wert: 2 Hertz, etc.) und der Wert gibt die Amplitude der entsprechenden Sinus-Kurve an \cite{3b1b:fft}.
 
 	So lässt sich bestimmen, welche Frequenzen am stärksten vorkommen. Außerdem können dann Frequenzen herausgefiltert werden, indem die entsprechenden Indices ignoriert werden.
 
-	Wir haben dazu spezifisch die Fast Fourier Transformation (FFT) des Julia-Pakets FFTW genutzt. Zuerst haben wir die Sinnhaftigkeit einer Fourier Transformation für unser Projekt getestet, indem wir sie auf unsere Daten angewandt und dies in einem Plot ausgegeben haben.
+	Eine FFT kann Elektroenzephalogramme fast verlustfrei repräsentieren. Dies lässt sich erkennen, wenn man mithilfe der durch die FFT entstandenen Spektralanalyse die Daten rekonstruiert (Inverse Fast Fourier Transformation, IFFT) (s. Abbildung \ref{EEG-IFFT}). Dazu werden die Sinus-Kurven der Frequenzen mit den entsprechenden Amplituden multipliziert und dann addiert.
+
+	\begin{figure}[h!]
+		\includegraphics[width=\textwidth]{pictures/blink_fft_ifft.png}
+		\caption{Das EEG eines Blinzelns, eine FFT dessen, und eine IFFT}
+		\label{EEG-IFFT}
+	\end{figure}
+
+	Aber vor der Implementation haben wir getestet, ob eine Spektralanalyse für unseren Zweck überhaupt sinnvoll ist. Dazu haben wir die Ergebnisse der FFT von Elektroenzephalogrammen mit Blinzeln und ohne Blinzeln verglichen. Wie man in Abbildung \ref{EEG-FFT} sehen kann, gibt es vor allem im niedrigeren Frequenzbereich einen klaren Unterschied. % Grund dafür ist wahrscheinlich, dass die Qualität unseres EEG beschränkt ist und es höhere Frequenzbereiche deswegen nicht so gut aufzeichnen kann, da diese nicht so leicht durch den Schädel dringen können.
+	Somit ist es geeignet, da die KI in der Lage sein sollte, diesen Unterschied zu erkennen.
 
 	\begin{figure}[h!]
 		\includegraphics[width=\textwidth]{pictures/Die_FFTs_der_EEG-Daten.png}
 		\caption{Die FFT unserer EEG-Daten}
 		\label{EEG-FFT}
 	\end{figure}
+	
+	Ob FFT einen Vorteil zu den rohen Daten darstellen wird, werden wir in den Ergebnissen sehen müssen, jedoch liegt es nahe, da die KI sich auf einige wenige, wichtige Inputs konzentrieren kann. Denn wie man sehen kann, ist der Unterschied in den höheren Frequenzen nicht so groß und vermutlich für eine sichere Erkennung nicht unbedingt notwendig.
 
-	Wie man in Abbildung \ref{EEG-FFT} sehen kann, ist dabei selbst mit den bloßen Augen ein Unterschied zwischen geblinzelt und nicht geblinzelt in allen Frequenzen zu sehen, vor allem bei den niedrigeren Frequenzen.% Grund dafür ist wahrscheinlich, dass die Qualität unseres EEG beschränkt ist und es höhere Frequenzbereiche deswegen nicht so gut aufzeichnen kann, da diese nicht so leicht durch den Schädel dringen können.
+	Die große Amplitude bei 50 Hertz ist aufgrund der Verstrahlung der Umgebung, die meist besonders die Frequenz von 50 Hertz betrifft \cite{Praktikum}. % Quelle überprüfen!
 
-	Der plötzliche Anstieg bei 50 Hertz ist aufgrund der Verstrahlung der Umgebung, die meist besonders die Frequenz von 50 Hertz betrifft \cite{Praktikum}.
+	Um eine Verwirrung der KI zu verhindern, können wir bei Verwendung von FFT also auch einfach die Amplitude für 50 Hertz auf 0 setzen.
 
-	Aufgrund dieses Tests haben wir uns entschieden, auch auszuprobieren, das neuronale Netzwerk mit EEG-Daten zu trainieren, welche vorher mit der Fast Fourier Transformation verarbeitet wurden.
+	Die FFT ist außerdem sehr schnell, auf unserem Test-System braucht sie für ddie Verarbeitung von einer Sekunde Messdaten von zwei Elektroden im Schnitt \qty{22}{\micro\second}.
 
-	\newpage
+	Dennoch wollen wir das Programm auch ohne FFT ausprobieren -- wenn die Ergebnisse gleich gut sind, würde es sich trotzdem lohnen, auf FFT zu verzichten, da für FFT auch die Installation eines weiteren Packages (FFTW) notwendig ist. 
+
 	\subsubsection{Neuronales Netz}
 
 	Ein neuronales Netzwerk besteht aus drei Teilen: dem Input Layer, den Hidden Layers und dem Output Layer.
@@ -279,6 +312,8 @@
 	\threesub{Forward Pass}
 
 	Zur Berechnung der Aktivierung eines Neurons gibt es den sogenannten Forward Pass. Dabei beginnt man im ersten Hidden Layer damit, für alle Neuronen den sogenannten Netzinput (auch net input) zu berechnen. Um den Netzinput eines Neurons zu berechnen, werden alle Aktivierungen des vorherigen Layers mit den von dem Neuron dorthin führenden Gewichten multipliziert und summiert. Der Bias ist eigentlich auch ein Gewicht, jedoch ist er mit einem Neuron verbunden, das immer die Aktivierung 1 hat.
+
+	\newpage
 
 	\begin{wrapfigure}{r}{0.4\textwidth}
 		\centering
@@ -364,17 +399,9 @@
 
 	Da immer die nächsten Layer und der Output Layer benötigt werden, ergibt es Sinn, diese Optimierung beim Output Layer zu starten und dann rückwärts die \mbox{$\delta$-Werte} für jeden Layer zu berechnen und für die nächsten Berechnungen zu speichern -- daher auch der Name Backpropagation. \cite{MITNeuronale} \cite{3b1b:fft} \cite{brotcrunsher:backwardpass}
 
-	\begin{figure}[H]
-		\centering
-		\includegraphics[width=0.8\textwidth]{pictures/Abbildung-des-Programms.png}
-		\caption{Funktionsweise des Programms}
-	\end{figure}
-
-
-	\newpage
 	\threesub{Flux}
 
-	Wir haben in unserem letzten Projekt bereits ein neuronales Netzwerk mit dieser Funktionsweise selbst programmiert, um es besser verstehen zu können \cite{AIComposer}. Für dieses Projekt haben wir allerdings das Package Flux benutzt, welches die gleichen Ergebnisse liefern sollte, jedoch mit deutlich besserer Performance, da es sehr stark optimiert wurde.
+	Wir haben in unserem letzten Projekt bereits ein neuronales Netzwerk mit dieser Funktionsweise selbst programmiert, um es besser verstehen zu können \cite{AIComposer}. Für dieses Projekt haben wir allerdings das Package Flux benutzt, welches die gleichen oder besseren Ergebnisse liefern sollte, mit deutlich besserer Performance, da es stark optimiert und sehr weit entwickelt wurde.
 
 	\subsubsection{Roboter}
 
@@ -390,10 +417,17 @@
 
 	Mehr technische Details zu der Umsetzung lassen sich beim GitHub Repository des Packages finden \cite{ev3dev}.
 
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.5\textwidth]{pictures/roboter-annotated.png}
+		\caption{Unser Roboter (ohne Raspberry Pi, der über den EV3-Brick gehört)}
+	\end{figure}
+
+
 	\begin{figure}[h!]
 		\centering
-		\includegraphics[width=0.75\textwidth]{pictures/roboter-annotated.png}
-		\caption{Unser Roboter (ohne Raspberry Pi, der über den EV3-Brick gehört)}
+		\includegraphics[width=0.9\textwidth]{pictures/Abbildung-des-Programms.png}
+		\caption{Funktionsweise des Programms}
 	\end{figure}
 
 	%\newpage
@@ -403,13 +437,10 @@
 	%	\includegraphics[width=\textwidth]{pictures/Abbildung-des-Programms.png}
 	%	\caption{Funktionsweise des Programms}
 	%\end{figure}
-	
-	\newpage
-	\newpage
 
 	\section{Ergebnisse}
 
-	\textbf{Der gesamte Code sowie der aktuellste Bericht können auf unserem GitHub Repository gefunden werden!} \cite{InterpretingEEG}
+	{\large \textbf{Der gesamte Code sowie der aktuellste Bericht können auf unserem GitHub Repository gefunden werden! \cite{InterpretingEEG}} }
 
 	Zuerst haben wir versucht, eine KI zu trainieren, welche erkennen kann, ob eine Person gerade geblinzelt hat oder nicht. Diese könnte man zum Beispiel nutzen, indem man einen Roboter immer dann nach vorne fahren lässt, wenn eine Versuchsperson blinzelt.
 
@@ -445,44 +476,45 @@
 		\label{training-fft}
 	\end{figure}
 
-	Dies heißt, dass FFT auf jeden Fall die Ergebnisse nicht verschlechtert. Jedoch lässt sich auch nicht genau sagen, inwiefern sie besser als keine ist, wenn überhaupt. Denn die kleinen Unterschiede, die man oft sieht, wie hier auch, stammen meist davon, dass jedes neuronale Netzwerk zufällig initialisiert wird und somit, selbst mit dem ansonsten identischen Verfahren, einen leichten Unterschied in den Ergebnissen zeigen wird.
+	Dies heißt, dass die FFT wie erwartet die Ergebnisse nicht verschlechtert hat. Jedoch lässt sich auch nicht genau sagen, inwiefern sie besser ist als keine, wenn überhaupt. Denn die kleinen Erfolgs-Unterschiede, die man oft sieht, wie hier auch, stammen meist davon, dass jedes neuronale Netzwerk zufällig initialisiert wird und somit, selbst mit einem ansonsten identischen Verfahren, einen leichten Unterschied in den Ergebnissen zeigen kann.
 
-	Es gab aber noch ein größeres Problem: Die Testdaten konnten sicher erkannt werden, aber als wir es mit neuen Daten von anderen Personen und in anderen Räumen versuchten, hat das Netzwerk meist komplett versagt.
+	Zu Beginn hatten wir ein noch größeres Problem: Die Testdaten konnten sicher erkannt werden, aber als wir es mit neuen Daten von anderen Personen und in anderen Räumen versuchten, hat das Netzwerk meist komplett versagt.
 
-	Das Ziel der allgemeinen Anwendung ist also noch nicht gegeben. 
+	Das Ziel der allgemeinen Anwendung war also nicht gegeben gewesen. 
+
+	Dieses Problem konnten wir allerdings lösen, indem wir einen größeren Raum benutzt und mehr Daten gesammelt haben. So gab es eine größere Diversität an Daten und das neuronale Netzwerk wurde darauf trainiert, auf die Umgebung zurückzuführende Veränderungen zu ignorieren.
+
+	Das neuronale Netzwerk konnte Blinzeln danach sicher erkennen. Wie in Abbildung \ref{test-graph} zu erkennen ist, war die Differenz zwischen den beiden Output-Neuronen als nicht geblinzelt wurde fast 1, bei kräftigem Blinzeln auch. Die Klassifizierung des Netzwerks war also mit sehr großer Sicherheit getätigt worden. Bei leichtem Blinzeln hat das erste Output-Neuron (geblinzelt, grüner Graph) das zweite (nicht geblinzelt, roter Graph) zwar nicht oder nur leicht übertroffen, war aber dennoch klar erkennbar.
+
+	\begin{figure}
+		\includegraphics[width=\textwidth]{pictures/Test-Graph-annotated.png}
+		\caption{Ein Live-Test unseres Projektes, die grüne Linie repräsentiert das erste Output-Neuron (es wurde geblinzelt), die rote das zweite Output-Neuron (es wurde nicht geblinzelt). Die x-Achse ist die Zeit in 0,25 Sekunden Schritten}
+		\label{test-graph}
+	\end{figure}
+
+	Es fällt auch auf, dass die Summe der beiden Output-Neuronen stets ungefähr 1 ergibt und die Graphen sich an y = 0.5 grob spiegeln. Wir vermuten, dass beim neuronalen Netz entweder nur einer der Werte ausgerechnet wird und der andere der Umkehrwert dessen ist $\left(1 - P\right)$, oder beide fast identisch berechnet werden.
 	
-	Die Kosten der benutzten Hardware halten sich jedoch noch in Grenzen: Beim Kauf hat die gesamte EEG-Ausstattung ca. 550€ gekostet.
+	Ein Video mit Aufnahme der Augen, des Graphen, und des Roboters ist auf YouTube verfügbar, auch wenn die Synchronisierung bei zwei der drei Clips nicht automatisch funktioniert hat und deswegen einige Teile vielleicht nicht genau synchron sind \cite{projekt-video}. 
 
-	Die Performance des Programms kann außerdem zwar noch verbessert werden, jedoch dauern 1000 Epochen auf unseren persönlichen Systemen bereits lediglich 3 Minuten. 
+	Jedoch merkt man vor allem im letzten Clip (wo wir mithilfe von Audiowellenanalyse die Augen- und Roboteraufnahme synchronisieren konnten) und auch als Testperson, dass eine Verzögerung kaum spürbar ist. Grund dafür ist vermutlich, dass wir für diese Tests alle 0,25 Sekunden das EEG der letzten Sekunde abgefragt haben. Somit gibt es nicht eine maximale extra Verzögerung von z.B. \qty{1000}{\milli\second}, sondern nur \qty{250}{\milli\second}.
 
+	Die Kosten der benutzten Hardware halten sich ebenfalls noch in Grenzen: Beim Kauf hat die gesamte EEG-Ausstattung ca. 550€ gekostet, was zwar eigentlich eine hohe Summe ist (danke an den Förderverein für die Finanzierung!), aber \enquote{professionelle} Ausrüstung kostet deutlich mehr.
+
+	Die Performance des Programms kann außerdem zwar noch verbessert werden, jedoch dauern beim Trainieren 1000 Epochen (genug für ca. 100\% Genauigkeit) auf dem Test-System bereits lediglich 5 Minuten. 
 
 	\section{Diskussion}
 
-	Ein großes Problem, welches wir lösen wollen, ist die oben genannte Tatsache, dass das neuronale Netzwerk für neue Daten fast nutzlos ist. Wir haben bereits einige Ideen, wie wir dies verbessern können:
+	Wir sind zufrieden damit, dass wir unser erstes Teilziel erreicht haben.
 
-	Wir glauben, dass hauptsächlich die fehlende Diversität der Daten verantwortlich ist. Denn alle Trainings- und Testdaten wurden im selben Raum, am selben Tag, von derselben Person aufgenommen. Somit lernt das neuronale Netzwerk nicht, zwischen tatsächlichen Unterschieden in den Daten und unwichtigen Unterschieden, die z.B. durch andere Hintergrundstrahlung oder Person verursacht werden, zu differenzieren.
+	Als ersten folgenden Schritt wollen wir zuerst die aktuell offenstehenden Fragen beantworten, indem wir das Trainieren mit nur einem Output-Neuron ausprobieren und recherchieren, warum unsere Ergebnisse in großen Räumen und draußen so viel besser waren als in kleinen Räumen.
 
-	Um dieses Problem zu lösen, wollen wir also versuchen, mehr Trainingsdaten zu sammeln, die unter verschiedenen Bedingungen aufgenommen wurden, um unser Ziel der allgemeinen Nutzbarkeit erfüllen zu können. Dafür haben sich bereits Freunde freiwillig erklärt. 
+	Außerdem könnte man die Signalqualität des EEG noch verbessern, indem man Elektrodengel aufträgt. 
 
-	Außerdem vermuten wir auch Probleme mit der Platzierung der Elektroden. Denn wir nehmen die EEG-Daten von Blinzeln direkt an der Stirn, über den Augen, auf. Da das Auge ein Dipol ist (zwei unterschiedlich geladene Seiten hat) und beim Blinzeln der Augapfel sich automatisch mit der negativ geladenen Vorderseite nach oben (in Richtung der Elektroden) dreht, könnte so ein direkter elektrischer Ausschlag entstehen -- ohne eine bestimmte Frequenz. Wir denken, dies könnte andere Signale, die vom Gehirn kommen, etwas \enquote{übertönen}.
+	Der nächste, große Schritt wird dann sein, die Elektroden an anderen Positionen anzubringen, wo sie nicht mehr auf Muskeln sitzen und wir somit kein EMG mehr benutzen, sondern ein tatsächliches EEG.
 
-	Darum wollen wir die Elektroden eher im Bereich des Okzipitalen Kortexes platzieren. Dort sollte es optimal sein, denn dort sind außerdem die Alpha-Wellen des Gehirns besonders stark ausgeprägt, und wie Abbildung \ref{EEG-FFT} gezeigt hat, ist vor allem dieser niedrige Frequenzbereich von Bedeutung.
+	Wir planen dafür, den Okzipitalen Kortex (mittig am Hinterkopf, leicht über dem Inion) zu verwenden. Denn Professor Everling hat uns informiert, dass dort $\alpha$-Wellen (7 - 13 Hertz) besonders stark ausgeprägt sind, und er hat uns den Tipp gegeben, dass unser EEG vor allem diesen Frequenzbereich gut aufnehmen könnte. Dies hat sich bereits bestätigt, denn wie man in Abbildung \ref{EEG-FFT} sehen kann, ist der niedrige Frequenzbereich zumindest beim Blinzeln am stärksten ausgeprägt.
 
-	%Eine weiteredass ein weiteres Problem die hohen Zahlen sein könnten, denn aufgrund der Sigmoidfunktion \enquote{lernt} das Netzwerk, sie mit den Weights zwischen Input und erstem Layer runterzuskalieren, da das Netzwerk sonst im zweiten Layer überall 1 als Aktivierung haben würde, wie man aus Abbildung \ref{sig_func} erschließen kann.
-
-	%Jedoch haben Computer oft Probleme damit, sehr kleine Zahlen präzise abzuspeichern und zu verarbeiten, was zu Ungenauigkeiten geführt haben könnte.
-
-	%Wir wollen das Problem mit der Anwendung von FFT möglichst schnell lösen, indem wir den Hauptcode unserem funktionierenden FFT-Code angleichen und weitere Aktivierungsfunktionen recherchieren, oder aber die Werte (wenn sich 10000 durch weiteres Testen als bestehender Faktor zeigt) einfach mit 10000 dividieren.
-
-	%Außerdem gilt das Problem mit der Polarisierung des Auges immer noch. Dies wollen wir lösen, indem  wir die Elektroden an einer anderen Stelle am Schädel platzieren, wahrscheinlich am Okzipitalen Kortex, da dort Alpha-Wellen (Wellen im Bereich von 7 – 13 Herz) am stärksten ausgeprägt sind und unser EEG diese am zuverlässigsten messen kann.
-
-	%Ein weiteres Problem, ergab sich, als wir das trainierte Neuronale Netzwerk für Blinzeln mit Daten testeten, die unter anderen Umständen entstanden waren (anderer Raum, andere Person, etc.). Denn dann sank die Zuverlässigkeit der Ergebnisse drastisch, auch wenn sie leicht besser als zufällig war.
-
-	Sobald wir komplett neue Daten sicher erkennen können, wollen wir das Programm mit Blinzeln direkt den Roboter steuern lassen.
-
-	Zudem wollen wir in Zukunft versuchen, mithilfe unseres neuronalen Netzes bereits bei allen Menschen vorhandene, selbst kontrollierbare Gehirnaktivität zu finden und sicher zu erkennen, jedoch ohne vorherige Konditionierung. Solche Gehirnaktivität könnte z.B. der allgemeine Gedanke an \enquote{Rechts} sein, was womöglich mit erhöhter Aktivität auf der linken Hirnhälfte in Verbindung stehen könnte.
-
-	\newpage
+	Zudem wollen wir in fernerer Zukunft versuchen, mithilfe unseres neuronalen Netzes bereits bei allen Menschen vorhandene, selbst kontrollierbare Gehirnaktivität zu finden und sicher zu erkennen, jedoch ohne vorherige Konditionierung. Solche Gehirnaktivität könnte z.B. der allgemeine Gedanke an \enquote{Rechts} sein, was womöglich mit erhöhter Aktivität auf der linken Hirnhälfte in Verbindung stehen könnte.
 	
 	\section{Danksagung}
 
@@ -492,11 +524,11 @@
 
 	\subsection{Unterstützung}
 
-	Danke an Professor Everling vom \enquote{The Brain and Mind Institute} der Western University in Kanada, der uns geholfen hat, einen Ansatz in diesem komplizierten Thema zu finden. \footnote{\href{https://www.uwo.ca/bmi/investigators/stefan-everling.html}{https://www.uwo.ca/bmi/investigators/stefan-everling.html}}
+	Vielen Dank an Professor Everling vom \enquote{The Brain and Mind Institute} der Western University in Kanada, der uns geholfen hat, einen Ansatz in diesem komplizierten Thema zu finden und praktische Tipps zum Umgang mit dem EEG gegeben hat. \footnote{\href{https://www.uwo.ca/bmi/investigators/stefan-everling.html}{https://www.uwo.ca/bmi/investigators/stefan-everling.html}}
 
-	Danke an Ino Saathoff, der für uns die Hülle der EEG-Platine mit seinem 3D-Drucker erstellt hat.
+	Dank geht auch an Ino Saathoff, der für uns die Hülle der EEG-Platine mit seinem 3D-Drucker erstellt hat.
 
-	Danke an Oliver Samkovskij und Ino, die zusammen mit uns den Roboter gebaut haben.
+	Natürlich geht auch Dank Oliver Samkovskij und Ino, die zusammen mit uns den Roboter gebaut haben.
 
 	\section{Quellen \& Referenzen}
 
