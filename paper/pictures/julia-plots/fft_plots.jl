@@ -140,16 +140,18 @@ x_f, y_f = get_fft(y)
 plot(x_f, y_f)
 =#
 
-function get_eeg_data(path, data_x, data_y, endings, output)
+function get_eeg_data(path, data_x, data_y, endings, output; filter = true)
     sample_number = 1
     while isfile(path * string(sample_number) * ".csv")
         # Read recorded EEG data
         sample_data_x = BrainFlow.read_file(path * string(sample_number) * ".csv")
         # Remove 3rd and 4th channel as they are a lot worse than 1st and 2nd and aren't necessary
         sample_data_x = sample_data_x[:, 1:2]
-        # Filter 50 Hz frequencies to remove environmental noise
-        for i = 1:size(sample_data_x)[2]
-            BrainFlow.remove_environmental_noise(view(sample_data_x, :, i), 200, BrainFlow.FIFTY)
+        if filter
+            # Filter 50 Hz frequencies to remove environmental noise
+            for i = 1:size(sample_data_x)[2]
+                BrainFlow.remove_environmental_noise(view(sample_data_x, :, i), 200, BrainFlow.FIFTY)
+            end
         end
 
         sample_data_x = reshape(sample_data_x, (:, 1))
@@ -170,10 +172,6 @@ function get_eeg_data(path, data_x, data_y, endings, output)
     return data_x, data_y
 end
 
-function own_ifft(x_fft, y_fft)
-    
-end
-
 function blink_fft()
     path = "C:/Users/alexs/OneDrive/Dokumente/Programming/Interpreting-EEG-with-AI/Blink/first_samples-before_01-15-2022/"
     global data_x = Array{Float64}(undef, 400, 0)
@@ -181,7 +179,6 @@ function blink_fft()
     data_x, data_y = get_eeg_data(path, data_x, data_y, nothing, [1, 0])
 
     fig = figure("Blink FFT")
-    plt
 
     current_d = data_x[:, 1]
     current_d = divide_into_channels(current_d, 2)
@@ -210,4 +207,35 @@ function blink_fft()
     #ax2.plot(x_fft_1, y_fft_1, color = "red")
     ax3.plot(y_ifft_2)
 
+end
+
+function brainflow_noiserm_comp()
+    path = "C:/Users/alexs/OneDrive/Dokumente/Programming/Interpreting-EEG-with-AI/Blink/first_samples-before_01-15-2022/"
+    global data_x = Array{Float64}(undef, 400, 0)
+    global data_x_filt = Array{Float64}(undef, 400, 0)
+    global data_y = Array{Float64}(undef, 2, 0)
+
+    data_x, data_y = get_eeg_data(path, data_x, data_y, nothing, [1, 0], filter = false)
+    data_x_filt, data_y = get_eeg_data(path, data_x_filt, data_y, nothing, [1, 0], filter = true)
+
+    d = divide_into_channels(data_x[:, 1], 2)
+    d_filt = divide_into_channels(data_x_filt[:, 1], 2)
+
+    fig = figure("Testing Brainflow")
+    ax1 = plt.subplot(121, title = "Ohne BrainFlow Filter")
+    xlabel("Frequenz in Hertz")
+    ylabel("Amplitude")
+
+    #plot(abs.(fft_eeg(d[1], 1)), label = "Elektrode 1")
+    plot(abs.(fft_eeg(d[2], 1)), label = "Elektrode 2")
+
+    ax2 = plt.subplot(122, title = "Mit BrainFlow Filter", sharex = ax1, sharey = ax1)
+    xlabel("Frequenz in Hertz")
+    ylabel("Amplitude")
+
+    #plot(abs.(fft_eeg(d_filt[1], 1)), label = "Elektrode 1")
+    plot(abs.(fft_eeg(d_filt[2], 1)), label = "Elektrode 2")
+
+    legend()
+    println(d == d_filt)
 end
