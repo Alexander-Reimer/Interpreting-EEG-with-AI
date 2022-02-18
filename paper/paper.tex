@@ -205,17 +205,21 @@
 
 	\subsubsection{Elektroenzephalographie}
 
-	Bei der Elektroenzephalographie werden Elektroden an der Kopfoberfläche platziert. Diese können sehr kleine Spannungsdifferenzen messen, die durch Reize im Gehirn entstehen und durch den Schädel dringen. Diese Spannungen werden nicht von einzelnen Nervenzellen erzeugt, sondern geben die Summe aller lokalen Spannungen wieder. Man kann also auch nur ungefähr sagen, wo genau im Gehirn ein bestimmter Reiz ausgelöst wurde, je mehr Elektroden, desto höher die Genauigkeit. \cite{wiki:Elektroenzephalografie}
+	Bei der Elektroenzephalographie (EEG) werden Elektroden an der Kopfoberfläche platziert. Diese können sehr kleine Spannungsdifferenzen messen, die durch Reize im Gehirn entstehen und durch den Schädel dringen. Diese Spannungen werden nicht von einzelnen Nervenzellen erzeugt, sondern geben die Summe aller lokalen Spannungen wieder. Man kann also auch nur ungefähr sagen, wo genau im Gehirn ein bestimmter Reiz ausgelöst wurde, je mehr Elektroden, desto höher die Genauigkeit. \cite{wiki:EEG}
 
 	Wir untersuchen dabei ereigniskorrelierte Potentiale (EKPs). Dies sind bestimmte Spannungsschwankungen (\enquote{Potentiale}), welche in Zusammenhang mit einem beobachtbaren Ereignis stehen, wie z.B. Blinzeln oder Armbewegungen. \cite{Birbaumer2010} \cite{Praktikum}
 
-	Weiter ist es möglich, nur durch Gedanken eine Steuerung auszuführen. Dies funktioniert jedoch meist durch instrumentelle oder klassische Konditionierung, also durch das Bestrafen und Belohnen auf Basis der Messungen des EEG. So kann das Gehirn darauf trainiert werden, auf Verlangen eine bestimmte, vorher festgelegte Aktivität auszulösen, die dann gemessen und ausgewertet werden kann.  \cite{BCIChaudhary}
+	Dabei haben wir uns für das Blinzeln entschieden, da wir es im Graphen zumindest mit bloßen Augen deutlich besser erkennen konnten als Armbewegungen.
 
-	Dies wollen wir nicht machen, da die Konditionierung Zeit benötigt, nicht unser Ziel einer allgemeinen Anwendbarkeit erfüllt und voraussichtlich bessere Ausrüstung erfordert.
+	Für unser Projekt nutzen wir zwar die Ausrüstung für EEG, aber genau genommen wird das Blinzeln mithilfe von Elektromyographie (EMG) erkannt, denn aufgrund der Platzierung der zwei verwendeten Elektroden direkt über den Augen werden nicht die Spannungsdifferenzen des Gehirns gemessen, sondern die für das Blinzeln verantwortlichen Augenmuskeln \cite{wiki:EMG}.
 
-	Zuerst probieren wir deshalb die Erkennung von EKPs, da diese deutlich leichter zu klassifizieren sind und wir so erstmal das Konzept eines neuronalen Netzes in einem solchen Kontext ausprobieren können. Denn wenn unser neuronales Netz EKPs noch nicht sicher erkennen kann, wären komplexere Zusammenhänge ohne vorherige Konditionierung erst recht nicht möglich.
+	Wir haben uns für diesen Anfang entschieden, da im EMG ein Blinzeln sehr sicher erkennbar ist und wir so eine mangelnde Genauigkeit des Messgerätes als Fehlerquelle ausschließen konnten, solange wir noch an dem neuronalen Netz und der Datenverarbeitung arbeiten.
 
-	Spezifisch probieren wir das Blinzeln aus, da dies in den EEG-Daten sogar von Menschen sehr einfach erkannt werden kann, wie man in Abbildung \ref{EEG-Blinzeln} sehen kann.
+	%Da wir nun wissen, dass diese Komponenten im Kern funktionieren, wollen wir die Elektroden am Hinterkopf, genauer dem Okzipitale Kortex, platzieren, sodass wir tatsächlich die Potentiale des Gehirns messen und somit unser Ziel der Deutung eines Elektroenzephalogramms erreichen können.
+
+	Weiter ist es möglich, nur durch Gedanken eine Steuerung auszuführen. Dies funktioniert jedoch meist durch instrumentelle oder klassische Konditionierung, also durch das Bestrafen und Belohnen auf Basis der Messungen des EEG. So kann das Gehirn darauf trainiert werden, auf Verlangen eine bestimmte, vorher festgelegte Aktivität auszulösen (), die dann gemessen und ausgewertet werden kann. \cite{BCIChaudhary}
+
+	Darauf wollen wir erstmal verzichten, da die Konditionierung Zeit benötigen und nicht unser Ziel einer allgemeinen Anwendbarkeit erfüllen würde.
 	
 	\begin{figure}[h]
 		\includegraphics{pictures/blinzeln_ekp_beispiel_pyplot_annotated.png}
@@ -223,7 +227,8 @@
 		\label{EEG-Blinzeln}
 	\end{figure}
 
-	Insgesamt haben wir zwei Earclips, die an den Ohren befestigt werden und zum Filtern von Störungen dienen, und vier Messelektroden, mit einer zeitlichen Auflösung von jeweils 200 Hertz (200 Messungen pro Sekunde). Zwei dieser Elektroden haben wir auf der Stirn platziert, zwei jeweils links und rechts auf dem Schädel, etwas über dem Ohr, da dies die Standard-Aufstellung in der Dokumentation ist (s. Abbildung \ref{10-20-System}) \cite{OpenBCI}. Wir planen, sie basierend auf unseren Ergebnissen wo nötig anzupassen.
+	Insgesamt haben wir zwei Earclips, die an den Ohren befestigt werden und zum Filtern von Störungen dienen, und vier Messelektroden, mit einer zeitlichen Auflösung von jeweils 200 Hertz (200 Messungen pro Sekunde). 
+	Zwei dieser Elektroden haben wir auf der Stirn platziert, zwei jeweils links und rechts auf dem Schädel, etwas über dem Ohr, da dies die Standard-Aufstellung in der Dokumentation ist (s. Abbildung \ref{10-20-System}) \cite{OpenBCI}. Wir planen, sie basierend auf unseren Ergebnissen wo nötig anzupassen. %!!!
 
 	\begin{figure}[h!]
 		\centering
@@ -236,11 +241,11 @@
 
 	Also kriegen wir $4 * 200 = 800$ Signale pro Sekunde.
 	
-	Uns wurde von Professor Everling empfohlen, die Fourier Transformation zur Vorbereitung der Daten für das neuronale Netz zu nutzen. 
+	Uns wurde von Professor Everling empfohlen, die Anwendung der Fourier Transformation zur Vorbereitung der Daten für das neuronale Netz zu bedenken.
 	
 	Die Fourier Transformation kann die verschiedenen zugrundeliegenden Frequenzen einer Zahlenfolge extrahieren, indem diese in Sinus-Kurven zerlegt wird.
 
-	Daraus folgt ein Array (eine Liste) an Werten. Der Index bestimmt, für welche Frequenz der Wert gilt (erster Wert: 1 Hertz, zweiter Wert: 2 Hertz, etc.) und der Wert gibt an, womit die entsprechende Sinus-Funktion multipliziert werden muss, um die originale Funktion wiederzuerlangen. \cite{3b1b:fft}
+	Daraus folgt ein Array (eine Liste) an Werten. Der Index bestimmt, für welche Frequenz der Wert gilt (erster Wert: 1 Hertz, zweiter Wert: 2 Hertz, etc.) und der Wert gibt die Amplitude dieser Sinus-Kurve an. So könnten die Daten auch rekonstruiert werden. \cite{3b1b:fft}
 
 	So lässt sich bestimmen, welche Frequenzen am stärksten vorkommen. Außerdem können dann Frequenzen herausgefiltert werden, indem die entsprechenden Indices ignoriert werden.
 
