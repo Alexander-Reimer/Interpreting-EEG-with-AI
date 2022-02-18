@@ -61,7 +61,7 @@ function get_eeg_data(path, data_x, data_y, endings, output)
         #sample_data_x[800] = endings[1][sample_number]
 
         # Perform FFT on data, once per channel
-        sample_data_x = [make_fft(sample_data_x[1:200])..., make_fft(sample_data_x[201:400])...]
+        sample_data_x = [rfft(sample_data_x[1:200])..., rfft(sample_data_x[201:400])...] # ?! Will it work?
         # Append to existing data
         data_x = [data_x sample_data_x]
         sample_number += 1
