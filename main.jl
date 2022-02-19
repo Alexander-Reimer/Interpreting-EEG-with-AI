@@ -30,19 +30,46 @@ function get_eeg_data(path, data_x, data_y, endings, output)
     sample_number = 1
     while isfile(path * string(sample_number) * ".csv")
         # Read recorded EEG data
-        sample_data_x = BrainFlow.read_file(path * string(sample_number) * ".csv")
-        # Remove 3rd and 4th channel as they are a lot worse than 1st and 2nd and aren't necessary
-        sample_data_x = sample_data_x[:, 1:2]
-        # Filter 50 Hz frequencies to remove environmental noise
+        global sample_data_x = BrainFlow.read_file(path * string(sample_number) * ".csv")
+
+
+        temp_data_x = Array{Float64}(undef, size(sample_data_x, 1), 0)
+
+        for electrode in hyper_params.electrodes
+            temp_data_x = [temp_data_x sample_data_x[:, electrode]]
+        end
+        sample_data_x = temp_data_x
+        # Filter 50 Hz frequencies to remove environmental noise using BrainFlow
         for i = 1:size(sample_data_x)[2]
-            BrainFlow.remove_environmental_noise(view(sample_data_x, :, i), 200, BrainFlow.FIFTY)
+            if hyper_params.notch == 50
+                notch = BrainFlow.FIFTY
+            elseif hyper_params.notch == 60
+                notch = BrainFlow.SIXTY
+            else
+                notch = hyper_params.notch
+            end
+            BrainFlow.remove_environmental_noise(view(sample_data_x, :, i), 200, notch)
         end
 
         sample_data_x = reshape(sample_data_x, (:, 1))
-        #sample_data_x[800] = endings[1][sample_number]
+        if 4 in hyper_params.electrodes
+            sample_data_x[last] = endings[1][sample_number]
+        end
 
-        # Perform FFT on data, once per channel
-        sample_data_x = [rfft(sample_data_x[1:200])..., rfft(sample_data_x[201:400])...] # ?! Will it work?
+        if hyper_params.fft == true
+            temp_data_x = []
+            # Perform FFT on data, once per channel
+            for i = 1:length(hyper_params.electrodes)
+                s = (i - 1) * 200 + 1
+                e = i * 200
+                #println(size(sample_data_x[s:e]))
+                fft_sample_x = abs.(rfft(sample_data_x[s:e]))
+                fft_sample_x[hyper_params.notch + 1] = 0.0
+                fft_sample_x = fft_sample_x[hyper_params.lower_limit:(hyper_params.upper_limit + 1)]
+                append!(temp_data_x, fft_sample_x)
+            end
+            sample_data_x = temp_data_x
+        end
         # Append to existing data
         data_x = [data_x sample_data_x]
         sample_number += 1
@@ -61,7 +88,7 @@ function get_loader(train_portion = 0.9, blink_path = "Blink/first_samples-befor
     # Not used right now as the 3. and 4. channel data isn't used at the moment
     endings = Recover.get_endings()
 
-    inputs_all_channels = 100 * 2 # FFT --> 100 per channel, only 1. & 2. channel
+    inputs_all_channels = hyper_params.inputs
     outputs = 2 # amount of output neurons
     data_x = Array{Float64}(undef, inputs_all_channels, 0)
     data_y = Array{Float64}(undef, outputs, 0)
@@ -83,8 +110,13 @@ function get_loader(train_portion = 0.9, blink_path = "Blink/first_samples-befor
     test_data_x = data_x[:, (l_train+1):l-l_train]
     test_data_y = data_y[:, (l_train+1):l-l_train]
 
-    train_data = Flux.Data.DataLoader((train_data_x, train_data_y), batchsize = hyper_parameters.batch_size, shuffle = hyper_parameters.shuffle, partial = false)
-    test_data = Flux.Data.DataLoader((test_data_x, test_data_y), batchsize = hyper_parameters.batch_size, shuffle = hyper_parameters.shuffle, partial = false)
+    train_data = Flux.Data.DataLoader((train_data_x, train_data_y),
+        batchsize = hyper_params.batch_size, shuffle = hyper_params.shuffle,
+        partial = false
+    )
+    test_data = Flux.Data.DataLoader((test_data_x, test_data_y),
+        batchsize = hyper_params.batch_size, shuffle = hyper_params.shuffle,
+        partial = false)
 
     return train_data, test_data
 end
@@ -143,7 +175,7 @@ end
 
 function build_model()
     # Amount of inputs for all channels
-    inputs = 200 #400
+    inputs = hyper_params.inputs
     return Chain(
         Dense(inputs, round(Int, inputs / 2), σ),
         Dense(round(Int, inputs / 2), round(Int, inputs / 2), σ),
@@ -154,12 +186,17 @@ end
 
 function prepare_cuda()
     # Enable CUDA on GPU if functional
-    if CUDA.functional() && 3 == 1+1
-        @info "Training on CUDA GPU"
-        CUDA.allowscalar(false)
-        device = gpu
+    if hyper_params.cuda == true
+        if CUDA.functional()
+            @info "Training on CUDA GPU"
+            CUDA.allowscalar(false)
+            device = gpu
+        else
+            @info "No NVIDIA GPU detected --> Training on CPU"
+            device = cpu
+        end
     else
-        @info "Training on CPU"
+        @info "CUDA disabled --> Training on CPU"
         device = cpu
     end
     return device
@@ -194,7 +231,7 @@ function plot_loss(epoch, frequency, test_data, model, device, train_data; label
         ax2.plot(test_accs, color = "blue", label=test_acc_l)
         ax2.plot(train_accs, color = "blue", linestyle = "dashed", label=train_acc_l)
     
-        println("$(epoch) Epochen von $(hyper_parameters.training_steps): Loss ist $test_loss, Accuracy ist $test_acc.")
+        println("$(epoch) Epochen von $(hyper_params.training_steps): Loss ist $test_loss, Accuracy ist $test_acc.")
     end
 end
 
@@ -231,10 +268,11 @@ function train(new = false)
     ax2.tick_params(axis = "y", color = "blue", labelcolor = "blue")
 
     fig.tight_layout()
-    device = prepare_cuda()
+    global device = prepare_cuda()
     # Load the training data and create the model structure with randomized weights
     train_data, test_data = get_loader(0.9, "Blink/01-26-2022/", "NoBlink/01-26-2022/")
     #train_data, test_data = get_loader(0.9, "Blink/first_samples-before_01-15-2022/", "NoBlink/first_samples-before_01-15-2022/")
+    
     global model = build_model()
     global test_losses = Float64[]
     global train_losses = Float64[]
@@ -253,20 +291,20 @@ function train(new = false)
     model = model |> device
 
     ps = Flux.params(model)
-    opt = Descent(hyper_parameters.learning_rate)
+    opt = Descent(hyper_params.learning_rate)
 
     test_loss, test_acc = loss_and_accuracy(test_data, model, device)
     train_loss, train_acc = loss_and_accuracy(train_data, model, device)
 
     @info "Training"
-    println("0 Epochen von $(hyper_parameters.training_steps): Loss ist $test_loss, Accuracy ist $test_acc.")
+    println("0 Epochen von $(hyper_params.training_steps): Loss ist $test_loss, Accuracy ist $test_acc.")
 
     #plot(test_losses, "b")
 
     println(test_losses)
     println(test_accs)
 
-    for epoch = 1:hyper_parameters.training_steps
+    for epoch = 1:hyper_params.training_steps
         for (x, y) in train_data
             x, y = device(x), device(y) # transfer data to device
             gs = gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
@@ -283,7 +321,7 @@ function train(new = false)
 
     save_weights(model, "model.bson", test_losses, train_losses)
     @info "Weights saved at \"model.bson\""
-    println(confusion_matrix(test_data, model))
+    #println(confusion_matrix(test_data, model))
 
     plot_loss(100, 100, test_data, model, device, train_data, label = true)
 
@@ -300,7 +338,9 @@ function test(model)
     )
     board_shim = BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
     samples = []
-    #BrainFlow.release_session(board_shim)
+    if BrainFlow.is_prepared(board_shim)
+        #BrainFlow.release_session(board_shim)
+    end
     BrainFlow.prepare_session(board_shim)
     BrainFlow.start_stream(board_shim)
     sleep(1)
@@ -323,10 +363,7 @@ function test(model)
         #clf()
         plot(blink_vals, "green")
         plot(no_blink_vals, "red")
-        if y[1] > y[2] + 0.2
-            counter += 100
-            #println("hgizugz")
-        end
+
         #push!(samples, sample)
         sleep(0.25)
         #print("\b\b\b\b\b")
@@ -338,17 +375,31 @@ end
 
 mutable struct Args
     learning_rate::Float64
-    batch_size::Int
     training_steps::Int
-    shuffle::Bool
     # cut off fft data (frequencies) below lower_limit or above upper_limit which also determines amount of inputs (inputs = upper_limit - lower_limit)
     lower_limit::Int
     upper_limit::Int
+    electrodes::Array
+    
+    fft::Bool
+    shuffle::Bool
+    batch_size::Int
+    notch::Int
+    inputs::Int
+    cuda::Bool
 end
 
-global hyper_parameters = Args(0.001, 2, 1000, true, 7, 13)
+function Args(learning_rate, training_steps, lower_limit, upper_limit, electrodes; 
+    fft = true, shuffle = true, batch_size = 2, notch = 50, cuda = true)
+    
+    inputs = (upper_limit - lower_limit + 2) * length(electrodes)
+    return Args(learning_rate, training_steps, lower_limit, upper_limit, electrodes, fft, shuffle,
+    batch_size, notch, inputs, cuda)
+end
 
-#train(true)
+global hyper_params = Args(0.001, 1000, 1, 100, [1, 2, 3]; cuda = false)
+
+train(true)
 
 
 #=
@@ -359,21 +410,4 @@ Flux.loadparams!(model, parameters)
 #test(model)
 =#
 
-#=
-model = build_model()
-parameters = old_network()
-Flux.loadparams!(model, parameters)
-
-train_data, test_data = get_loader()
-
-for i = 1:20
-    sample = test_data.data[1][:,i]
-    y = model(sample)
-    if ((y[1] > y[2]) && (test_data.data[2][1, i] == 1.0)) || ((y[1] < y[2]) && (test_data.data[2][2, i] == 1.0))
-        println("Correct!")
-    else
-        println("Incorrect!")
-    end
-end
-=#
 end # Module
