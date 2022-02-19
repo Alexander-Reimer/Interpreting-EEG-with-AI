@@ -18,7 +18,7 @@ end
 
 drive(robot, 0)
 
-function test2(modelo)
+function robot_test(modelo)
     
     BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
     params = BrainFlowInputParams(
@@ -60,23 +60,8 @@ function test2(modelo)
         clf()
         plot(blink_vals, "green")
         plot(no_blink_vals, "red")
-        #=
-        sample = reshape(sample, (:, 1))
-        println(y[1], "    ", y[2])
-        push!(blink_vals, y[1])
-        push!(no_blink_vals, y[2])
-    
-        #clf()
-        plot(blink_vals, "green")
-        plot(no_blink_vals, "red")
-        if y[1] > y[2] + 0.2
-            #println("hgizugz")
-        end
-        #push!(samples, sample)
-        =#
+
         sleep(0.25)
-        #print("\b\b\b\b\b")
-        #println(counter)
     end
     BrainFlow.release_session(board_shim)
     drive(robot, 0)
@@ -89,4 +74,4 @@ device = prepare_cuda()
 model = build_model()
 parameters = old_network()
 Flux.loadparams!(model, parameters)
-test2(model)
+robot_test(model)
