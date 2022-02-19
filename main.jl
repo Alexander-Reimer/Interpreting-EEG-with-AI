@@ -1,4 +1,4 @@
-#module AI
+module AI
 
 println("Loading BrainFlow...")
 # For reading the EEG training samples
@@ -376,4 +376,4 @@ for i = 1:20
     end
 end
 =#
-#end # Module
+end # Module
