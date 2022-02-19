@@ -1,6 +1,6 @@
 # TODO
 
-    [ ] Reduktion der Inputs durch FFT (Spiegelungseffekt bei reelen Zahlen etc.)
+    [X] Reduktion der Inputs durch FFT (Spiegelungseffekt bei reelen Zahlen etc.)
     [X] Neue Ergebnisse
         [X] Mehr Daten
         [X] Erfolg

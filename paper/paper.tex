@@ -59,14 +59,15 @@
 % Für \affil
 \usepackage{authblk}
 
+% Für Erzwingen der Abbildungs-Platzierung ([H])
 \usepackage{float}
+
 % Für Kopf-/Fußzeilen
 %\usepackage{scrlayer-scrpage}
 % \renewcommand*{\headfont}{\normalfont}
 %\setkomafont{pagehead}
 %\rehead[]{JUGEND FORSCHT -- PROJEKTBERICHT}
 %\rohead[]{JUGEND FORSCHT - PROJEKTBERICHT}
-
 
 \usepackage{fancyhdr}
 \pagestyle{fancy}
@@ -104,12 +105,19 @@
 	\vspace{0.5ex}
 	}
 
+	\pagenumbering{gobble}
+	\thispagestyle{empty}
+
 	{\centering
 
 	\vspace*{15mm}
 	\textbf{\Huge 
 	Erkennung ereigniskorrelierter Potenziale eines Elektroenzephalogramms durch eine KI
 	}
+
+	\vspace{20mm}
+	
+	\includegraphics[width=0.8\textwidth]{pictures/logo.png}
 
 	\vspace{15mm}
 
@@ -123,13 +131,13 @@
 
 	\textbf{\Large Betreuer: Herr Dr. Glade \& Herr Husemeyer}
 
-	\vspace{20mm}
 
-	\includegraphics[width=0.8\textwidth]{pictures/logo.png}
 
 	}
 
 	\newpage
+
+	\pagenumbering{arabic}
 	
 	\tableofcontents
 	
@@ -163,13 +171,14 @@
 	\begin{itemize}
 		\item EEG
 		\begin{itemize}
-			\item 4 Channel Ganglion Board von OpenBCI $\star$
+			\item 4 Channel Ganglion Board von OpenBCI $\star$ (s. \hyperref[Foerderverein]{Danksagung})
 			\item 2x Spike und 2x Flat Electrodes  $\star$
 			\item Klettband für die Elektroden $\star$
 			\item 2x Earclips $\star$
 			\item Lithium-Polymer-Akku und Ladegerät $\star$
 			\item Plastik-Hülle für das Ganglion Board
 		\end{itemize}
+
 		\item Roboter
 		\begin{itemize}
 			\item Lego Mindstorms EV3 Brick
@@ -290,7 +299,7 @@
 
 	%Grund für die Verwendung einer DFT ist, dass wir ein zeitdiskretes endliches Signal haben, also eine endliche Anzahl (200 pro Elektrode) an Datenpunkten, die auf konkrete Zeitpunkte bezogen sind, und keine unendlichen (iterativen) Funktionen.
 
-	Aus der FFT folgt ein Array (eine Liste) an Werten. Der Index dieser Liste bestimmt, für welche Frequenz der Wert gilt (erster Wert: 1 Hertz, zweiter Wert: 2 Hertz, etc.) und der Wert gibt die Amplitude der entsprechenden Sinus-Kurve an \cite{3b1b:fft}.
+	Aus der FFT folgt ein Array (eine Liste) an Werten. Der Index dieser Liste bestimmt, für welche Frequenz der Wert gilt (erster Wert: 1 Hertz, zweiter Wert: 2 Hertz, etc.) und der Wert gibt die Amplitude der entsprechenden Sinus-Kurve an.
 
 	So lässt sich bestimmen, welche Frequenzen am stärksten vorkommen. Außerdem können dann Frequenzen herausgefiltert werden, indem die entsprechenden Indices ignoriert werden.
 
@@ -306,6 +315,7 @@
 	Somit ist es geeignet, da die KI in der Lage sein sollte, diesen Unterschied zu erkennen.
 
 	\begin{figure}[H]
+		\centering
 		\includegraphics[width=0.9\textwidth]{pictures/Die_FFTs_der_EEG-Daten.png}
 		\caption{Die FFT unserer EEG-Daten}
 		\label{EEG-FFT}
@@ -339,16 +349,19 @@
 
 	Zur Berechnung der Aktivierung der Neuronen gibt es den sogenannten Forward Pass. Dabei beginnt man im ersten Hidden Layer damit, für alle Neuronen den sogenannten Netzinput (auch net input) zu berechnen. Um den Netzinput eines Neurons zu berechnen, werden alle Aktivierungen des vorherigen Layers mit den von dem Neuron dorthin führenden Gewichten multipliziert und summiert. Der Bias ist eigentlich auch ein Gewicht, jedoch ist er mit einem Neuron verbunden, das immer die Aktivierung 1 hat.
 
-	\newpage
-
 	\begin{wrapfigure}{r}{0.4\textwidth}
 		\centering
+		\vspace*{-5mm}
 		\includegraphics[width=0.4\textwidth]{pictures/sig_func.png}
 		\caption{Graph der Sigmoidfunktion}
 		\label{sig_func}
 	\end{wrapfigure}
 
-	Um aus diesem Netz Input nun die Aktivierung zu berechnen, benötigt man eine Aktivierungsfunktion, die dafür sorgt, dass die Aktivierung zwischen 0 und 1 liegt. Wir haben dafür eine Sigmoidfunktion benutzt, die eine Zahl nimmt und einen Wert zwischen 0 und 1 ausgibt (s. Abbildung \ref{sig_func}). Dies wird dann für jedes Neuron in jedem Layer wiederholt. Da man aber immer die Aktivierungen des vorherigen Layers benötigt, muss man das ganze vom Input Layer zum Output Layer machen. Daher auch der Name Forward Pass. Die Interpretation der Outputs hängt von den Trainingsdaten ab. Die allgemeine Formel für die Aktivierung eines Neurons lautet also:
+	Um aus diesem Netz Input nun die Aktivierung zu berechnen, benötigt man eine Aktivierungsfunktion, die dafür sorgt, dass die Aktivierung zwischen 0 und 1 liegt. Wir haben dafür eine Sigmoidfunktion benutzt, die eine Zahl nimmt und einen Wert zwischen 0 und 1 ausgibt (s. Abbildung \ref{sig_func}). Dies wird dann für jedes Neuron in jedem Layer wiederholt. Da man aber immer die Aktivierungen des vorherigen Layers benötigt, muss man das ganze vom Input Layer zum Output Layer machen. Daher auch der Name Forward Pass. Die Interpretation der Outputs hängt von den Trainingsdaten ab.
+
+	{\newpage
+	
+	Die allgemeine Formel für die Aktivierung eines Neurons lautet also:}
 
 
 	{\Large
@@ -415,7 +428,7 @@
 	\noindent wobei $L$ = der nächste Layer, $\delta_L$ = alle $\delta$'s des Layers $L$, und $W_{Li}$ = alle Gewichte, die ein Neuron des nächsten Layers und Neuron $i$ verbinden.
 
 
-	Da immer die nächsten Layer und der Output Layer benötigt werden, ergibt es Sinn, diese Optimierung beim Output Layer zu starten und dann rückwärts die \mbox{$\delta$-Werte} für jeden Layer zu berechnen und für die nächsten Berechnungen zu speichern -- daher auch der Name Backpropagation. \cite{MITNeuronale} \cite{3b1b:fft} \cite{brotcrunsher:backwardpass}
+	Da immer die nächsten Layer und der Output Layer benötigt werden, ergibt es Sinn, diese Optimierung beim Output Layer zu starten und dann rückwärts die \mbox{$\delta$-Werte} für jeden Layer zu berechnen und für die nächsten Berechnungen zu speichern -- daher auch der Name Backpropagation. \cite{MITNeuronale} \cite{3b1b:nn} \cite{brotcrunsher:backwardpass}
 
 	\threesub{Flux}
 
@@ -425,16 +438,12 @@
 
 	Für unseren Roboter haben wir uns entschieden, Lego Mindstorms EV3 Motoren zu benutzen, die von einem EV3-Brick gesteuert werden, der wiederum von einem Raspberry Pi 3B gesteuert wird (s. Abbildung \ref{robot-funktion} und \ref{Robot}). Der Grund dafür, dass wir keine Motoren direkt mit dem Raspberry Pi steuern, ist, dass wir schon alle Teile für einen EV3 Roboter haben. Somit müssten wir entweder neue Motoren kaufen oder passende Adapter finden, welche meist nur mit C und Python funktionieren und teuer sind.
 
-	\begin{figure}[h!]
+	\begin{figure}[H]
 		\centering
 		\includegraphics[width=0.8\textwidth]{pictures/roboter-funktionsweise.png}
 		\caption{Ablauf von Gehirnaktivität zur Motorbewegung}
 		\label{robot-funktion}
 	\end{figure}
-
-	Wir haben dafür das Package ev3dev.jl benutzt, welches wir bereits für die Robotik-AG programmiert hatten.
-
-	Mehr technische Details zu der Umsetzung lassen sich beim GitHub Repository des Packages finden \cite{ev3dev}.
 
 	\begin{figure}[H]
 		\centering
@@ -443,13 +452,18 @@
 		\label{Robot}
 	\end{figure}
 
-
-	\begin{figure}[h!]
+	Wir haben dafür das Package ev3dev.jl benutzt, welches wir bereits für die Robotik-AG programmiert hatten.
+	
+	Mehr technische Details zu der Umsetzung lassen sich beim GitHub Repository des Packages finden \cite{ev3dev}.
+	
+	\begin{figure}[H]
 		\centering
 		\includegraphics[width=0.9\textwidth]{pictures/Abbildung-des-Programms.png}
 		\caption{Funktionsweise des Programms}
 		\label{Gesamtfunktion}
 	\end{figure}
+
+
 
 	%\newpage
 	%\subsection{Funktionsweise des Programms}
@@ -473,9 +487,10 @@
 
 	Für den Aufbau der Hidden Layer des Netzwerkes haben wir uns entschieden, da wir mehrere verschiedene Ansätze ausprobiert haben und diese Struktur konsistent die besten Ergebnisse geliefert hat. Die Struktur ist zu sehen in Abbildung \ref{NetzStruktur}.
 
-	\begin{figure}[h!]
-		\includegraphics[width=0.75\textwidth]{pictures/netzwerk-struktur.png}
-		\caption{Struktur unseres neuronalen Netzwerks}
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=0.6\textwidth]{pictures/netzwerk-struktur.png}
+		\caption{Struktur unseres neuronalen Netzwerks (kein FFT)}
 		\label{NetzStruktur}
 	\end{figure}
 
@@ -489,10 +504,10 @@
 
 	Wie man an Abbildung \ref{training-nofft} sehen kann, erreichte das neuronale Netzwerk in diesem Fall in nur 1000 Epochen (ca. 5 Minuten Rechenzeit) eine Genauigkeit von 95\%, bei anderen Durchläufen erhielten wir auch 100\%.
 
-	Bei dem Versuch mit Frequenzfiltern durch FFT war die Struktur ähnlich, die Menge an Neuronen in jedem Layer wurde jedoch halbiert, da es nur 100 Inputs gibt, weil die Fast Fourier Transformation bei einer zeitlichen Auflösung von 200 Hertz nur 1 - 100 Hertz berechnen kann. Wir erhielten bei der gleichen Zahl an Wiederholungen (\enquote{Epochen}) ähnliche Ergebnisse (s. Abbildung \ref{training-fft}).
+	Bei dem Versuch mit Frequenzfiltern durch FFT war die Struktur ähnlich, die Menge an Neuronen in jedem Layer wurde jedoch halbiert, da es nur 100 Inputs pro Elektrode gibt. Wir erhielten bei der gleichen Zahl an Wiederholungen (\enquote{Epochen}) ähnliche Ergebnisse (s. Abbildung \ref{training-fft}).
 
-	\begin{figure}[h!]
-		\includegraphics[width=0.9\textwidth]{pictures/training-fft2.png}
+	\begin{figure}[H]
+		\includegraphics[width=\textwidth]{pictures/training-fft2.png}
 		\caption{Der Cost- und Genauigkeitsverlauf der Test- und Trainingsdaten beim Trainieren des Netwerkes mit FFT}
 		\label{training-fft}
 	\end{figure}
@@ -507,7 +522,7 @@
 
 	Das neuronale Netzwerk konnte Blinzeln danach sicher erkennen. Wie in Abbildung \ref{test-graph} zu erkennen ist, war die Differenz zwischen den beiden Output-Neuronen als nicht geblinzelt wurde fast 1, bei kräftigem Blinzeln auch. Die Klassifizierung des Netzwerks war also mit sehr großer Sicherheit getätigt worden. Bei leichtem Blinzeln hat das erste Output-Neuron (geblinzelt, grüner Graph) das zweite (nicht geblinzelt, roter Graph) zwar nicht oder nur leicht übertroffen, war aber dennoch klar erkennbar.
 
-	\begin{figure}
+	\begin{figure}[h!]
 		\includegraphics[width=\textwidth]{pictures/Test-Graph-annotated.png}
 		\caption{Ein Live-Test unseres Projektes, die grüne Linie repräsentiert das erste Output-Neuron (Sicherheit, dass geblinzelt wurde), die rote das zweite Output-Neuron (Sicherheit, dass nicht geblinzelt wurde). Die x-Achse ist die Zeit in 0,25 Sekunden Schritten}
 		\label{test-graph}
@@ -539,6 +554,8 @@
 
 	Zudem wollen wir in fernerer Zukunft versuchen, mithilfe unseres neuronalen Netzes bereits bei allen Menschen vorhandene, selbst kontrollierbare Gehirnaktivität zu finden und sicher zu erkennen, jedoch ohne vorherige Konditionierung. Solche Gehirnaktivität könnte z.B. der allgemeine Gedanke an \enquote{Rechts} sein, was womöglich mit erhöhter Aktivität auf der linken Hirnhälfte in Verbindung stehen könnte.
 	
+	\newpage
+
 	\section{Danksagung}
 
 	\subsection{Finanzierung} \label{Foerderverein}
