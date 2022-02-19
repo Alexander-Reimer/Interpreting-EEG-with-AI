@@ -162,6 +162,7 @@
 			\item GPU: RTX 3060
 			\item RAM: 16\,GB
 		\end{itemize}
+		
 		\item Software
 		\begin{itemize}
 			\item Flux.jl für das neuronale Netz
@@ -264,7 +265,7 @@
 
 	Wir nutzen dafür die Fast Fourier Transformation (FFT), welche lediglich eine komplexere aber effizientere Form der Diskreten Fourier Transformation (DFT) ist \cite{FFT-DFT}.
 
-	Grund für die Verwendung einer DFT ist, dass wir ein zeitdiskretes endliches Signal haben, also eine endliche Anzahl (200 pro Elektrode) an Datenpunkten, die auf konkrete Zeitpunkte bezogen sind, und keine unendlichen (iterativen) Funktionen.
+	%Grund für die Verwendung einer DFT ist, dass wir ein zeitdiskretes endliches Signal haben, also eine endliche Anzahl (200 pro Elektrode) an Datenpunkten, die auf konkrete Zeitpunkte bezogen sind, und keine unendlichen (iterativen) Funktionen.
 
 	Aus der FFT folgt ein Array (eine Liste) an Werten. Der Index dieser Liste bestimmt, für welche Frequenz der Wert gilt (erster Wert: 1 Hertz, zweiter Wert: 2 Hertz, etc.) und der Wert gibt die Amplitude der entsprechenden Sinus-Kurve an \cite{3b1b:fft}.
 
@@ -293,7 +294,7 @@
 
 	Um eine Verwirrung der KI zu verhindern, können wir bei Verwendung von FFT also auch einfach die Amplitude für 50 Hertz auf 0 setzen.
 
-	Die FFT ist außerdem sehr schnell, auf unserem Test-System braucht sie für ddie Verarbeitung von einer Sekunde Messdaten von zwei Elektroden im Schnitt \qty{22}{\micro\second}.
+	Die FFT ist außerdem sehr schnell, auf unserem Test-System braucht sie für die Verarbeitung von einer Sekunde Messdaten von zwei Elektroden im Schnitt \qty{22}{\micro\second}.
 
 	Dennoch wollen wir das Programm auch ohne FFT ausprobieren -- wenn die Ergebnisse gleich gut sind, würde es sich trotzdem lohnen, auf FFT zu verzichten, da für FFT auch die Installation eines weiteren Packages (FFTW) notwendig ist. 
 
@@ -322,7 +323,7 @@
 		\label{sig_func}
 	\end{wrapfigure}
 
-	Um aus diesem Netz Input nun die Aktivierung zu berechnen, benötigt man eine Aktivierungsfunktion, die dafür sorgt, dass die Aktivierung zwischen 0 und 1 liegt. Wir haben dafür eine Sigmoidfunktion benutzt, die eine Zahl nimmt und einen Wert zwischen 0 und 1 ausgibt. Dies wird dann für jedes Neuron in jedem Layer wiederholt. Da man aber immer die Aktivierungen des vorherigen Layers benötigt, muss man das ganze vom Input Layer zum Output Layer machen. Daher auch der Name Forward Pass. Die Interpretation der Outputs hängt von den Trainingsdaten ab. (s. Backwardpass). Die allgemeine Formel für die Aktivierung eines Neurons lautet also:
+	Um aus diesem Netz Input nun die Aktivierung zu berechnen, benötigt man eine Aktivierungsfunktion, die dafür sorgt, dass die Aktivierung zwischen 0 und 1 liegt. Wir haben dafür eine Sigmoidfunktion benutzt, die eine Zahl nimmt und einen Wert zwischen 0 und 1 ausgibt (s. Abbildung \ref{sig_func}). Dies wird dann für jedes Neuron in jedem Layer wiederholt. Da man aber immer die Aktivierungen des vorherigen Layers benötigt, muss man das ganze vom Input Layer zum Output Layer machen. Daher auch der Name Forward Pass. Die Interpretation der Outputs hängt von den Trainingsdaten ab. (s. Backwardpass). Die allgemeine Formel für die Aktivierung eines Neurons lautet also:
 
 
 	{\Large
@@ -405,15 +406,16 @@
 
 	\subsubsection{Roboter}
 
-	Für unseren Roboter haben wir uns entschieden, Lego Mindstorms EV3 Motoren zu benutzen, die von einem EV3-Brick gesteuert werden, der wiederum von einem Raspberry Pi 3B gesteuert wird. Der Grund dafür, dass wir keine Motoren direkt mit dem Raspberry Pi steuern, ist, dass wir schon alle Teile für einen EV3 Roboter haben. Somit müssten wir entweder neue Motoren kaufen oder passende Adapter finden, welche meist nur mit C und Python funktionieren und teuer sind.
+	Für unseren Roboter haben wir uns entschieden, Lego Mindstorms EV3 Motoren zu benutzen, die von einem EV3-Brick gesteuert werden, der wiederum von einem Raspberry Pi 3B gesteuert wird (s. Abbildung \ref{robot-funktion} und \ref{Robot}). Der Grund dafür, dass wir keine Motoren direkt mit dem Raspberry Pi steuern, ist, dass wir schon alle Teile für einen EV3 Roboter haben. Somit müssten wir entweder neue Motoren kaufen oder passende Adapter finden, welche meist nur mit C und Python funktionieren und teuer sind.
 
 	\begin{figure}[h!]
 		\centering
 		\includegraphics[width=0.8\textwidth]{pictures/roboter-funktionsweise.png}
 		\caption{Ablauf von Gehirnaktivität zur Motorbewegung}
+		\label{robot-funktion}
 	\end{figure}
 
-	Wir haben dafür das Package ev3dev.jl benutzt, welches wir bereits für die Robotik-AG programmiert hatten. Deshalb ist der Roboter bereits fertig, obwohl das neuronale Netz noch nicht so weit ist.
+	Wir haben dafür das Package ev3dev.jl benutzt, welches wir bereits für die Robotik-AG programmiert hatten.
 
 	Mehr technische Details zu der Umsetzung lassen sich beim GitHub Repository des Packages finden \cite{ev3dev}.
 
@@ -421,6 +423,7 @@
 		\centering
 		\includegraphics[width=0.5\textwidth]{pictures/roboter-annotated.png}
 		\caption{Unser Roboter (ohne Raspberry Pi, der über den EV3-Brick gehört)}
+		\label{Robot}
 	\end{figure}
 
 
@@ -428,6 +431,7 @@
 		\centering
 		\includegraphics[width=0.9\textwidth]{pictures/Abbildung-des-Programms.png}
 		\caption{Funktionsweise des Programms}
+		\label{Gesamtfunktion}
 	\end{figure}
 
 	%\newpage
