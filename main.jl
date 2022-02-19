@@ -26,25 +26,6 @@ include("EEG.jl")
 include("recover_data.jl")
 println("Recover loaded!")
 
-function make_fft(data)
-    # Apply fft functions to data
-    return get_magnitudes(split_double(fft(data)))
-end
-
-function split_double(fft_data)
-    # Cut off the second half of the data because of mirror-effect
-    half = round(Int, length(fft_data) / 2)
-    fft_data = fft_data[1:half]
-    # Double amplitudes to compensate
-    fft_data .*= 2
-    return fft_data
-end
-
-function get_magnitudes(fft_data)
-    # Calculate the magnitude of the fft values (complex numbers)
-    return abs.(fft_data)
-end
-
 function get_eeg_data(path, data_x, data_y, endings, output)
     sample_number = 1
     while isfile(path * string(sample_number) * ".csv")
