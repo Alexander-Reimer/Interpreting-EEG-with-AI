@@ -89,13 +89,24 @@ function get_loader(train_portion = 0.9, blink_path = "Blink/first_samples-befor
     endings = Recover.get_endings()
 
     inputs_all_channels = hyper_params.inputs
-    outputs = 2 # amount of output neurons
+    if hyper_params.one_out
+        outputs = 1 # amount of output neurons
+    else
+        outputs = 2 # amount of output neurons
+    end
     data_x = Array{Float64}(undef, inputs_all_channels, 0)
     data_y = Array{Float64}(undef, outputs, 0)
 
-    data_x, data_y = get_eeg_data(blink_path, data_x, data_y, endings, [1.0; 0.0])
+    if hyper_params.one_out
+        blink_y = [1.0]
+        no_blink_y = [0.0]
+    else
+        blink_y = [1.0; 0.0]
+        no_blink_y = [0.0, 1.0]
+    end
+    data_x, data_y = get_eeg_data(blink_path, data_x, data_y, endings, blink_y)
 
-    data_x, data_y = get_eeg_data(no_blink_path, data_x, data_y, endings, [0.0, 1.0])
+    data_x, data_y = get_eeg_data(no_blink_path, data_x, data_y, endings, no_blink_y)
 
     # total amount of samples
     l = size(data_x)[2]
@@ -132,6 +143,24 @@ function load_weights(name)
 end
 
 function loss_and_accuracy(data_loader, model, device)
+    loss = 0.0
+    acc = 0.0
+    num = 0
+    for (x, y) in data_loader
+        x, y = device(x), device(y)
+        ests = model(x)
+        diff = ests .- y
+        loss += Flux.mean(diff .^ 2)
+        # Calculate difference between
+        diff = abs.(round.(diff))
+        global diff = 1 .- diff
+        acc += sum(diff)
+        num += size(y, 2)
+    end
+    return loss / num, acc / num
+end
+
+function loss_and_accuracy_old(data_loader, model, device)
     acc = 0
     ls = 0.0f0
     num = 0
@@ -176,12 +205,18 @@ end
 function build_model()
     # Amount of inputs for all channels
     inputs = hyper_params.inputs
+    if hyper_params.one_out == true
+        out_layer = Dense(round(Int, inputs / 2), 1, σ)
+    else
+        out_layer = Dense(round(Int, inputs / 2), 2, σ)
+    end
+
     return Chain(
         Dense(inputs, round(Int, inputs / 2), σ),
         Dense(round(Int, inputs / 2), round(Int, inputs / 2), σ),
         #Dense(round(Int, inputs / 4), round(Int, inputs / 16), σ),
-        Dense(round(Int, inputs / 2), 2, σ)
-    )
+        out_layer
+        )
 end
 
 function prepare_cuda()
@@ -270,7 +305,7 @@ function train(new = false)
     fig.tight_layout()
     global device = prepare_cuda()
     # Load the training data and create the model structure with randomized weights
-    train_data, test_data = get_loader(0.9, "Blink/01-26-2022/", "NoBlink/01-26-2022/")
+    global train_data, test_data = get_loader(0.9, "Blink/01-26-2022/", "NoBlink/01-26-2022/")
     #train_data, test_data = get_loader(0.9, "Blink/first_samples-before_01-15-2022/", "NoBlink/first_samples-before_01-15-2022/")
     
     global model = build_model()
@@ -310,7 +345,7 @@ function train(new = false)
             gs = gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
             Flux.Optimise.update!(opt, ps, gs) # update parameters
         end
-        plot_loss(epoch, 100, test_data, model, device, train_data)
+        plot_loss(epoch, 1, test_data, model, device, train_data)
     end
 
     # Move model back to CPU (if it already was, it just stays)
@@ -387,17 +422,18 @@ mutable struct Args
     notch::Int
     inputs::Int
     cuda::Bool
+    one_out::Bool
 end
 
 function Args(learning_rate, training_steps, lower_limit, upper_limit, electrodes; 
-    fft = true, shuffle = true, batch_size = 2, notch = 50, cuda = true)
+    fft = true, shuffle = true, batch_size = 2, notch = 50, cuda = true, one_out = false)
     
     inputs = (upper_limit - lower_limit + 2) * length(electrodes)
     return Args(learning_rate, training_steps, lower_limit, upper_limit, electrodes, fft, shuffle,
-    batch_size, notch, inputs, cuda)
+    batch_size, notch, inputs, cuda, one_out)
 end
 
-global hyper_params = Args(0.001, 1000, 1, 100, [1, 2, 3]; cuda = false)
+global hyper_params = Args(0.001, 100000, 1, 100, [1, 2, 3]; cuda = false, one_out = true)
 
 train(true)
 
