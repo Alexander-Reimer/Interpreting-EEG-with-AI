@@ -160,20 +160,6 @@ function loss_and_accuracy(data_loader, model, device)
     return loss / num, acc / num
 end
 
-function loss_and_accuracy_old(data_loader, model, device)
-    acc = 0
-    ls = 0.0f0
-    num = 0
-    for (x, y) in data_loader
-        x, y = device(x), device(y)
-        ŷ = model(x)
-        ls += Flux.Losses.mse(model(x), y) # agg
-        acc += sum(Flux.onecold(cpu(model(x))) .== Flux.onecold(cpu(y)))
-        num += size(x, 2)
-    end
-    return ls / num, acc / num
-end
-
 function confusion_matrix(data_loader, model)
     # Create a confusion matrix for 
     blink_count = 0
@@ -435,7 +421,7 @@ end
 
 global hyper_params = Args(0.001, 100000, 1, 100, [1, 2, 3]; cuda = false, one_out = true)
 
-train(true)
+#train(true)
 
 
 #=
