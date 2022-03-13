@@ -66,8 +66,9 @@ end
 
 function fft_eeg(eeg_data, time)
     #x_fft, y_fft = get_fft(nothing, eeg_data, time = time)
-    y_fft = rfft(eeg_data)
-    return y_fft
+    y_fft = abs.(rfft(eeg_data))
+    x = [i for i = 1:length(y_fft)]
+    return x, y_fft
 end
 
 function divide_into_channels(data, channels)
@@ -88,7 +89,10 @@ function plot_eegs_fft()
 
     include("main.jl")
     sleep(0.2)
-    global eeg_data = AI.get_loader()[1].data[1]
+    println(pwd())
+    AI.hyper_params.fft = false
+    AI.hyper_params.inputs = 400
+    global eeg_data = AI.get_loader(0.9, "Blink/Okzipital-03-13-2022/", "NoBlink/Okzipital-03-13-2022/")[1].data[1]
     diviser = Int(size(eeg_data)[2] / 2)
     blink_data = eeg_data[:, 1:diviser]
     no_blink_data = eeg_data[:, diviser+1:end]
@@ -102,29 +106,29 @@ function plot_eegs_fft()
     # Channel 1
 
     # Blink:
-    global current_data = divide_into_channels(blink_data[:, 1], 2)
+    global current_data = divide_into_channels(blink_data[:, 1], 4)
     x, y = fft_eeg(current_data[1], 1)
     plot(x, y, "blue", label = "Geblinzelt")
 
     for sample_i = 2:size(blink_data)[2]
-        global current_data = divide_into_channels(blink_data[:, sample_i], 2)
+        global current_data = divide_into_channels(blink_data[:, sample_i], 4)
         x, y = fft_eeg(current_data[1], 1)
         plot(x, y, "blue")
     end
 
     # No blink:
-    global current_data = divide_into_channels(no_blink_data[:, 1], 2)
+    global current_data = divide_into_channels(no_blink_data[:, 1], 4)
     x, y = fft_eeg(current_data[1], 1)
-    plot(x, y, "red", label="Nicht geblinzelt")
+    plot(x, y, "red", label = "Nicht geblinzelt")
 
     for sample_i = 2:size(blink_data)[2]
-        global current_data = divide_into_channels(no_blink_data[:, sample_i], 2)
+        global current_data = divide_into_channels(no_blink_data[:, sample_i], 4)
         x, y = fft_eeg(current_data[1], 1)
         plot(x, y, "red")
     end
 
     legend()
-    
+
     return x, y
 end
 

@@ -9,3 +9,4 @@
         [X] Video Link
     [ ] Performance (benchmark ``y = model(x)``)
     [X] Diskussion
+    [ ] loss berechnung auf GPU statt CPU

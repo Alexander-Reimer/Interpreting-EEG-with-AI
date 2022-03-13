@@ -142,22 +142,24 @@ function load_weights(name)
     return content[:model_weights], content[:test_losses], content[:train_losses]
 end
 
-function loss_and_accuracy(data_loader, model, device)
+function loss_and_accuracy(data_loader, model, dev)
     loss = 0.0
     acc = 0.0
     num = 0
+    model = dev(model)
     for (x, y) in data_loader
-        x, y = device(x), device(y)
+        x, y = dev(x), dev(y)
         ests = model(x)
         diff = ests .- y
         loss += Flux.mean(diff .^ 2)
         # Calculate difference between
         diff = abs.(round.(diff))
-        global diff = 1 .- diff
+        diff = 1 .- diff
         acc += sum(diff)
         num += size(y, 2)
     end
-    return loss / num, acc / num
+    #global model = gpu(model)
+    return loss / num, acc / num / (Int(!hyper_params.one_out) + 1)
 end
 
 function confusion_matrix(data_loader, model)
@@ -171,12 +173,12 @@ function confusion_matrix(data_loader, model)
         est = model(x)
         if y[1, 1] == 1.0
             blink_count += 1
-            if est[1, 1] > est[2, 1]
+            if est[1, 1] > 1 - est[1, 1]
                 blink_acc += 1
             end
         else
             no_blink_count += 1
-            if est[1, 1] < est[2, 1]
+            if est[1, 1] < 1 - est[1, 1]
                 no_blink_acc += 1
             end
         end
@@ -202,7 +204,7 @@ function build_model()
         Dense(round(Int, inputs / 2), round(Int, inputs / 2), σ),
         #Dense(round(Int, inputs / 4), round(Int, inputs / 16), σ),
         out_layer
-        )
+        ) 
 end
 
 function prepare_cuda()
@@ -258,8 +260,8 @@ end
 
 function new_network(test_data, train_data, model, device)
     @info "Creating new network"
-    test_loss, test_acc = loss_and_accuracy(test_data, model |> device, device)
-    train_loss, train_acc = loss_and_accuracy(train_data, model |> device, device)
+    test_loss, test_acc = loss_and_accuracy(test_data, model, cpu)
+    train_loss, train_acc = loss_and_accuracy(train_data, model, cpu)
 
     push!(test_losses, cpu(test_loss))
     push!(train_losses, cpu(train_loss))
@@ -291,10 +293,10 @@ function train(new = false)
     fig.tight_layout()
     global device = prepare_cuda()
     # Load the training data and create the model structure with randomized weights
-    global train_data, test_data = get_loader(0.9, "Blink/01-26-2022/", "NoBlink/01-26-2022/")
+    global train_data, test_data = get_loader(0.9, "Blink/Okzipital-03-13-2022/", "NoBlink/Okzipital-03-13-2022/")
     #train_data, test_data = get_loader(0.9, "Blink/first_samples-before_01-15-2022/", "NoBlink/first_samples-before_01-15-2022/")
     
-    global model = build_model()
+    global model = device(build_model())
     global test_losses = Float64[]
     global train_losses = Float64[]
     global test_accs = Float64[]
@@ -302,7 +304,7 @@ function train(new = false)
 
     # if new = true, create a new network
     if new
-        new_network(test_data, train_data, model, cpu)
+        new_network(test_data, train_data, model, device)
     else
         model_weights = old_network()
         Flux.loadparams!(model, model_weights)
@@ -331,7 +333,7 @@ function train(new = false)
             gs = gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
             Flux.Optimise.update!(opt, ps, gs) # update parameters
         end
-        plot_loss(epoch, 1, test_data, model, device, train_data)
+        plot_loss(epoch, hyper_params.plot_frequency, test_data, model, device, train_data)
     end
 
     # Move model back to CPU (if it already was, it just stays)
@@ -342,7 +344,7 @@ function train(new = false)
 
     save_weights(model, "model.bson", test_losses, train_losses)
     @info "Weights saved at \"model.bson\""
-    #println(confusion_matrix(test_data, model))
+    println(confusion_matrix(test_data, model))
 
     plot_loss(100, 100, test_data, model, device, train_data, label = true)
 
@@ -409,17 +411,18 @@ mutable struct Args
     inputs::Int
     cuda::Bool
     one_out::Bool
+    plot_frequency::Int
 end
 
 function Args(learning_rate, training_steps, lower_limit, upper_limit, electrodes; 
-    fft = true, shuffle = true, batch_size = 2, notch = 50, cuda = true, one_out = false)
+    plot_frequency = 200, fft = true, shuffle = true, batch_size = 2, notch = 50, cuda = true, one_out = false)
     
     inputs = (upper_limit - lower_limit + 2) * length(electrodes)
     return Args(learning_rate, training_steps, lower_limit, upper_limit, electrodes, fft, shuffle,
-    batch_size, notch, inputs, cuda, one_out)
+    batch_size, notch, inputs, cuda, one_out, plot_frequency)
 end
 
-global hyper_params = Args(0.001, 100000, 1, 100, [1, 2, 3]; cuda = false, one_out = true)
+global hyper_params = Args(0.0001, 500, 1, 100, [1, 2]; cuda = false, one_out = true)
 
 #train(true)
 
