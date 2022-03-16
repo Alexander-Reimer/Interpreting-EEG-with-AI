@@ -13,13 +13,15 @@ function get_some_board_data(board_shim, nsamples)
 end
 
 function read_data(num_of_files, location)
+    #fig, ax1 = subplot()
+    #ax1.set_ylim(ymin = 0, ymax = 10000, auto = false)
     for i = 1:num_of_files
         data = BrainFlow.read_file(location * string(i) * ".csv")
         data = abs.(rfft(data[:, 1:4]))
         figure("Restored Data")
         clf()
         plot(data)
-        sleep(0.1)
+        sleep(0.01)
     end
 end
 
@@ -33,8 +35,8 @@ end
 
 function main(board_shim)
     data = Array{Float64,2}
-    blink_path = "Blink/Okzipital-03-13-2022-2/"
-    no_blink_path = "NoBlink/Okzipital-03-13-2022-2/"
+    blink_path = "Blink/Okzipital-03-16-2022/"
+    no_blink_path = "NoBlink/Okzipital-03-16-2022/"
 
     next_i_blink = get_latest(blink_path, 1)
     next_i_no_blink = get_latest(no_blink_path, 1)
@@ -42,6 +44,7 @@ function main(board_shim)
 
     for i = 0:9
         println("No Blink")
+        print("\a")
         sleep(2)
         for i2 = 0:20
             sleep(0.25)
@@ -71,8 +74,8 @@ end
 
 
 
-#=
 
+#=
 BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
 
 # params = BrainFlowInputParams() # Synthetic board
@@ -86,21 +89,23 @@ params = BrainFlowInputParams(
 ) # Ganglion board Windows
 #board_shim = BrainFlow.BoardShim(BrainFlow.SYNTHETIC_BOARD, params)
 board_shim = BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
+
 #BrainFlow.release_session(board_shim)
+
 BrainFlow.prepare_session(board_shim)
 BrainFlow.start_stream(board_shim)
 #println(get_some_board_data(board_shim, 200))
 main(board_shim)
 BrainFlow.release_session(board_shim)
 #
-=#
+
+# =#
 
 
-#=
 println("Blinks:")
-read_data(201, "Blink/Okzipital-03-13-2022-2/")
+read_data(201, "Blink/Okzipital-03-16-2022/")
 println("NoBlinks:")
-read_data(201, "NoBlink/Okzipital-03-13-2022-2/")
+read_data(201, "NoBlink/Okzipital-03-16-2022/")
 
 
 #=
