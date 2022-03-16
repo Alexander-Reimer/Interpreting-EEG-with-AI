@@ -21,7 +21,7 @@ function read_data(num_of_files, location)
         figure("Restored Data")
         clf()
         plot(data)
-        sleep(0.01)
+        sleep(0.05)
     end
 end
 
@@ -101,12 +101,12 @@ BrainFlow.release_session(board_shim)
 
 # =#
 
-
+#=
 println("Blinks:")
 read_data(201, "Blink/Okzipital-03-16-2022/")
 println("NoBlinks:")
 read_data(201, "NoBlink/Okzipital-03-16-2022/")
-
+=#
 
 #=
 BrainFlow.release_session(board_shim)
