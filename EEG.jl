@@ -99,7 +99,7 @@ BrainFlow.release_session(board_shim)
 
 # =#
 
-
+#=
 println("Blinks:")
 read_data(201, "Blink/Okzipital-03-16-2022/", "g")
 println("NoBlinks:")

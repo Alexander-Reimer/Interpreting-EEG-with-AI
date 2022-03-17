@@ -293,7 +293,7 @@ function train(new = false)
     fig.tight_layout()
     global device = prepare_cuda()
     # Load the training data and create the model structure with randomized weights
-    global train_data, test_data = get_loader(0.9, "Blink/Okzipital-03-13-2022/", "NoBlink/Okzipital-03-13-2022/")
+    global train_data, test_data = get_loader(0.9, "Blink/Okzipital-03-16-2022/", "NoBlink/Okzipital-03-16-2022/")
     #train_data, test_data = get_loader(0.9, "Blink/first_samples-before_01-15-2022/", "NoBlink/first_samples-before_01-15-2022/")
     
     global model = device(build_model())
@@ -424,7 +424,7 @@ end
 
 global hyper_params = Args(0.0001, 500, 1, 100, [1, 2]; cuda = false, one_out = true)
 
-#train(true)
+train(false)
 
 
 #=
