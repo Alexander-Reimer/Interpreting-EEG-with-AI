@@ -12,16 +12,14 @@ function get_some_board_data(board_shim, nsamples)
     return eeg_data
 end
 
-function read_data(num_of_files, location)
+function read_data(num_of_files, location, color)
     #fig, ax1 = subplot()
     #ax1.set_ylim(ymin = 0, ymax = 10000, auto = false)
     for i = 1:num_of_files
         data = BrainFlow.read_file(location * string(i) * ".csv")
         data = abs.(rfft(data[:, 1:4]))
-        figure("Restored Data")
-        clf()
-        plot(data)
-        sleep(0.01)
+        plot(data, color)
+        sleep(0.0001)
     end
 end
 
@@ -103,9 +101,9 @@ BrainFlow.release_session(board_shim)
 
 
 println("Blinks:")
-read_data(201, "Blink/Okzipital-03-16-2022/")
+read_data(201, "Blink/Okzipital-03-16-2022/", "g")
 println("NoBlinks:")
-read_data(201, "NoBlink/Okzipital-03-16-2022/")
+read_data(201, "NoBlink/Okzipital-03-16-2022/", "r")
 
 
 #=
