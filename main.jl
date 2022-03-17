@@ -20,6 +20,8 @@ println("Loading FFTW...")
 # For the Discreete Fourier Transform
 using FFTW
 
+using WAV
+
 println("Loading Recover...")
 # For loading corrupted endings, see recover_data.jl for more info
 include("EEG.jl")
@@ -52,9 +54,9 @@ function get_eeg_data(path, data_x, data_y, endings, output)
         end
 
         sample_data_x = reshape(sample_data_x, (:, 1))
-        if 4 in hyper_params.electrodes
-            sample_data_x[last] = endings[1][sample_number]
-        end
+        #if 4 in hyper_params.electrodes
+        #    sample_data_x[last] = endings[1][sample_number]
+        #end
 
         if hyper_params.fft == true
             temp_data_x = []
@@ -194,14 +196,14 @@ function build_model()
     # Amount of inputs for all channels
     inputs = hyper_params.inputs
     if hyper_params.one_out == true
-        out_layer = Dense(round(Int, inputs / 2), 1, σ)
+        out_layer = Dense(round(Int, inputs / 4), 1, σ)
     else
-        out_layer = Dense(round(Int, inputs / 2), 2, σ)
+        out_layer = Dense(round(Int, inputs / 4), 2, σ)
     end
 
     return Chain(
-        Dense(inputs, round(Int, inputs / 2), σ),
-        Dense(round(Int, inputs / 2), round(Int, inputs / 2), σ),
+        Dense(inputs, round(Int, inputs / 4), σ),
+        Dense(round(Int, inputs / 4), round(Int, inputs / 4), σ),
         #Dense(round(Int, inputs / 4), round(Int, inputs / 16), σ),
         out_layer
         ) 
@@ -238,23 +240,23 @@ function plot_loss(epoch, frequency, test_data, model, device, train_data; label
             train_loss_l = ""
             train_acc_l = ""
         end
-    
+        
         test_loss, test_acc = loss_and_accuracy(test_data, model, device)
         train_loss, train_acc = loss_and_accuracy(train_data, model, device)
-    
+        
         push!(test_losses, test_loss)
         push!(train_losses, train_loss)
         push!(test_accs, test_acc * 100)
         push!(train_accs, train_acc * 100)
-    
-        #clf()
-        ax1.plot(test_losses, color = "red", label=test_loss_l)
-        ax1.plot(train_losses, color = "red", linestyle = "dashed", label=train_loss_l)
-
-        ax2.plot(test_accs, color = "blue", label=test_acc_l)
-        ax2.plot(train_accs, color = "blue", linestyle = "dashed", label=train_acc_l)
-    
+        
         println("$(epoch) Epochen von $(hyper_params.training_steps): Loss ist $test_loss, Accuracy ist $test_acc.")
+        #clf()
+        #ax1.plot(test_losses, color = "red", label=test_loss_l)
+        #ax1.plot(train_losses, color = "red", linestyle = "dashed", label=train_loss_l)
+
+        #ax2.plot(test_accs, color = "blue", label=test_acc_l)
+        #ax2.plot(train_accs, color = "blue", linestyle = "dashed", label=train_acc_l)
+    
     end
 end
 
@@ -295,7 +297,7 @@ function train(new = false)
     # Load the training data and create the model structure with randomized weights
     global train_data, test_data = get_loader(0.9, "Blink/Okzipital-03-16-2022/", "NoBlink/Okzipital-03-16-2022/")
     #train_data, test_data = get_loader(0.9, "Blink/first_samples-before_01-15-2022/", "NoBlink/first_samples-before_01-15-2022/")
-    
+
     global model = device(build_model())
     global test_losses = Float64[]
     global train_losses = Float64[]
@@ -346,7 +348,7 @@ function train(new = false)
     @info "Weights saved at \"model.bson\""
     println(confusion_matrix(test_data, model))
 
-    plot_loss(100, 100, test_data, model, device, train_data, label = true)
+    plot_loss(hyper_params.plot_frequency, hyper_params.plot_frequency, test_data, model, device, train_data, label = true)
 
     #fig.legend(loc = "center right")
     fig.tight_layout()
@@ -362,7 +364,7 @@ function test(model)
     board_shim = BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
     samples = []
     if BrainFlow.is_prepared(board_shim)
-        #BrainFlow.release_session(board_shim)
+        BrainFlow.release_session(board_shim)
     end
     BrainFlow.prepare_session(board_shim)
     BrainFlow.start_stream(board_shim)
@@ -371,24 +373,37 @@ function test(model)
     println("")
     blink_vals = []
     no_blink_vals = []
-    for i = 1:100
+    for i = 1:2000
         counter -= 20
         sample = EEG.get_some_board_data(board_shim, 200)
         clf()
         #plot(sample)
+        for i = 0:3
+            BrainFlow.remove_environmental_noise(sample[i*200+1:(i+1)*200], 200, BrainFlow.FIFTY)
+        end
         sample = reshape(sample, (:, 1))
-        sample = [make_fft(sample[1:200])..., make_fft(sample[201:400])...]
+        sample = [abs.(rfft(sample[1:200]))..., abs.(rfft((sample[201:400])))...] #, abs.(rfft((sample[401:600])))..., abs.(rfft((sample[601:800])))...
         y = model(sample)
-        println(y[1], "    ", y[2], "       ", y[1] + y[2])
+        println(y)
         push!(blink_vals, y[1])
-        push!(no_blink_vals, y[2])
+        #push!(no_blink_vals, y[2])
     
         #clf()
         plot(blink_vals, "green")
-        plot(no_blink_vals, "red")
 
+        if y[1] > 0.55
+            fs = 8e3
+            t = 0.0:1/fs:prevfloat(0.1)
+            f = 500
+            y = sin.(2pi * f * t) * 0.1
+            wavplay(y, fs)
+        else
+            sleep(0.01)
+        end
+
+        #plot(no_blink_vals, "red")
+    
         #push!(samples, sample)
-        sleep(0.25)
         #print("\b\b\b\b\b")
         #println(counter)
     end
@@ -422,17 +437,17 @@ function Args(learning_rate, training_steps, lower_limit, upper_limit, electrode
     batch_size, notch, inputs, cuda, one_out, plot_frequency)
 end
 
-global hyper_params = Args(0.0001, 500, 1, 100, [1, 2]; cuda = false, one_out = true)
+global hyper_params = Args(0.0001, 500, 1, 100, [1, 2]; cuda = false, one_out = true, plot_frequency = 100)
 
-train(false)
+#train(true)
 
 
-#=
+
 device = prepare_cuda()
 model = build_model()
 parameters = old_network()
 Flux.loadparams!(model, parameters)
-#test(model)
-=#
+test(model)
+
 
 end # Module

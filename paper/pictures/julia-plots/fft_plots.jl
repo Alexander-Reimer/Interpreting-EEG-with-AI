@@ -1,7 +1,7 @@
 using Pkg
 cur_path = pwd()
-cd("../../..")
-Pkg.activate(".")
+#cd("../../..")
+#Pkg.activate(".")
 cd(cur_path)
 using PyPlot
 using FFTW
