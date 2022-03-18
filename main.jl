@@ -61,14 +61,22 @@ function get_eeg_data(path, data_x, data_y, endings, output)
         if hyper_params.fft == true
             temp_data_x = []
             # Perform FFT on data, once per channel
-            for i = 1:length(hyper_params.electrodes)
+            for i in hyper_params.electrodes
                 s = (i - 1) * 200 + 1
                 e = i * 200
                 #println(size(sample_data_x[s:e]))
                 fft_sample_x = abs.(rfft(sample_data_x[s:e]))
-                fft_sample_x[hyper_params.notch + 1] = 0.0
-                fft_sample_x = fft_sample_x[hyper_params.lower_limit:(hyper_params.upper_limit + 1)]
+                fft_sample_x[hyper_params.notch+1] = 0.0
+                fft_sample_x = fft_sample_x[hyper_params.lower_limit:(hyper_params.upper_limit+1)]
                 append!(temp_data_x, fft_sample_x)
+            end
+            sample_data_x = temp_data_x
+        else
+            temp_data_x = []
+            for i in hyper_params.electrodes
+                s = (i - 1) * 200 + 1
+                e = i * 200
+                append!(temp_data_x, sample_data_x[s:e])
             end
             sample_data_x = temp_data_x
         end
@@ -227,7 +235,7 @@ function prepare_cuda()
     return device
 end
 
-function plot_loss(epoch, frequency, test_data, model, device, train_data; label=false)
+function plot_loss(epoch, frequency, test_data, model, device, train_data; label=false, plot = true)
     if mod(epoch, frequency) == 0
         if label
             test_loss_l = "Testdaten Cost"
@@ -251,12 +259,13 @@ function plot_loss(epoch, frequency, test_data, model, device, train_data; label
         
         println("$(epoch) Epochen von $(hyper_params.training_steps): Loss ist $test_loss, Accuracy ist $test_acc.")
         #clf()
-        #ax1.plot(test_losses, color = "red", label=test_loss_l)
-        #ax1.plot(train_losses, color = "red", linestyle = "dashed", label=train_loss_l)
+        if plot
+            ax1.plot(test_losses, color = "red", label=test_loss_l)
+            ax1.plot(train_losses, color = "red", linestyle = "dashed", label=train_loss_l)
 
-        #ax2.plot(test_accs, color = "blue", label=test_acc_l)
-        #ax2.plot(train_accs, color = "blue", linestyle = "dashed", label=train_acc_l)
-    
+            ax2.plot(test_accs, color = "blue", label=test_acc_l)
+            ax2.plot(train_accs, color = "blue", linestyle = "dashed", label=train_acc_l)
+        end
     end
 end
 
@@ -335,7 +344,7 @@ function train(new = false)
             gs = gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
             Flux.Optimise.update!(opt, ps, gs) # update parameters
         end
-        plot_loss(epoch, hyper_params.plot_frequency, test_data, model, device, train_data)
+        plot_loss(epoch, hyper_params.plot_frequency, test_data, model, device, train_data, plot = false)
     end
 
     # Move model back to CPU (if it already was, it just stays)
@@ -350,7 +359,7 @@ function train(new = false)
 
     plot_loss(hyper_params.plot_frequency, hyper_params.plot_frequency, test_data, model, device, train_data, label = true)
 
-    #fig.legend(loc = "center right")
+    fig.legend(loc = "center")
     fig.tight_layout()
     #ax2.legend()
 end
@@ -432,22 +441,26 @@ end
 function Args(learning_rate, training_steps, lower_limit, upper_limit, electrodes; 
     plot_frequency = 200, fft = true, shuffle = true, batch_size = 2, notch = 50, cuda = true, one_out = false)
     
-    inputs = (upper_limit - lower_limit + 2) * length(electrodes)
+    if fft
+        inputs = (upper_limit - lower_limit + 2) * length(electrodes)
+    else
+        inputs = length(electrodes) * 200
+    end
     return Args(learning_rate, training_steps, lower_limit, upper_limit, electrodes, fft, shuffle,
     batch_size, notch, inputs, cuda, one_out, plot_frequency)
 end
 
-global hyper_params = Args(0.0001, 500, 1, 100, [1, 2]; cuda = false, one_out = true, plot_frequency = 100)
+global hyper_params = Args(0.001, 400, 1, 100, [1, 2]; cuda = false, one_out = true, plot_frequency = 100, fft = true)
 
 #train(true)
 
 
-
+#=
 device = prepare_cuda()
 model = build_model()
 parameters = old_network()
 Flux.loadparams!(model, parameters)
 test(model)
-
+=#
 
 end # Module

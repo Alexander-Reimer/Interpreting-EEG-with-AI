@@ -92,7 +92,7 @@ function plot_eegs_fft()
     println(pwd())
     AI.hyper_params.fft = false
     AI.hyper_params.inputs = 400
-    global eeg_data = AI.get_loader(0.9, "Blink/Okzipital-03-13-2022/", "NoBlink/Okzipital-03-13-2022/")[1].data[1]
+    global eeg_data = AI.get_loader(0.9, "Blink/Okzipital-03-16-2022/", "NoBlink/Okzipital-03-16-2022/")[1].data[1]
     diviser = Int(size(eeg_data)[2] / 2)
     blink_data = eeg_data[:, 1:diviser]
     no_blink_data = eeg_data[:, diviser+1:end]
