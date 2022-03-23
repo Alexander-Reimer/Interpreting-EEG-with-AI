@@ -41,10 +41,10 @@ function get_endings_path(path)
 end
 
 function get_endings()
-    endings = Array{Array{Float64,1},1}()
-    push!(endings, get_endings_path("Blink"))
-    push!(endings, get_endings_path("NoBlink"))
-    return endings
+    blink_endings = get_endings_path("Blink")
+    no_blink_endings = get_endings_path("NoBlink")
+
+    return (blink = blink_endings, no_blink = no_blink_endings)
 end
 
 end #Module
