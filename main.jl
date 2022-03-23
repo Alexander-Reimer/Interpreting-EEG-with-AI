@@ -248,6 +248,8 @@ function plot_loss(epoch, frequency, test_data, model, device, train_data; label
             train_loss_l = ""
             train_acc_l = ""
         end
+
+        x = [i for i = 0:frequency:epoch]
         
         test_loss, test_acc = loss_and_accuracy(test_data, model, device)
         train_loss, train_acc = loss_and_accuracy(train_data, model, device)
@@ -260,6 +262,7 @@ function plot_loss(epoch, frequency, test_data, model, device, train_data; label
         println("$(epoch) Epochen von $(hyper_params.training_steps): Loss ist $test_loss, Accuracy ist $test_acc.")
         #clf()
         if plot
+
             ax1.plot(test_losses, color = "red", label=test_loss_l)
             ax1.plot(train_losses, color = "red", linestyle = "dashed", label=train_loss_l)
 
@@ -300,6 +303,12 @@ function train(new = false)
 
     ylabel("Genauigkeit in %", color = "blue")
     ax2.tick_params(axis = "y", color = "blue", labelcolor = "blue")
+
+    line_loss_test = ax1.plot(test_losses, color = "red", label = test_loss_l)
+    line_loss_train = ax1.plot(train_losses, color = "red", linestyle = "dashed", label = train_loss_l)
+
+    line_acc_test = ax2.plot(test_accs, color = "blue", label = test_acc_l)
+    line_acc_train = ax2.plot(train_accs, color = "blue", linestyle = "dashed", label = train_acc_l)
 
     fig.tight_layout()
     global device = prepare_cuda()
@@ -364,7 +373,21 @@ function train(new = false)
     #ax2.legend()
 end
 
+function setup_robot()
+    ev3dev_path = "../ev3dev.jl/ev3dev.jl"
+    include(ev3dev_path)
+end
+
 function test(model)
+    setup("Z:/Programming/EEG/mount/sys/class/")
+
+    left_motor = Motor(:outB)
+    right_motor = Motor(:outD)
+
+    robot = Robot(left_motor, right_motor)
+
+    drive(robot, 0)
+
     counter = 200
     BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
     params = BrainFlowInputParams(
@@ -380,44 +403,77 @@ function test(model)
     sleep(1)
     println("Starting!")
     println("")
-    blink_vals = []
-    no_blink_vals = []
-    for i = 1:2000
-        counter -= 20
-        sample = EEG.get_some_board_data(board_shim, 200)
-        clf()
-        #plot(sample)
-        for i = 0:3
-            BrainFlow.remove_environmental_noise(sample[i*200+1:(i+1)*200], 200, BrainFlow.FIFTY)
-        end
-        sample = reshape(sample, (:, 1))
-        sample = [abs.(rfft(sample[1:200]))..., abs.(rfft((sample[201:400])))...] #, abs.(rfft((sample[401:600])))..., abs.(rfft((sample[601:800])))...
-        y = model(sample)
-        println(y)
-        push!(blink_vals, y[1])
-        #push!(no_blink_vals, y[2])
-    
-        #clf()
-        plot(blink_vals, "green")
+    blink_vals = [0.0]
+    no_blink_vals = [0.0]
+    x = [0.0]
 
-        if y[1] > 0.55
-            fs = 8e3
-            t = 0.0:1/fs:prevfloat(0.1)
-            f = 500
-            y = sin.(2pi * f * t) * 0.1
-            wavplay(y, fs)
-        else
-            sleep(0.01)
-        end
+    if hyper_params.one_out
+        global fig = figure("Live-Test mit einem Output-Neuron")
+    else
+        global fig = figure("Live-Test mit zwei Output-Neuronen")
+    end
 
-        #plot(no_blink_vals, "red")
-    
-        #push!(samples, sample)
-        #print("\b\b\b\b\b")
-        #println(counter)
+    clf()
+
+    ylabel("Sicherheit des NN in %")
+    xlabel("Zeit")
+    fig.axes[1].set_ylim(0:1)
+
+    line1 = plot([0], [0], "green")
+    #line2 = plot([0], [0], "red")
+    for i = 1:200
+        for i = 1:500
+            counter -= 20
+            sample = EEG.get_some_board_data(board_shim, 200)
+            #clf()
+            #plot(sample)
+            for i = 0:3
+                BrainFlow.remove_environmental_noise(sample[i*200+1:(i+1)*200], 200, BrainFlow.FIFTY)
+            end
+            sample = reshape(sample, (:, 1))
+            sample = [abs.(rfft(sample[1:200]))..., abs.(rfft((sample[201:400])))...] #, abs.(rfft((sample[401:600])))..., abs.(rfft((sample[601:800])))...
+            y = model(sample)
+            println(y)
+            push!(blink_vals, y[1])
+            #push!(no_blink_vals, y[2])
+
+            #push!(x, x[end] + 0.01)
+
+            #clf()
+            #plot(blink_vals, "green")
+            #line2[1].set_data(x, no_blink_vals)
+
+            if y[1] > 0.7
+                #=
+                fs = 8e3
+                t = 0.0:1/fs:prevfloat(0.01)
+                f = 500
+                y = sin.(2pi * f * t) * 0.1
+                wavplay(y, fs)
+                =#
+                drive(robot, 50)
+            else
+                drive(robot, 0)
+                #sleep(0.01)
+            end
+
+            #plot(no_blink_vals, "red")
+
+            #push!(samples, sample)
+            #print("\b\b\b\b\b")
+            #println(counter)
+        end
+        line1[1].remove()
+        line1 = plot(blink_vals, "green")
+        #line1[1].set_data(x, blink_vals)
     end
     BrainFlow.release_session(board_shim)
-
+    drive(robot, 0)
+    drive(robot, 0)
+    drive(robot, 0)
+    #clf()
+    #plot(blink_vals, "green", label = "Augen zu")
+    #plot(blink_vals, "red", label = "Augen auf")
 end
 
 mutable struct Args
@@ -455,12 +511,12 @@ global hyper_params = Args(0.001, 400, 1, 100, [1, 2]; cuda = false, one_out = t
 #train(true)
 
 
-#=
+setup_robot()
 device = prepare_cuda()
 model = build_model()
 parameters = old_network()
 Flux.loadparams!(model, parameters)
 test(model)
-=#
+# =#
 
 end # Module
