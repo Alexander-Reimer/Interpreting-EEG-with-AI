@@ -28,74 +28,80 @@ include("EEG.jl")
 include("recover_data.jl")
 println("Recover loaded!")
 
-function get_eeg_data(path, data_x, data_y, endings, output)
-    sample_number = 1
-    while isfile(path * string(sample_number) * ".csv")
-        # Read recorded EEG data
-        global sample_data_x = BrainFlow.read_file(path * string(sample_number) * ".csv")
+function get_eeg_data(paths, data_x, data_y, endings, output)
+    for path in paths
+        sample_number = 1
+        while isfile(path * string(sample_number) * ".csv")
+            # Read recorded EEG data
+            global sample_data_x = BrainFlow.read_file(path * string(sample_number) * ".csv")
 
+            temp_data_x = Array{Float64}(undef, size(sample_data_x, 1), 0)
 
-        temp_data_x = Array{Float64}(undef, size(sample_data_x, 1), 0)
+            # (Try to) filter 50 / 60 Hz frequencies to remove environmental noise using BrainFlow
+            # It doesnt really do a lot, but at least it's something
+            for i = 1:size(sample_data_x)[2]
+                if hyper_params.notch == 50
+                    notch = BrainFlow.FIFTY
+                elseif hyper_params.notch == 60
+                    notch = BrainFlow.SIXTY
+                else
+                    notch = hyper_params.notch
+                end
+                BrainFlow.remove_environmental_noise(view(sample_data_x, :, i), 200, notch)
+            end
 
-        for electrode in hyper_params.electrodes
-            temp_data_x = [temp_data_x sample_data_x[:, electrode]]
-        end
-        sample_data_x = temp_data_x
-        # Filter 50 Hz frequencies to remove environmental noise using BrainFlow
-        for i = 1:size(sample_data_x)[2]
-            if hyper_params.notch == 50
-                notch = BrainFlow.FIFTY
-            elseif hyper_params.notch == 60
-                notch = BrainFlow.SIXTY
+            # Make data 1d
+            sample_data_x = reshape(sample_data_x, (:, 1))
+
+            if 4 in hyper_params.electrodes
+                sample_data_x[last] = endings[sample_number]
+            end
+
+            if hyper_params.fft == true
+                temp_data_x = []
+                # Perform FFT on all channels in hyper_params.electrodes
+                for channel in hyper_params.electrodes
+                    # Every channel has 200 values
+                    s = (channel - 1) * 200 + 1
+                    e = channel * 200
+            
+                    # Using rfft for better performance, as it is best for real values
+                    fft_sample_x = abs.(rfft(sample_data_x[s:e]))
+                    # Remove Amplitude for the frequency in hyper_params.notch
+                    fft_sample_x[hyper_params.notch+1] = 0.0
+                    # Cut off all frequencies not between hyper_params.lower_limit and hyper_params.upper_limit
+                    fft_sample_x = fft_sample_x[hyper_params.lower_limit:(hyper_params.upper_limit+1)]
+            
+                    append!(temp_data_x, fft_sample_x)
+                end
+                sample_data_x = temp_data_x
             else
-                notch = hyper_params.notch
+                temp_data_x = []
+                # Only include data from the channels in hyper_params.electrodes
+                for channel in hyper_params.electrodes
+                    # Every channel has 200 values
+                    s = (channel - 1) * 200 + 1
+                    e = channel * 200
+                    append!(temp_data_x, sample_data_x[s:e])
+                end
+                sample_data_x = temp_data_x
             end
-            BrainFlow.remove_environmental_noise(view(sample_data_x, :, i), 200, notch)
+            # Append to existing data
+            data_x = [data_x sample_data_x]
+            sample_number += 1
         end
 
-        sample_data_x = reshape(sample_data_x, (:, 1))
-        #if 4 in hyper_params.electrodes
-        #    sample_data_x[last] = endings[1][sample_number]
-        #end
-
-        if hyper_params.fft == true
-            temp_data_x = []
-            # Perform FFT on data, once per channel
-            for i in hyper_params.electrodes
-                s = (i - 1) * 200 + 1
-                e = i * 200
-                #println(size(sample_data_x[s:e]))
-                fft_sample_x = abs.(rfft(sample_data_x[s:e]))
-                fft_sample_x[hyper_params.notch+1] = 0.0
-                fft_sample_x = fft_sample_x[hyper_params.lower_limit:(hyper_params.upper_limit+1)]
-                append!(temp_data_x, fft_sample_x)
-            end
-            sample_data_x = temp_data_x
-        else
-            temp_data_x = []
-            for i in hyper_params.electrodes
-                s = (i - 1) * 200 + 1
-                e = i * 200
-                append!(temp_data_x, sample_data_x[s:e])
-            end
-            sample_data_x = temp_data_x
+        # Append given output to data_y ([1.0, 0.0] for Blink and [0.0, 1.0] for NoBlink)
+        for i = 0:sample_number
+            data_y = [data_y output]
         end
-        # Append to existing data
-        data_x = [data_x sample_data_x]
-        sample_number += 1
-    end
-
-    # Append given "output" to data_y ([1.0, 0.0] for Blink and [0.0, 1.0] for NoBlink)
-    for i = 1:sample_number-1
-        data_y = [data_y output]
     end
 
     return data_x, data_y
 end
 
-function get_loader(train_portion = 0.9, blink_path = "Blink/first_samples-before_01-15-2022/", no_blink_path = "NoBlink/first_samples-before_01-15-2022/")
+function get_loader(train_portion = 0.9, blink_paths = ["Blink/first_samples-before_01-15-2022/"], no_blink_paths = ["NoBlink/first_samples-before_01-15-2022/"])
     # Load corrupted endings, see recover_data.jl for more info
-    # Not used right now as the 3. and 4. channel data isn't used at the moment
     endings = Recover.get_endings()
 
     inputs_all_channels = hyper_params.inputs
@@ -114,9 +120,10 @@ function get_loader(train_portion = 0.9, blink_path = "Blink/first_samples-befor
         blink_y = [1.0; 0.0]
         no_blink_y = [0.0, 1.0]
     end
-    data_x, data_y = get_eeg_data(blink_path, data_x, data_y, endings, blink_y)
 
-    data_x, data_y = get_eeg_data(no_blink_path, data_x, data_y, endings, no_blink_y)
+    data_x, data_y = get_eeg_data(blink_paths, data_x, data_y, endings.blink, blink_y)
+
+    data_x, data_y = get_eeg_data(no_blink_paths, data_x, data_y, endings.no_blink, no_blink_y)
 
     # total amount of samples
     l = size(data_x)[2]
@@ -124,10 +131,10 @@ function get_loader(train_portion = 0.9, blink_path = "Blink/first_samples-befor
     # multiplying with train portion and dividing by two because it is used twice (one for test data, one for train data)
     l_train = round(Int, l * train_portion / 2)
 
-    # dividing data into test and train data
+    # Dividing data into test and train data by taking from the beginning and end for train, and then the middle for test
+    # This way, the ratio of blink to no_blink data is equal in both
     train_data_x = [data_x[:, 1:l_train] data_x[:, (l-l_train+1):l]]
     train_data_y = [data_y[:, 1:l_train] data_y[:, (l-l_train+1):l]]
-
     test_data_x = data_x[:, (l_train+1):l-l_train]
     test_data_y = data_y[:, (l_train+1):l-l_train]
 
@@ -160,15 +167,19 @@ function loss_and_accuracy(data_loader, model, dev)
     for (x, y) in data_loader
         x, y = dev(x), dev(y)
         ests = model(x)
+        # Get differences between estimates of the model
+        # and correct output
         diff = ests .- y
+        # Calculate loss using the Mean Squared Error method
         loss += Flux.mean(diff .^ 2)
-        # Calculate difference between
-        diff = abs.(round.(diff))
+        # Round the values to either -1, 0, or 1
+        # and then get the absolute values
+        diff = round.(diff) .|> abs
+
         diff = 1 .- diff
         acc += sum(diff)
         num += size(y, 2)
     end
-    #global model = gpu(model)
     return loss / num, acc / num / (Int(!hyper_params.one_out) + 1)
 end
 
