@@ -1,4 +1,4 @@
-\documentclass{scrartcl}
+\documentclass[10pt]{scrartcl}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 
@@ -105,6 +105,8 @@
 	\vspace{0.5ex}
 	}
 
+	\newcommand{\form}[1]{#1}
+
 	\pagenumbering{gobble}
 	\thispagestyle{empty}
 
@@ -152,20 +154,17 @@
 	
 	Das Ziel ist es dann, einen Roboter nur mit Gedanken steuern zu können.
 	Wir haben bereits ein geeignetes neuronales Netz trainiert, welches Blinzeln sicher erkennen kann. Die Steuerung eines Roboters funktioniert ebenfalls.
-	Wir hoffen, in Zukunft den Roboter auch durch Gedanken an bestimmte Richtungen und nicht nur Blinzeln steuern zu können.
+	Unsere Hoffnung ist, in Zukunft den Roboter auch durch Gedanken an bestimmte Richtungen und nicht nur Blinzeln steuern zu können.
 
 	\section{Einleitung}
 
 	Ziel des Projektes ist es, zuerst ein BCI -- Brain-Computer-Interface -- zu entwickeln, welches verschiedene EKPs erkennen kann. Dieses wollen wir dann testen, indem wir es zur Steuerung eines Roboters nutzen.
 
-	%Die Idee eines BCI ist nicht neu, sondern wird intensiv erforscht. Aufgrund bereits durchgeführter Experimente ist bekannt, dass BCIs umsetzbar sind \cite{BCIChaudhary}. 
-	BCIs sind Schnittstellen zwischen dem Gehirn und einem Computer, die Kommunikation vom Ghirn zum Computer ermöglichen. Man kann BCIs zum Beispiel für die Steuerung von Prothesen, Drohnen und Robotern nutzen.
+	BCIs sind Schnittstellen zwischen dem Gehirn und einem Computer, die Kommunikation vom Gehirn zum Computer ermöglichen. Man kann BCIs zum Beispiel für die Steuerung von Prothesen, Drohnen und Robotern nutzen.
 
-	Zum Beispiel haben Forscher aus Standfort ein BCI entwickelt, dass in der Lage ist behinderten Personen wieder die Möglichkeit zu geben nur über ihre Gedanke Nachrichten schreiben zu können.
+	Zum Beispiel haben Forscher aus Stanford ein BCI entwickelt, das in der Lage ist, behinderten Personen wieder die Möglichkeit zu geben, nur über ihre Gedanken Nachrichten schreiben zu können \cite{brain2text}.
 	
-	Wir hoffen, bei der Erarbeitung unseres Projektes, neben dem Erlangen von Erfahrung in diesem interessanten Bereich auch selbst dazu beizutragen. BCIs, die mit sehr teurer Hardware entwickelt werden, sind nämlich bereits ziemlich gut erforscht. Jedoch sind diese BCIs, aufgrund ihres hohen Preises, für den Konsumenten nicht nutzbar. Genau bei diesem Problem wollen wir mit unserem Projekt ansetzten. Wir versuchen nämlich ein BCI zu entwickeln, welches auch mit günstiger Hardware funktioniert. Dabei ist es auch wichtig, dass unser BCI auch ohne spezielles Training auf eine bestimmte Person funktioniert und dass unser BCI auch leicht für die eigenen Zwecke anpassbar ist. Deswegen benutzen wir auch Open Source Software und haben zudem unseren kompletten Code auch auf GitHub veröffentlicht.
-	%Dies wollen wir erreichen durch das Entwickeln einer allgemeinen Anwendung, bei der kein vorheriges Trainieren für eine fremde Person benötigt wird, das Umsetzen mit günstiger, für viele bezahlbare Hardware, sowie ein performantes Programm, welches leicht für die eigenen Zwecke anpassbar ist.
-	
+	Wir hoffen, bei der Erarbeitung unseres Projektes neben dem Erlangen von Erfahrung in diesem interessanten Bereich auch selbst dazu beizutragen. BCIs, die mit sehr teurer Hardware entwickelt werden, sind nämlich bereits ziemlich gut erforscht. Jedoch sind diese BCIs, aufgrund ihres hohen Preises, für viele Konsumenten nicht nutzbar. Genau bei diesem Problem wollen wir mit unserem Projekt ansetzten. Wir wollen ein BCI entwickeln, welches auch mit günstiger Hardware funktioniert. Dabei ist es uns wichtig, dass unser BCI ohne spezielles Training auf genau diese Person für jeden beliebigen Menschen funktioniert, und dass unser BCI auch leicht für die eigenen Zwecke anpassbar ist, z.B. die Erkennung von Atemzügen statt Augenschließen. Deswegen benutzen wir Open Source Software und haben unseren kompletten Code ebenfalls auf GitHub veröffentlicht.
 
 	\section{Methode und Vorgehensweise}
 
@@ -201,31 +200,31 @@
 		\item Software
 		\begin{itemize}
 			\item Flux.jl für das neuronale Netz
-				\footnote{\href{https://github.com/FluxML/Flux.jl}{https://github.com/FluxML/Flux.jl}}
+				%\footnote{\href{https://github.com/FluxML/Flux.jl}{https://github.com/FluxML/Flux.jl}}
 				\cite{Flux.jl-2018}
 				\cite{innes:2018}
 			
 			\item BrainFlow.jl als Schnittstelle zum EEG
-				\footnote{\href{https://github.com/brainflow-dev/brainflow}{https://github.com/brainflow-dev/brainflow}}
+				%\footnote{\href{https://github.com/brainflow-dev/brainflow}{https://github.com/brainflow-dev/brainflow}}
 				\cite{brainflow}
 			
 			\item FFTW.jl für die Fast Fourier Transformation
-				\footnote{\href{https://github.com/JuliaMath/FFTW.jl}{https://github.com/JuliaMath/FFTW.jl}}
+				%\footnote{\href{https://github.com/JuliaMath/FFTW.jl}{https://github.com/JuliaMath/FFTW.jl}}
 				\cite{FFTW.jl-2005}
 			
 			\item CUDA.jl zum effektiven Nutzen einer NVIDIA GPU
-				\footnote{\href{https://github.com/JuliaGPU/CUDA.jl}{https://github.com/JuliaGPU/CUDA.jl}}
+				%\footnote{\href{https://github.com/JuliaGPU/CUDA.jl}{https://github.com/JuliaGPU/CUDA.jl}}
 				\cite{CUDA}
 			
 			\item PyPlot.jl zum Plotten
-				\footnote{\href{https://github.com/JuliaPy/PyPlot.jl}{https://github.com/JuliaPy/PyPlot.jl}}
+				%\footnote{\href{https://github.com/JuliaPy/PyPlot.jl}{https://github.com/JuliaPy/PyPlot.jl}}
 				\cite{pyplot}
 			
 			\item BSON.jl zum Speichern und Laden von Netzwerken
-				\footnote{\href{https://github.com/JuliaIO/BSON.jl}{https://github.com/JuliaIO/BSON.jl}}
+				%\footnote{\href{https://github.com/JuliaIO/BSON.jl}{https://github.com/JuliaIO/BSON.jl}}
 			
 			\item ev3dev.jl zum Steuern eines EV3-Roboters durch einen Raspberry Pi
-				\footnote{\href{https://github.com/AR102/ev3dev.jl}{https://github.com/AR102/ev3dev.jl}}
+				%\footnote{\href{https://github.com/AR102/ev3dev.jl}{https://github.com/AR102/ev3dev.jl}}
 				\cite{ev3dev}
 			
 		\end{itemize}
@@ -267,7 +266,7 @@
 
 	Weiter ist es möglich, nur durch Gedanken eine Steuerung auszuführen. Dies funktioniert jedoch meist durch instrumentelle oder klassische Konditionierung, also durch das Bestrafen und Belohnen auf Basis der Messungen des EEG. So kann das Gehirn darauf trainiert werden, auf Verlangen eine bestimmte, vorher festgelegte Aktivität auszulösen, die dann gemessen und ausgewertet werden kann. \cite{BCIChaudhary} Darauf wollen wir erstmal verzichten, da die Konditionierung Zeit benötigen und nicht unser Ziel einer allgemeinen Anwendbarkeit erfüllen würde.
 
-	Insgesamt hstehen uns zwei Earclips, die an den Ohren befestigt werden und zum Filtern von Störungen dienen, und vier Messelektroden, mit einer zeitlichen Auflösung von jeweils 200 Hertz (200 Messungen pro Sekunde) zur Verfügung. Zwei dieser Elektroden haben wir auf der Stirn platziert (links: Elektrode 1, rechts: Elektrode 2), zwei jeweils links (Elektrode 3) und rechts (Elektrode 4) auf dem Schädel, etwas über und vor dem Ohr (s. Abbildung \ref{10-20-System}). Wir haben uns für diese Platzierung entschieden, da die Elektroden so direkt über Muskeln sitzen, die beim Blinzeln bewegt werden. %!!!
+	Insgesamt stehen uns zwei Earclips, die an den Ohren befestigt werden und zum Filtern von Störungen dienen, und vier Messelektroden, jeweils mit einer zeitlichen Auflösung von 200 Hertz (200 Messungen pro Sekunde), zur Verfügung. Zwei dieser Elektroden haben wir auf der Stirn platziert (links: Elektrode 1, rechts: Elektrode 2), zwei jeweils links (Elektrode 3) und rechts (Elektrode 4) auf dem Schädel, etwas über und vor dem Ohr (s. Abbildung \ref{10-20-System}). Wir haben uns für diese Platzierung entschieden, da die Elektroden so direkt über Muskeln sitzen, die beim Blinzeln bewegt werden. %!!!
 
 	\begin{figure}[h!]
 		\centering
@@ -306,7 +305,7 @@
 	
 	Ob die FFT Analyse einen Vorteil zu den rohen Daten darstellen wird, werden wir in den Ergebnissen sehen müssen, jedoch liegt es nahe, da die KI sich auf einige wenige, wichtige Inputs konzentrieren kann. Denn wie man sehen kann, ist der Unterschied in den höheren Frequenzbereichen nicht so groß und vermutlich für eine sichere Erkennung nicht unbedingt notwendig.
 
-	Die große Amplitude bei 50 Hertz ist aufgrund der Verstrahlung der Umgebung, die meist besonders die Frequenz von 50 Hertz betrifft \cite{Praktikum}. Der Grund für diese Verstrahlung ist höchstwarscheinlich der Wechselstrom, der in Deutschland nämlich auch genau bei 50 Hertz liegt. Um eine Verwirrung der KI zu verhindern, können wir bei Verwendung von FFT also auch einfach die Amplitude für 50 Hertz auf 0 setzen.
+	Die große Amplitude bei 50 Hertz ist aufgrund der Verstrahlung der Umgebung, die meist besonders die Frequenz von 50 Hertz betrifft \cite{Praktikum}. Der Grund für diese Verstrahlung ist höchstwahrscheinlich der Wechselstrom, der in Deutschland nämlich auch genau bei 50 Hertz liegt. Um eine Verwirrung der KI zu verhindern, können wir bei Verwendung von FFT also auch einfach die Amplitude für 50 Hertz auf 0 setzen.
 
 	Die FFT ist außerdem sehr schnell, auf unserem Test-System braucht sie für die Verarbeitung von einer Sekunde Messdaten von zwei Elektroden im Schnitt \qty{22}{\micro\second}. Ein weiterer Vorteil der FFT ist, dass wir weniger Inputs haben. Denn wir brauchen aller höchstens die Amplituden für 1-100 Hertz, alles darüber kann unser EEG sowieso nicht akkurat wahrnehmen. Mit 100 Inputs (die Frequenzen) statt 200 Inputs (jede einzelne Spannungsdifferenz) kann unsere KI schneller lernen und schneller eine Erkennung durchführen.
 
@@ -339,7 +338,7 @@
 	Die allgemeine Formel für die Aktivierung eines Neurons lautet also:}
 
 
-	{\Large
+	\form{
 	\[
 		\sig(x)=\frac{1}{1+e^{-x}}
 		\]
@@ -347,7 +346,7 @@
 		a_{j} = \sig\left(\sum_{L} (a_{L} * W_{Lj}) + b_{j}\right)
 		\]}
 	
-	\noindent wobei $a_j$ = die Aktivierung des Neurons $j$, $L$ = der vorherige Layer, $a_L$ = alle Aktivierungen des Layers $L$, $W_{Lj}$ = alle Gewichte zwischen dem Neuron $j$ und den Neuronen des Layers $L$, und $b_j$ = der Bias des Neurons $j$. \cite{brotcrunsher:forwardpass}	
+	\noindent wobei $a_j$ die Aktivierung des Neurons $j$, $L$ der vorherige Layer, $a_L$ der Vektor aller Aktivierungen des Layers $L$, $W_{Lj}$ der Vektor aller Gewichte zwischen dem Neuron $j$ und den Neuronen des Layers $L$, und $b_j$ der Bias des Neurons $j$ ist. \cite{brotcrunsher:forwardpass}	
 	
 	\threesub{Loss/Cost} 
 
@@ -357,7 +356,7 @@
 
 	Die Funktion für die Cost des Output-Layers und somit gesamten Netzwerkes (für einen Trainingsdatensatz) lautet wie folgt:
 
-	{\Large \[
+	\form{ \[
 		C_0 = (a_L - y)^2
 	\]}
 
@@ -375,7 +374,7 @@
 
 	Doch wie verändert man nun die Aktivierungen des Output-Layers? Es müssen alle Gewichte und Biases davor angepasst werden. Um nun zu wissen, wie ein Gewicht verändert werden muss, gibt es folgende Funktion:
 
-	{\Large \[
+	\form{\[
 		\Delta W_{ij} = \epsilon * \delta_i * a_j
 	\]}
 
@@ -385,7 +384,7 @@
 
 	Um nun $\delta_i$ für den Output Layer zu berechnen, gibt es folgende Gleichung: 
 
-	{\Large \[
+	\form{\[
 		\delta_i = \sig '\left({\netin}_i\right) * (a_i (\textrm{soll}) - a_i (\textrm{ist})) 
 	\]}
 
@@ -397,7 +396,7 @@
 	
 	Durch die Multiplikation mit den dahin führenden Gewichten werden diese Änderungen gewichtet, da sie auf einige Neuronen größere Auswirkungen haben als auf andere. Wie beim Output Layer auch wird diese Summe noch mit $\sig'(\netin)$ multipliziert, um die Aktivierung durch bestimmte Muster angesprochener Neuronen noch weiter zu erhöhen und weniger/kaum angesprochener Neuronen zu senken, sodass die Ergebnisse besser und eindeutiger werden. Die Formel hierfür lautet:
 
-	{\Large \[\sig'({\netin}_i) * \sum_{L}{\left(\delta_L\ast W_{Li}\right)}\]}
+	\form{\[\sig'({\netin}_i) * \sum_{L}{\left(\delta_L\ast W_{Li}\right)}\]}
 
 	\noindent wobei $L$ = der nächste Layer, $\delta_L$ = alle $\delta$'s des Layers $L$, und $W_{Li}$ = alle Gewichte, die ein Neuron des nächsten Layers und Neuron $i$ verbinden.
 
@@ -436,10 +435,6 @@
 		\caption{Funktionsweise des Programms}
 		\label{Gesamtfunktion}
 	\end{figure}
-
-	\subsubsection{Open Source Software}
-
-	Bei der Erarbeitung des Projektes war es uns wichtig, dass wir Open Source Software verwenden, da es anderen Leuten, die eventuell unsern Code für ihr eignens Projekt nutzen wollen hilft, wenn die Programme die genutzt werden alle öffentlich einsehbar sind. Deswegen haben wir uns auch dazu entschieden unseren gesamten Code auf GitHub zu veröffentlichen.
 
 	%\newpage
 	%\subsection{Funktionsweise des Programms}
