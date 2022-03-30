@@ -17,3 +17,4 @@
             [ ] Einen Text, der darauf eingeht
         [ ] Ergebnisse
             [ ] BCI Ganglion paper erwähnen, ...
+            [ ] Neue Graphen (Schöner, z.B. größere Beschriftungen)

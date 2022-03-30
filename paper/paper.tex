@@ -265,7 +265,7 @@
 		\label{EEG-Blinzeln}
 	\end{figure}
 
-	Dafür haben wir zu Beginn zwei Flat Electrodes (Elektroden mit glatter Kontaktoberfläche) über den Augen und zwei Spike Elektroden (Elektroden mit langen \enquote{Stacheln}) an den Schläfen platziert. Flat Elektroden haben zwar aufgrund ihrer größeren Oberfläche auf freier Haut eine etwas bessere Signalqualität, aber die von uns gewählten Stellen an den Schläfen waren leicht behaart. Die Spike Elektroden können durch die Haare leichter Kontakt zur Kopfoberfläche herstellen.
+	Dafür haben wir zu Beginn zwei Flat Electrodes (Elektroden mit glatter Kontaktoberfläche) über den Augen und zwei Spike Elektroden (Elektroden mit langen \enquote{Spitzen}) an den Schläfen platziert. Flat Elektroden haben zwar aufgrund ihrer größeren Oberfläche auf freier Haut eine etwas bessere Signalqualität, aber die von uns gewählten Stellen an den Schläfen waren leicht behaart. Die Spike Elektroden können durch die Haare leichter Kontakt zur Kopfoberfläche herstellen.
 
 	Jedoch handelt es sich dabei eigentlich nicht um EEG. Der Grund für den so starken Ausschlag war, dass wir Elektromyographie (EMG) nutzten. Dabei werden die Spannungsdifferenzen von Muskeln gemessen, in unserem Fall die Muskeln, welche das Augenlid bewegen. \cite{wiki:EMG}
 
@@ -459,16 +459,25 @@
 
 	\section{Ergebnisse}
 
-	Beim Erkennen von Blinzeln mit EMG (Konfiguration 1) erhielten wir, sowohl mit als auch ohne FFT, eine Testdaten-Genauigkeit von 100\%. Mit der Genauigkeit ist gemeint, welchen Anteil der gegebenen Datensätze das neuronale Netzwerk korrekt klassifizieren konnte. Dabei ist vor allem die Testdaten-Genauigkeit relevant, da diese die Genauigkeit mit den Testdaten angibt. Die Testdaten wurden von den Trainingsdaten weggenommen, sodass das neuronale Netzwerk nicht mit ihnen trainiert wurde und so mit ihnen komplett neue, unbekannte Fälle simuliert werden können.
+	Beim Erkennen von Blinzeln mit EMG (Konfiguration 1) erhielten wir, sowohl mit als auch ohne FFT, eine Testdaten-Genauigkeit von 100\% (s. Abb. \ref{training-fft}). Mit der Genauigkeit ist gemeint, welchen Anteil der gegebenen Datensätze das neuronale Netzwerk korrekt klassifizieren konnte. Dabei ist vor allem die Testdaten-Genauigkeit relevant, da diese die Genauigkeit mit den Testdaten angibt. Die Testdaten sind nicht in den Trainingsdaten enthalten, sodass das neuronale Netzwerk nicht mit ihnen trainiert wurde und so mit ihnen komplett neue, unbekannte Fälle simuliert werden können.
 
 	\begin{figure}[H]
+		\fig{
 		\includegraphics[width=\textwidth]{pictures/training-fft2.png}
 		\caption{Der Cost- und Genauigkeitsverlauf der Test- und Trainingsdaten beim Trainieren des Netwerkes mit FFT}
-		\label{training-fft}
+		\label{training-fft}}
 	\end{figure}
-	
 
+	Auch ein realer Test mit einer Testperson lief gut, wie man in der Aufnahme davon sehen kann. \cite{projekt-video}
 
+	Bei der Verwendung von EEG (Konfiguration 2) konnte das neuronale Netzwerk ebenfalls eine Testdaten-Genauigkeit von 100\% erreichen, jedoch nur mit FFT. Ohne FFT sah es deutlich schlechter aus.
+
+	\begin{figure}[H]
+		\fig{
+		\includegraphics[width=\textwidth]{pictures/training_eeg_fft_vs_nofft.png}
+		\caption{Der Cost- und Genauigkeitsverlauf der Test- und Trainingsdaten beim Trainieren des Netwerkes mit FFT}
+		\label{training2}}
+	\end{figure}
 
 
 
@@ -556,10 +565,19 @@
 
 	\section{Quellen \& Referenzen}
 
-	\printbibliography[title={Literatur}, keyword={Literatur}, notkeyword={YTVideos}]
+	\subsection{Abbildungen}
 
-	\printbibliography[title={Videos}, keyword={YTVideos}]
+	Die Vorlage des 10-20-Systems in der Abbildung \ref{10-20-System} stammt von der Dokumentation von OpenBCI. \cite{OpenBCI}
+	
+	Alle anderen Abbildungen und Fotos wurden von uns selbst erstellt.
 
-	\printbibliography[title=Programme, keyword=Programme]
+	\subsection{Literatur}
+	\printbibliography[heading=none, keyword={Literatur}, notkeyword={YTVideos}]
+
+	\subsection{Videos}
+	\printbibliography[heading=none, keyword={YTVideos}]
+
+	\subsection{Programme}
+	\printbibliography[heading=none, keyword=Programme]
 
 \end{document}
