@@ -1,13 +1,9 @@
 # TODO
 
-    [X] Reduktion der Inputs durch FFT (Spiegelungseffekt bei reelen Zahlen etc.)
-    [X] Neue Ergebnisse
-        [X] Mehr Daten
-        [X] Erfolg
-        [X] Graph
-        [/] Video Frame
-        [X] Video Link
-    [ ] Performance (benchmark ``y = model(x)``)
-    [X] Diskussion
     [ ] loss berechnung auf GPU statt CPU
     [ ] accuracy zu save_weights hinzufügen
+    [ ] Bericht
+        [ ] Performance (benchmark ``y = model(x)``)
+        [ ] Beide Elektrodenplatzierungen in Abbildung
+        [ ] Quellen mit direktem Link für Packages
+        [ ] Zu Abb. 1 Spike & Flat Elektroden hinzufügen

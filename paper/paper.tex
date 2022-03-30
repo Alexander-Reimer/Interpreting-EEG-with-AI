@@ -107,6 +107,7 @@
 
 	\newcommand{\form}[1]{#1}
 
+	\newcommand{\fig}[1]{\centering #1}
 	\pagenumbering{gobble}
 	\thispagestyle{empty}
 
@@ -164,7 +165,9 @@
 
 	Zum Beispiel haben Forscher aus Stanford ein BCI entwickelt, das in der Lage ist, behinderten Personen wieder die Möglichkeit zu geben, nur über ihre Gedanken Nachrichten schreiben zu können \cite{brain2text}.
 	
-	Wir hoffen, bei der Erarbeitung unseres Projektes neben dem Erlangen von Erfahrung in diesem interessanten Bereich auch selbst dazu beizutragen. BCIs, die mit sehr teurer Hardware entwickelt werden, sind nämlich bereits ziemlich gut erforscht. Jedoch sind diese BCIs, aufgrund ihres hohen Preises, für viele Konsumenten nicht nutzbar. Genau bei diesem Problem wollen wir mit unserem Projekt ansetzten. Wir wollen ein BCI entwickeln, welches auch mit günstiger Hardware funktioniert. Dabei ist es uns wichtig, dass unser BCI ohne spezielles Training auf genau diese Person für jeden beliebigen Menschen funktioniert, und dass unser BCI auch leicht für die eigenen Zwecke anpassbar ist, z.B. die Erkennung von Atemzügen statt Augenschließen. Deswegen benutzen wir Open Source Software und haben unseren kompletten Code ebenfalls auf GitHub veröffentlicht.
+	Wir hoffen, bei der Erarbeitung unseres Projektes neben dem Erlangen von Erfahrung in diesem interessanten Bereich auch selbst dazu beizutragen. BCIs, die mit sehr teurer Hardware entwickelt werden, sind nämlich bereits ziemlich gut erforscht. Jedoch sind diese BCIs, aufgrund ihres hohen Preises, für viele Konsumenten nicht nutzbar. Genau bei diesem Problem wollen wir mit unserem Projekt ansetzten. Wir wollen ein BCI entwickeln, welches auch mit günstiger Hardware funktioniert.
+	
+	Dabei ist es uns wichtig, dass unser BCI ohne spezielles Training auf genau diese Person für jeden beliebigen Menschen funktioniert, und dass unser BCI auch leicht für die eigenen Zwecke anpassbar ist, z.B. die Erkennung von Atemzügen statt Augenschließen. Deswegen benutzen wir Open Source Software und haben unseren kompletten Code ebenfalls auf GitHub veröffentlicht.
 
 	\section{Methode und Vorgehensweise}
 
@@ -174,7 +177,7 @@
 		\item EEG
 		\begin{itemize}
 			\item 4 Channel Ganglion Board von OpenBCI $\star$ (s. \hyperref[Foerderverein]{Danksagung})
-			\item 2x Spike und 2x Flat Electrodes  $\star$
+			\item 4x Spike und 2x Flat Electrodes  $\star$
 			\item Klettband für die Elektroden $\star$
 			\item 2x Earclips $\star$
 			\item Lithium-Polymer-Akku und Ladegerät $\star$
@@ -232,8 +235,9 @@
 	\end{itemize}
 
 	\begin{figure}[h!]
+		\fig{
 		\includegraphics[width=0.5\textwidth]{pictures/EEG-Alex-annotated.png}
-		\includegraphics[width=0.35\textwidth]{pictures/Ganglion-Board-annotated.png}
+		\includegraphics[width=0.35\textwidth]{pictures/Ganglion-Board-annotated.png}}
 		\caption{Das EEG und Zubehör. Links sieht man die typische Anwendung des EEG im Versuchsaufbau. Rechts ist das Ganglion Board genauer dargestellt.}
 		\label{EEG-Zubehor}
 	\end{figure}
@@ -246,11 +250,13 @@
 
 	\subsubsection{Elektroenzephalographie}
 
-	Bei der Elektroenzephalographie (EEG) werden Elektroden an der Kopfoberfläche platziert. Diese können sehr kleine Spannungsdifferenzen messen, die durch Reize im Gehirn entstehen und durch den Schädel dringen. Diese Spannungen werden nicht von einzelnen Nervenzellen erzeugt, sondern geben die Summe aller lokalen Spannungen wieder. Man kann also auch nur ungefähr sagen, wo genau im Gehirn ein bestimmter Reiz ausgelöst wurde, je mehr Elektroden, desto höher die Genauigkeit. \cite{wiki:EEG}
+	Bei der Elektroenzephalographie (EEG) werden Elektroden an der Kopfoberfläche platziert. Diese können sehr kleine Spannungen messen, die durch Reize im Gehirn entstehen und durch den Schädel dringen. Diese Spannungen werden nicht von einzelnen Nervenzellen erzeugt, sondern geben die Summe aller lokalen Spannungen wieder. Man kann also auch nur ungefähr sagen, wo genau im Gehirn ein bestimmter Reiz ausgelöst wurden. Mit mehr Elektroden kann die Genauigkeit erhöht werden. \cite{wiki:EEG} \cite{Birbaumer2010}
 
-	Wir untersuchen dabei ereigniskorrelierte Potentiale (EKPs). Dies sind bestimmte Spannungsschwankungen (\enquote{Potentiale}), welche in Zusammenhang mit einem beobachtbaren Ereignis stehen, wie z.B. Blinzeln oder Armbewegungen. \cite{Birbaumer2010} \cite{Praktikum}
+	Um eine Differenz bilden zu können, wird eine zweite Elektrode benötigt. Wir benutzen dafür eine Referenzelektrode, welche am Ohrläppchen befestigt wurde, wo sie ein von Gehirnströmen weitgehend unbeeinflusstes, konstantes Potential ableiten kann. Alle vier am Kopf platzierten Elektroden nutzen diese Referenzelektrode. Somit handelt es sich bei allen vieren um eine unipolare Ableitung. \cite{Praktikum}
 
-	Dabei haben wir uns für das Blinzeln entschieden, da wir es im Graphen zumindest mit bloßen Augen sehr gut erkennen konnten (s. Abbildung \ref{EEG-Blinzeln}).
+	Wir untersuchen dabei ereigniskorrelierte Potentiale (EKPs). Dies sind bestimmte Spannungsschwankungen (\enquote{Potentiale}), welche in Zusammenhang mit einem internen oder externen Ereignis stehen, wie z.B. nach einem lauten Ton, während und nach einer Körperbewegung, oder während hoher Konzentration. \cite{Birbaumer2010} \cite{Praktikum}
+
+	Dabei haben wir uns zuerst für das Blinzeln entschieden, da wir es im Graphen zumindest mit bloßen Augen sehr gut erkennen konnten (s. Abbildung \ref{EEG-Blinzeln}).
 
 	\begin{figure}[h]
 		\includegraphics{pictures/blinzeln_ekp_beispiel_pyplot_annotated.png}
@@ -258,32 +264,36 @@
 		\label{EEG-Blinzeln}
 	\end{figure}
 
-	Für unser Projekt nutzen wir zwar die Ausrüstung für EEG, aber genau genommen wird das Blinzeln mithilfe von Elektromyographie (EMG) erkannt, denn aufgrund der Platzierung der zwei verwendeten Elektroden direkt über den Augen werden nicht die Spannungsdifferenzen des Gehirns gemessen, sondern die für das Blinzeln verantwortlichen Augenmuskeln \cite{wiki:EMG}.
+	Dafür haben wir zu Beginn zwei Flat Electrodes (Elektroden mit glatter Kontaktoberfläche) über den Augen und zwei Spike Elektroden (Elektroden mit langen \enquote{Stacheln}) an den Schläfen platziert. Flat Elektroden haben zwar aufgrund ihrer größeren Oberfläche auf freier Haut eine etwas bessere Signalqualität, aber die von uns gewählten Stellen an den Schläfen waren leicht behaart. Die Spike Elektroden können durch die Haare leichter Kontakt zur Kopfoberfläche herstellen.
 
-	Wir haben uns für diesen Anfang entschieden, da im EMG ein Blinzeln sehr sicher erkennbar ist und wir so eine mangelnde Genauigkeit des Messgerätes als Fehlerquelle ausschließen konnten, solange wir noch an dem neuronalen Netz und der Datenverarbeitung arbeiten.
+	Jedoch handelt es sich dabei eigentlich nicht um EEG. Der Grund für den so starken Ausschlag war, dass wir Elektromyographie (EMG) nutzten. Dabei werden die Spannungsdifferenzen von Muskeln gemessen, in unserem Fall die Muskeln, welche das Augenlid bewegen. \cite{wiki:EMG}
 
-	%Da wir nun wissen, dass diese Komponenten im Kern funktionieren, wollen wir die Elektroden am Hinterkopf, genauer dem Okzipitale Kortex, platzieren, sodass wir tatsächlich die Potentiale des Gehirns messen und somit unser Ziel der Deutung eines Elektroenzephalogramms erreichen können.
+	Aber wir haben es trotzdem zu Beginn genutzt, da wir erstmal eine funktionierende Basis schaffen wollten.
 
-	Weiter ist es möglich, nur durch Gedanken eine Steuerung auszuführen. Dies funktioniert jedoch meist durch instrumentelle oder klassische Konditionierung, also durch das Bestrafen und Belohnen auf Basis der Messungen des EEG. So kann das Gehirn darauf trainiert werden, auf Verlangen eine bestimmte, vorher festgelegte Aktivität auszulösen, die dann gemessen und ausgewertet werden kann. \cite{BCIChaudhary} Darauf wollen wir erstmal verzichten, da die Konditionierung Zeit benötigen und nicht unser Ziel einer allgemeinen Anwendbarkeit erfüllen würde.
+	Nach EMG haben wir dann tatsächliche Elektroenzephalographie genutzt. Dabei haben wir weiterhin Blinzeln genommen. Die Elektroden haben wir dafür alle nebeneinander am Okzipitalen Kortex (Visueller Kortex) platziert (s. Abb. \ref{10-20-System}), welcher sich am Hinterkopf befindet und sehr stark mit den Augen und dem Sehvermögen verknüpft ist. \cite{Birbaumer2010} 
 
-	Insgesamt stehen uns zwei Earclips, die an den Ohren befestigt werden und zum Filtern von Störungen dienen, und vier Messelektroden, jeweils mit einer zeitlichen Auflösung von 200 Hertz (200 Messungen pro Sekunde), zur Verfügung. Zwei dieser Elektroden haben wir auf der Stirn platziert (links: Elektrode 1, rechts: Elektrode 2), zwei jeweils links (Elektrode 3) und rechts (Elektrode 4) auf dem Schädel, etwas über und vor dem Ohr (s. Abbildung \ref{10-20-System}). Wir haben uns für diese Platzierung entschieden, da die Elektroden so direkt über Muskeln sitzen, die beim Blinzeln bewegt werden. %!!!
+	Wir entschieden uns, beim Blinzeln zu bleiben, da wir bereits wussten, dass geschlossene Augen klar erkennbar sein sollten: Bei offenen Augen findet eine sogenannte Alpha-Blockade statt, bei der - vor allem im Okzipitalem Kortex - die Alphawellen stark sinken. Entsprechend steigen sie stark an, wenn die Augen geschlossen sind. \cite{Praktikum} \cite{wiki:Berger-Effekt}
+
+	Weiter ist es möglich, nur durch Gedanken eine Steuerung auszuführen. Dies funktioniert jedoch meist durch instrumentelle oder klassische Konditionierung, also durch das Bestrafen und Belohnen auf Basis der Messungen des EEG. So kann das Gehirn darauf trainiert werden, auf Verlangen eine bestimmte, vorher festgelegte Aktivität auszulösen, die dann gemessen und ausgewertet werden kann. \cite{BCIChaudhary} Darauf wollen wir verzichten, da die Konditionierung Zeit benötigen und nicht unser Ziel einer allgemeinen Anwendbarkeit erfüllen würde.
+
+	%Insgesamt stehen uns zwei Earclips, die an den Ohren befestigt werden und zum Filtern von Störungen dienen, und vier Messelektroden, jeweils mit einer zeitlichen Auflösung von 200 Hertz (200 Messungen pro Sekunde), zur Verfügung. Zwei dieser Elektroden haben wir auf der Stirn platziert (links: Elektrode 1, rechts: Elektrode 2), zwei jeweils links (Elektrode 3) und rechts (Elektrode 4) auf dem Schädel, etwas über und vor dem Ohr (s. Abbildung \ref{10-20-System}). Wir haben uns für diese Platzierung entschieden, da die Elektroden so direkt über Muskeln sitzen, die beim Blinzeln bewegt werden. %!!!
 
 	\begin{figure}[h!]
-		\centering
+		\fig{
 		\includegraphics[width=0.5\textwidth]{pictures/elektroden-platzierungen.png}
 		\caption{10-20 System mit den von uns genutzten Elektroden rot und Earclips orange gefärbt}
-		\label{10-20-System}
+		\label{10-20-System}}
 	\end{figure}
 
-	Uns ist nach der Aufnahme der Trainingsdaten aufgefallen, dass die Elektroden 3 und 4 deutlich schlechtere Signalqualität hatten als Elektroden 1 und 2, vermutlich weil die Elektroden 3 und 4 auf Haaren auflagen und weiter von den Augen entfernt waren.
+	Uns ist nach der Aufnahme der Trainingsdaten in der ersten Konfiguration (EMG) aufgefallen, dass bei den Elektroden 3 und 4 das Blinzeln deutlich schlechter erkennbar war als bei den Elektroden 1 und 2, vermutlich weil die Elektroden 3 und 4 Spike Elektroden und weiter von den Augen entfernt waren.
 
 	Deswegen haben wir uns entschieden, nur die Elektroden 1 und 2 zu verwenden.
 
-	Also können wir insgesamt $2 * 200 = 400$ Signale pro Sekunde messen.
+	Da jede Elektrode eine zeitliche Auflösung von 200 Hertz (200 Messungen pro Sekunde) hat, messen wir insgesamt $2 * 200 = 400$ Signale pro Sekunde.
 
 	\subsubsection{Fourier-Analyse}
 	
-	Uns wurde von Professor Everling (s. Danksagung) empfohlen, die Anwendung der Fourier-Analyse zur Vorbereitung der Daten für das neuronale Netz zu bedenken. Die Fourier-Analyse kann die verschiedenen zugrundeliegenden Frequenzen von Datenfolgen, Funktionen, und mehr bestimmen, indem diese in Sinus-Kurven zerlegt werden, sie dient also zur Spektralanalyse \cite{3b1b:fft}. Wir nutzen dafür die Fast Fourier Transformation (FFT), welche lediglich eine komplexere aber effizientere Form der Diskreten Fourier Transformation (DFT) ist \cite{FFT-DFT}. 
+	Uns wurde von Professor Everling (s. \refname{Unterstuetzung}) empfohlen, die Anwendung der Fourier-Analyse zur Vorbereitung der Daten für das neuronale Netz zu bedenken. Die Fourier-Analyse kann die verschiedenen zugrundeliegenden Frequenzen von Datenfolgen, Funktionen, und mehr bestimmen, indem diese in Sinus-Kurven zerlegt werden, sie dient also zur Spektralanalyse \cite{3b1b:fft}. Wir nutzen dafür die Fast Fourier Transformation (FFT), welche lediglich eine komplexere aber effizientere Form der Diskreten Fourier Transformation (DFT) ist \cite{FFT-DFT}. 
 	Aus der FFT folgt ein Array (eine Liste) an Werten. Der Index dieser Liste bestimmt, für welche Frequenz der Wert gilt (erster Wert: 1 Hertz, zweiter Wert: 2 Hertz, etc.) und der Wert gibt die Amplitude der entsprechenden Sinus-Kurve an. So lässt sich bestimmen, welche Frequenzen am stärksten vorkommen. Außerdem können dann Frequenzen herausgefiltert werden, indem die entsprechenden Indices auf Null gesetzt werden. 
 	Eine FFT kann Elektroenzephalogramme verlustfrei repräsentieren. Dies lässt sich erkennen, wenn man mithilfe der durch die FFT entstandenen Spektralanalyse die Daten rekonstruiert (Inverse Fast Fourier Transformation, IFFT) (s. Abbildung \ref{EEG-IFFT}). Dazu werden die Sinus-Kurven der Frequenzen mit den entsprechenden Amplituden multipliziert und dann addiert.
 
@@ -510,7 +520,7 @@
 
 	Danke an den Förderverein \enquote{Gesellschaft der Freunde des Gymnasium Eversten e.V.} für die Finanzierung des EEG-Geräts. Alle finanzierten Teile sind in der \hyperref[Materialien]{Materialliste} mit $\star$ gekennzeichnet. 
 
-	\subsection{Unterstützung}
+	\subsection{Unterstützung} \label{Unterstuetzung}
 
 	Vielen Dank an Professor Everling vom \enquote{The Brain and Mind Institute} der Western University in Kanada, der uns geholfen hat, einen Ansatz in diesem komplizierten Thema zu finden und praktische Tipps zum Umgang mit dem EEG gegeben hat. \footnote{\href{https://www.uwo.ca/bmi/investigators/stefan-everling.html}{https://www.uwo.ca/bmi/investigators/stefan-everling.html}}
 
