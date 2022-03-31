@@ -10,6 +10,7 @@ It opens every file, and goes through the underlying text data of the .csv to ge
 using BrainFlow
 
 function get_endings_path(path)
+    pwd_cur = pwd()
     cd(path)
     i = 1
     endings = Float64[]
@@ -36,13 +37,13 @@ function get_endings_path(path)
         push!(endings, parse(Float64, num_str))
         i += 1
     end
-    cd("..")
+    cd(pwd_cur)
     return endings
 end
 
-function get_endings()
-    blink_endings = get_endings_path("Blink")
-    no_blink_endings = get_endings_path("NoBlink")
+function get_endings(blink_path, no_blink_path)
+    blink_endings = get_endings_path(blink_path)
+    no_blink_endings = get_endings_path(no_blink_path)
 
     return (blink = blink_endings, no_blink = no_blink_endings)
 end
