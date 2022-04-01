@@ -80,6 +80,8 @@
 % \usepackage{geometry}
 % \geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2cm}
 
+
+\usepackage{booktabs}
 \title{\textbf{\Huge 
 \texttt{
 	Erkennung ereigniskorrelierte Potenziale eines Elektroenzephalogramms durch eine KI
@@ -108,6 +110,14 @@
 	\newcommand{\form}[1]{#1}
 
 	\newcommand{\fig}[1]{\centering #1}
+
+	\newcommand{\filepath}[1]{\texttt{#1}}
+	\newcommand{\cmd}[1]{\texttt{#1}}
+
+	% Abstand zwischen Tabellenzeilen
+	\renewcommand*{\arraystretch}{1.2}
+
+
 	\pagenumbering{gobble}
 	\thispagestyle{empty}
 
@@ -159,13 +169,13 @@
 
 	\section{Einleitung}
 
-	Ziel des Projektes ist es, zuerst ein BCI -- Brain-Computer Interface -- zu entwickeln, welches verschiedene EKPs erkennen kann. Dieses wollen wir dann testen, indem wir es zur Steuerung eines Roboters nutzen.
+	Ziel des Projektes ist es, zuerst ein BCI -- Brain-Computer Interface -- zu entwickeln, welches verschiedene EKPs erkennen kann - momentan, ob man gerade blinzelt. Die Erkennung wollen wir dann zur Steuerung eines Roboters nutzen.
 
-	BCIs sind Schnittstellen zwischen dem Gehirn und einem Computer, die Kommunikation vom Gehirn zum Computer ermöglichen. Man kann BCIs zum Beispiel für die Steuerung von Prothesen, Drohnen und Robotern nutzen. \cite{bci-explained}
+	BCIs sind Schnittstellen zwischen dem Gehirn und einem Computer, die eine Kommunikation vom Gehirn zum Computer ermöglichen. Man kann BCIs für die Steuerung von Prothesen, Drohnen, Robotern, und vielem mehr nutzen. \cite{bci-explained}
 
-	Zum Beispiel haben Forscher aus Stanford ein BCI entwickelt, das in der Lage ist, behinderten Personen wieder die Möglichkeit zu geben, nur über ihre Gedanken Nachrichten schreiben zu können \cite{brain2text}.
+	Zum Beispiel haben Forscher aus Stanford ein BCI entwickelt, welches in der Lage ist, behinderten Personen die Möglichkeit zu geben, über ihre Gedanken Nachrichten zu schreiben und so wieder kommunizieren zu können \cite{brain2text}.
 	
-	Wir hoffen, bei der Erarbeitung unseres Projektes neben dem Erlangen von Erfahrung in diesem interessanten Bereich auch selbst dazu beizutragen. BCIs, die mit sehr teurer Hardware entwickelt werden, sind nämlich bereits ziemlich gut erforscht. Jedoch sind diese BCIs, aufgrund ihres hohen Preises, für viele Konsumenten nicht nutzbar. Genau bei diesem Problem wollen wir mit unserem Projekt ansetzten. Wir wollen ein BCI entwickeln, welches auch mit günstiger Hardware funktioniert.
+	Wir hoffen, bei der Erarbeitung unseres Projektes neben dem Erlangen von Erfahrung in diesem interessanten Bereich auch selbst dazu beizutragen. BCIs, die mit sehr teurer Hardware entwickelt werden, sind nämlich bereits ziemlich gut erforscht. Jedoch sind diese BCIs, aufgrund ihres hohen Preises, für viele Konsumenten nicht interessant. Genau bei diesem Problem wollen wir mit unserem Projekt ansetzten: Wir wollen ein BCI entwickeln, welches auch mit günstiger Hardware funktioniert.
 	
 	Dabei ist es uns wichtig, dass unser BCI ohne spezielles Training auf genau diese Person für jeden beliebigen Menschen funktioniert, und dass unser BCI auch leicht für die eigenen Zwecke anpassbar ist, z.B. die Erkennung von Atemzügen statt Augenschließen. Deswegen benutzen wir Open Source Software und haben unseren kompletten Code ebenfalls auf GitHub veröffentlicht.
 
@@ -187,7 +197,7 @@
 		\item Roboter
 		\begin{itemize}
 			\item Lego Mindstorms EV3 Brick
-			\item Raspberry Pi 3B 8\,GB
+			\item Raspberry Pi 3B+ 1\,GB
 			\item 2x EV3 großer Motor
 			\item SD-Karte (8\,GB)
 			\item diverse LEGO Teile
@@ -237,10 +247,11 @@
 
 	\begin{figure}[h!]
 		\fig{
-		\includegraphics[width=0.5\textwidth]{pictures/EEG-Alex-annotated.png}
-		\includegraphics[width=0.35\textwidth]{pictures/Ganglion-Board-annotated.png}}
-		\caption{Das EEG und Zubehör. Links sieht man die typische Anwendung des EEG im Versuchsaufbau. Rechts ist das Ganglion Board genauer dargestellt.}
-		\label{EEG-Zubehor}
+		\includegraphics[width=0.4\textwidth]{pictures/EEG-Alex-annotated.png}
+		\includegraphics[width=0.35\textwidth]{pictures/Ganglion-Board-annotated.png}
+		\includegraphics[width=0.15\textwidth]{pictures/spike_flat_elektroden.png}
+		\caption{Das EEG und Zubehör. Links sieht man die typische Anwendung des EEG im Versuchsaufbau (Konfiguration 1, s. Abb. \ref{10-20-System}). In der Mitte ist das Ganglion Board genauer dargestellt. Rechts sind eine Flat Elektrode und eine Spike Elektrode zu sehen.}
+		\label{EEG-Zubehor}}
 	\end{figure}
 
 	Unser EEG-Gerät besteht aus einem Klettband mit Löchern für die Elektroden, einer Platine (Ganglion Board), in welche die Elektroden eingesteckt werden, einer Kunststoff-Hülle zum Schutz des Ganglion Boards, und einem USB-Dongle, mit welchem die Signale der Platine kabellos empfangen werden können (s. Abbildung \ref{EEG-Zubehor}).
@@ -257,14 +268,16 @@
 
 	Wir untersuchen dabei ereigniskorrelierte Potentiale (EKPs). Dies sind bestimmte Spannungsschwankungen (\enquote{Potentiale}), welche in Zusammenhang mit einem internen oder externen Ereignis stehen, wie z.B. nach einem lauten Ton, während und nach einer Körperbewegung, oder während hoher Konzentration. \cite{Birbaumer2010} \cite{Praktikum}
 
-	Dabei haben wir uns zuerst für das Blinzeln entschieden, da wir es im Graphen zumindest mit bloßen Augen sehr gut erkennen konnten (s. Abbildung \ref{EEG-Blinzeln}).
+	Dabei haben wir uns zuerst für das Blinzeln entschieden, da wir es im Graphen zumindest mit bloßen Augen sehr gut erkennen konnten (s. Abbildung \ref{EMG-Blinzeln}).
 
-	\begin{figure}[H]
+	\begin{figure}[h!]
 		\fig{
 		\includegraphics[width=0.8\textwidth]{pictures/EMG_blinzeln_beispiel.png}
 		\caption{Ausschnitt eines EMG mit Blinzeln (Konfiguration 1)}
-		\label{EEG-Blinzeln}}
+		\label{EMG-Blinzeln}}
 	\end{figure}
+
+	Dafür haben wir zu Beginn zwei Flat Electrodes (Elektroden mit glatter Kontaktoberfläche) über den Augen und zwei Spike Elektroden (Elektroden mit langen \enquote{Spitzen}) an den Schläfen platziert (s. Abb. \ref{10-20-System}). Flat Elektroden haben zwar aufgrund ihrer größeren Oberfläche auf freier Haut eine etwas bessere Signalqualität, aber die von uns gewählten Stellen an den Schläfen waren leicht behaart. Die Spike Elektroden können durch die Haare leichter Kontakt zur Kopfoberfläche herstellen.
 
 	\begin{figure}[h!]
 		\fig{
@@ -273,21 +286,19 @@
 		\label{10-20-System}}
 	\end{figure}
 
-	Dafür haben wir zu Beginn zwei Flat Electrodes (Elektroden mit glatter Kontaktoberfläche) über den Augen und zwei Spike Elektroden (Elektroden mit langen \enquote{Spitzen}) an den Schläfen platziert. Flat Elektroden haben zwar aufgrund ihrer größeren Oberfläche auf freier Haut eine etwas bessere Signalqualität, aber die von uns gewählten Stellen an den Schläfen waren leicht behaart. Die Spike Elektroden können durch die Haare leichter Kontakt zur Kopfoberfläche herstellen.
-
 	Jedoch handelt es sich dabei eigentlich nicht um EEG. Der Grund für den so starken Ausschlag war, dass wir Elektromyographie (EMG) nutzten. Dabei werden die Spannungsdifferenzen von Muskeln gemessen, in unserem Fall die Muskeln, welche das Augenlid bewegen. \cite{wiki:EMG}
 
 	Aber wir haben es trotzdem zu Beginn genutzt, da wir erstmal eine funktionierende Basis schaffen wollten.
 
 	Nach EMG haben wir dann tatsächliche Elektroenzephalographie genutzt. Dabei haben wir weiterhin Blinzeln genommen. Die Elektroden haben wir dafür alle nebeneinander am Okzipitalen Kortex (Visueller Kortex) platziert (s. Abb. \ref{10-20-System}), welcher sich am Hinterkopf befindet und sehr stark mit den Augen und dem Sehvermögen verknüpft ist. \cite{Birbaumer2010} 
 
-	Wir entschieden uns, beim Blinzeln zu bleiben, da wir bereits wussten, dass geschlossene Augen klar erkennbar sein sollten: Bei offenen Augen findet eine sogenannte Alpha-Blockade statt, bei der - vor allem im Okzipitalem Kortex - die Alphawellen stark sinken. Entsprechend steigen sie stark an, wenn die Augen geschlossen sind. \cite{Praktikum} \cite{Springer:Berger} \cite{wiki:Berger-Effekt}
+	Wir entschieden uns, trotz des Umstiegs auf EEG bei Blinzeln zu bleiben, da wir bereits wussten, dass geschlossene Augen klar erkennbar sein sollten: Bei offenen Augen findet eine sogenannte Alpha-Blockade statt, bei der -- vor allem im Okzipitalem Kortex -- die Alphawellen stark sinken. Entsprechend steigen sie stark an, wenn die Augen geschlossen sind. \cite{Springer:Berger} \cite{Praktikum} \cite{wiki:Berger-Effekt}
 
 	Weiter ist es möglich, nur durch Gedanken eine Steuerung auszuführen. Dies funktioniert jedoch meist durch instrumentelle oder klassische Konditionierung, also durch das Bestrafen und Belohnen auf Basis der Messungen des EEG. So kann das Gehirn darauf trainiert werden, auf Verlangen eine bestimmte, vorher festgelegte Aktivität auszulösen, die dann gemessen und ausgewertet werden kann. \cite{BCIChaudhary} Darauf wollen wir verzichten, da die Konditionierung Zeit benötigen und nicht unser Ziel einer allgemeinen Anwendbarkeit erfüllen würde.
 
 	%Insgesamt stehen uns zwei Earclips, die an den Ohren befestigt werden und zum Filtern von Störungen dienen, und vier Messelektroden, jeweils mit einer zeitlichen Auflösung von 200 Hertz (200 Messungen pro Sekunde), zur Verfügung. Zwei dieser Elektroden haben wir auf der Stirn platziert (links: Elektrode 1, rechts: Elektrode 2), zwei jeweils links (Elektrode 3) und rechts (Elektrode 4) auf dem Schädel, etwas über und vor dem Ohr (s. Abbildung \ref{10-20-System}). Wir haben uns für diese Platzierung entschieden, da die Elektroden so direkt über Muskeln sitzen, die beim Blinzeln bewegt werden. %!!!
 
-	Uns ist nach der Aufnahme der Trainingsdaten in der ersten Konfiguration (EMG) aufgefallen, dass bei den Elektroden 3 und 4 das Blinzeln deutlich schlechter erkennbar war als bei den Elektroden 1 und 2, vermutlich weil die Elektroden 3 und 4 Spike Elektroden und weiter von den Augen entfernt waren.
+	Uns ist nach der Aufnahme der Trainingsdaten in der ersten Konfiguration (EMG) aufgefallen, dass bei den Elektroden 3 und 4 das Blinzeln deutlich schlechter erkennbar war als bei den Elektroden 1 und 2 (s. Abb. \ref{EMG-Blinzeln}), vermutlich weil die Elektroden 3 und 4 Spike Elektroden und weiter von den Augen entfernt waren.
 
 	Deswegen haben wir uns entschieden, nur die Elektroden 1 und 2 zu verwenden.
 
@@ -325,7 +336,7 @@
 	\begin{figure}[H]
 		\fig{
 		\includegraphics[width=0.9\textwidth]{pictures/Die_FFTs_der_EEG-Daten.png}
-		\caption{Die FFT unserer EEG-Daten}
+		\caption{Die Amplituden für die Frequenzen 1-50 Hertz von unseren Trainings- und Testdaten (EEG, Konfiguration 2), berechnet durch die FFT. Jede Linie entspricht einem Datensatz. Bei den blauen wurde geblinzelt, bei den roten nicht.}
 		\label{EEG-FFT}}
 	\end{figure}
 	
@@ -356,10 +367,8 @@
 	\end{wrapfigure}
 
 	Um aus diesem Netzinput nun die Aktivierung zu berechnen, benötigt man eine Aktivierungsfunktion, die dafür sorgt, dass die Aktivierung zwischen 0 und 1 liegt. Wir haben dafür eine Sigmoidfunktion benutzt, die eine Zahl nimmt und einen Wert zwischen 0 und 1 ausgibt (s. Abbildung \ref{sig_func}). Dies wird dann für jedes Neuron in jedem Layer wiederholt. Da man aber immer die Aktivierungen des vorherigen Layers benötigt, muss man das ganze vom Input Layer zum Output Layer durchführen. Daher auch der Name Forward Pass. Die Interpretation der Outputs hängt von den Trainingsdaten ab.
-
-	{\newpage
 	
-	Die allgemeine Formel für die Aktivierung eines Neurons lautet also:}
+	Die allgemeine Formel für die Aktivierung eines Neurons lautet also:
 
 
 	\form{
@@ -387,7 +396,7 @@
 	%C0 = (aL − y)2 
 
 	\noindent wobei $C_0$ = die Cost des Output-Layers, $L$ = der letzte Layer (Output Layer), $a_L$ = die Aktivierungen des Layers $L$, und $y$ = die richtigen Outputs für die Inputs, mit denen die Aktivierungen berechnet wurden. 
-	Bei $a_L$ und $y$ handelt es sich um Vektoren
+	Bei $a_L$ und $y$ handelt es sich um Vektoren.
 	
 	Um die Cost zu berechnen, muss man also für alle Output Neuronen die Differenz der gegebenen und der richtigen Aktivierungen bilden. Danach muss man diese Differenzen quadrieren und am Ende alle Ergebnisse aufsummieren. Dies kann man für alle Trainingsdatensätze wiederholen und von allen Costs den Durchschnitt nehmen, um die allgemeine Performance eines Netzwerkes zu überprüfen. Diese Art der Cost-Funktion wird mittlere quadratische Abweichung (mean squared error, kurz MSE) genannt. 
 	
@@ -435,6 +444,8 @@
 
 	Für unseren Roboter haben wir uns entschieden, Lego Mindstorms EV3 Motoren zu benutzen, die von einem EV3-Brick gesteuert werden, der wiederum von einem Raspberry Pi 3B gesteuert wird (s. Abbildung \ref{robot-funktion} und \ref{Robot}). Der Grund dafür, dass wir keine Motoren direkt mit dem Raspberry Pi steuern, ist, dass wir schon alle Teile für einen EV3 Roboter haben. Somit müssten wir entweder neue Motoren kaufen oder passende Adapter finden, welche meist nur mit C und Python funktionieren und teuer sind.
 
+	Der Roboter, zu sehen in Abbildung \ref{Robot}, wurde von Alexander Reimer, Ino Saathoff, und Oliver Samkovskij im Rahmen der Robotik-AG unserer Schule für den RoboCup entwickelt. Die Steuerung in Julia wurde jedoch von uns selbst programmiert. Danke an Ino und Oliver, dass ihr uns erlaubt, den Roboter auch hierfür zu nutzen!
+
 	\begin{figure}[H]
 		\centering
 		\includegraphics[width=0.8\textwidth]{pictures/roboter-funktionsweise.png}
@@ -445,14 +456,49 @@
 	\begin{figure}[H]
 		\centering
 		\includegraphics[width=0.5\textwidth]{pictures/roboter-annotated.png}
-		\caption{Unser Roboter (ohne Raspberry Pi, der über den EV3-Brick gehört)}
+		\caption{Unser Roboter (ohne Raspberry Pi, der über den EV3-Brick gehört). Die extra mittleren Motoren, die Konstruktion vorne, sowie die Sensoren vorne und unten sind für unser Projekt nicht relevant.}
 		\label{Robot}
 	\end{figure}
 
-	Wir haben dafür das Package ev3dev.jl benutzt, welches wir bereits für die Robotik-AG programmiert hatten.
+	Die Steuerung besteht aus zwei Komponenten: dem Brick und dem Computer.
 	
-	Mehr technische Details zu der Umsetzung lassen sich beim GitHub Repository des Packages finden \cite{ev3dev}.
+	Auf dem EV3-Brick wurde mit einer SD-Karte das Betriebssystem ev3dev installiert. Dieses gibt neben komplette, Zugriff auf das Debian-Betriebssystem des Bricks auch Zugriff auf die Motoren. Ev3dev übernimmt die tiefgreifende, direkte Kontrolle der Motoren, und ermöglicht eine Steuerung / einen Informationenabruf über verschiedene Dateien im \filepath{/sys/class} Verzeichnis (s. Beispiele in Tabelle \ref{beispiel-dateien})
+
+	\begin{table}[H]		
+		\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+			\toprule
+			Dateipfad & Funktion \\
+			\midrule
+			\filepath{/sys/class/tacho-motor/motor<x>/address} & Der Port, an dem der Motor angeschlossen ist (outA, outB, etc.) \\
+			\filepath{/sys/class/tacho-motor/motor<x>/command} & Einen \enquote{Befehl} an den Motor senden, wie z.B. \cmd{stop}, \cmd{run-timed} oder \cmd{run-forever} \\
+			\filepath{/sys/class/tacho-motor/motor<x>/commands} & Alle verfügbaren Befehle. \\
+			\filepath{/sys/class/tacho-motor/motor<x>/speed\_sp}, \path{/sys/class/tacho-motor/motor<x>/duty_cycle_sp} & Die aktuelle Geschwindigkeit des Motors auslesen oder setzen.\\ 
+			... & ...\\
+			\bottomrule
+		\end{tabular}
+		\caption{Einige Beispieldateien für die Steuerung eines Motors auf ev3dev. \filepath{<x>} ist die Nummer des Motors.}
+		\label{beispiel-dateien}
+	\end{table}
+
+	Auf dem Computer (ein Raspberry Pi 3b) verwenden wir SSHFS, um einen Mount zu erstellen, mithilfe dessen wir über USB vom Pi aus auf diese Dateien zugreifen können.
+
+	In einer von uns eigens entwickelten Julia-API haben wir dann Funktionen implementiert, welche dem Nutzer ein unkompliziertes Steuern des Roboters erlaubt. Dabei machen die low-level Funktionen nichts anderes, als z.B. die vom Nutzer gewünschte Geschwindigkeit in die entsprechende Datei zu schreiben.
+
+	Den Code dazu haben wir auf GitHub veröffentlicht, unter dem Namen ev3dev.jl. \cite{ev3dev}
+
+	Das Programm sollte ebenfalls mit dem Raspberry Pi 4B funktionieren, jedoch haben wir momentan nur einen Raspberry Pi 3B+. Dieser ist vergleichsweise sehr schwach, mit nur 1\,GB Arbeitsspeicher. Vor allem die Menge an Arbeitsspeicher stellt ein Problem dar, da es nicht genug ist, um überhaupt die ganzen Packages zu laden, welche wir benötigen.
+
+	Deshalb müssen wir jetzt erstmal einen Umweg gehen: Anstatt das ganze Programm direkt auf dem Raspberry Pi am Roboter auszuführen, erstellen wir mit SSHFS auf unserem Laptop einen Mountpoint, welcher über WLAN auf den Mountpoint auf dem Raspberry zugreift, und so über diesen Zugriff auf das \filepath{/sys/class}-Verzeichnis des Bricks hat. Die Auslesung der EEG-Daten, das Auswerten durch das neuronale Netzwerk, und die Steuerung der Motoren können so alle auf dem Laptop stattfinden.
 	
+
+	\subsubsection{Übersicht des Ablaufs unseres Programmes in einem Diagramm}
+	\begin{figure}[H]
+		\fig{
+		\includegraphics[width=\textwidth]{pictures/programm-ablauf.png}
+		\caption{Eine Übersicht des Ablaufs unseres Programmes in einem Diagramm. Den Schwellenwert für die Aktivierung des Output-Neurons haben wir durch Beobachtung des Wertes in Tests sowie Ausprobieren bestimmt.}
+		\label{programm-ablauf}}
+	\end{figure}
+
 	%\begin{figure}[H]
 	%	\centering
 	%	\includegraphics[width=0.9\textwidth]{pictures/Abbildung-des-Programms.png}
@@ -470,11 +516,11 @@
 
 	\section{Ergebnisse}
 
-	Beim Erkennen von Blinzeln mit EMG (Konfiguration 1) erhielten wir, sowohl mit als auch ohne FFT, eine Testdaten-Genauigkeit von 95\% (s. Abb. \ref{training-emg}), in einigen undokumentierten Durchläufen auch 100\% (). Mit der Genauigkeit ist gemeint, welchen Anteil der gegebenen Datensätze das neuronale Netzwerk korrekt klassifizieren konnte. Dabei ist vor allem die Testdaten-Genauigkeit relevant, da diese die Genauigkeit mit den Testdaten angibt. Die Testdaten sind nicht in den Trainingsdaten enthalten, sodass das neuronale Netzwerk nicht mit ihnen trainiert wurde und so mit ihnen komplett neue, unbekannte Fälle simuliert werden können.
+	Beim Erkennen von Blinzeln mit EMG (Konfiguration 1) erhielten wir, sowohl mit als auch ohne FFT, eine Testdaten-Genauigkeit von 95\% (s. Abb. \ref{training-emg}), in einigen undokumentierten Durchläufen auch 100\%. Mit der Genauigkeit ist gemeint, welchen Anteil der gegebenen Datensätze das neuronale Netzwerk korrekt klassifizieren konnte. Dabei ist vor allem die Testdaten-Genauigkeit relevant, da diese die Genauigkeit mit den Testdaten angibt. Die Testdaten sind nicht in den Trainingsdaten enthalten, sodass das neuronale Netzwerk nicht mit ihnen trainiert wurde und so mit ihnen komplett neue, unbekannte Fälle simuliert werden können.
 
 	\begin{figure}[H]
 		\fig{
-		\includegraphics[width=0.9\textwidth]{pictures/Trainingsprozess_EMG_FFT_vs_kein_FFT2.png}
+		\includegraphics[width=0.7\textwidth]{pictures/Trainingsprozess_EMG_FFT_vs_kein_FFT2.png}
 		\caption{Es wurde EMG benutzt. Zu sehen ist der Cost- und Genauigkeitsverlauf der Test- und Trainingsdaten beim Trainieren des Netwerkes, oben ohne Vorverarbeitung durch FFT und unten mit. Eine Epoche entspricht jeweils einer Backpropagation mit allen Trainings-Datensätzen.}
 		\label{training-emg}}
 	\end{figure}
@@ -486,7 +532,7 @@
 
 	\begin{figure}[H]
 		\fig{
-		\includegraphics[width=0.8\textwidth]{pictures/netzwerkstruktur-emg.png}
+		\includegraphics[width=0.7\textwidth]{pictures/netzwerkstruktur-emg.png}
 		\caption{Struktur unseres neuronalen Netzwerks bei Verwendung von EMG (Konfiguration 1)}
 		\label{emg-netzstruktur}}
 	\end{figure}
@@ -499,7 +545,7 @@
 
 	\begin{figure}[H]
 		\fig{
-		\includegraphics[width=0.9\textwidth]{pictures/Trainingsprozess_EEG_FFT_vs_kein_FFT2.png}
+		\includegraphics[width=0.7\textwidth]{pictures/Trainingsprozess_EEG_FFT_vs_kein_FFT2.png}
 		\caption{Es wurde EEG benutzt. Zu sehen ist der Cost- und Genauigkeitsverlauf der Test- und Trainingsdaten beim Trainieren des Netwerkes, oben ohne Vorverarbeitung durch FFT und unten mit. Eine Epoche entspricht jeweils einer Backpropagation mit allen Trainings-Datensätzen.}
 		\label{training2}}
 	\end{figure}
@@ -510,19 +556,29 @@
 
 	\begin{figure}[H]
 		\fig{
-		\includegraphics[width=0.8\textwidth]{pictures/netzwerkstruktur-eeg.png}
+		\includegraphics[width=0.7\textwidth]{pictures/netzwerkstruktur-eeg.png}
 		\caption{Struktur unseres neuronalen Netzwerks bei Verwendung von EEG (Konfiguration 2)}
 		\label{eeg-netzstruktur}}
 	\end{figure}
 
+	%Vor kurzem haben wir einen wissenschaftlichen Artikel gefunden, in dem Nikolaos Korovesis  et al. beschreiben, wie sie ein Brain-Computer Interface entwickelt haben. \cite{bci-ganglion} Dabei ist uns vor allem aufgefallen, dass ihr Vorgehen sehr ähnlich zu unserem war: Sie haben dasselbe Board verwendet, 
+
+
 	\section{Diskussion}
 
-	Wir sind zufrieden damit, dass wir unser erstes Teilziel erreicht haben: Der Roboter fährt sicher, und es gibt kaum eine Verzögerung. Die Kosten der benutzten Hardware halten sich noch in Grenzen: Beim Kauf hat die gesamte EEG-Ausstattung ca. 550€ gekostet, was zwar eigentlich eine hohe Summe ist (danke an den Förderverein für die Finanzierung!), aber \enquote{professionelle} Ausrüstung kostet deutlich mehr. Die Performance des Programms kann außerdem zwar noch verbessert werden, jedoch dauern beim Trainieren 1000 Epochen (genug für ca. 100\% Genauigkeit) auf dem Test-System bereits lediglich 5 Minuten. 
+	Wir sind zufrieden damit, dass wir unser erstes Teilziel erreicht haben: Der Roboter fährt sicher, und es gibt kaum eine Verzögerung. Die Kosten der benutzten Hardware halten sich noch in Grenzen: Beim Kauf hat die gesamte EEG-Ausstattung ca. 550€ gekostet, was zwar eigentlich eine hohe Summe ist (danke an den Förderverein für die Finanzierung!), aber professionelle Ausrüstung kostet deutlich mehr. Die Performance des Programms kann außerdem zwar noch verbessert werden, jedoch dauern beim Trainieren 1000 Epochen (genug für ca. 100\% Genauigkeit) auf dem Test-System bereits lediglich 5 Minuten. 
 
-	Als ersten folgenden Schritt wollen wir recherchieren, warum unsere Ergebnisse in großen Räumen und draußen so viel besser waren als in kleinen Räumen. Außerdem könnte man die Signalqualität des EEG noch verbessern, indem man Elektrodengel aufträgt. 
+	Folgend wollen wir unser Programm auch mit Personen testen, von denen wir vorher keine Trainingsdaten gesammelt haben.
 
-	Zudem wollen wir in fernerer Zukunft versuchen, mithilfe unseres neuronalen Netzes bereits bei allen Menschen vorhandene, selbst kontrollierbare Gehirnaktivität zu finden und sicher zu erkennen, jedoch ohne vorherige Konditionierung. Solche Gehirnaktivität könnte z.B. der allgemeine Gedanke an \enquote{Rechts} sein, was womöglich mit erhöhter Aktivität auf der linken Hirnhälfte in Verbindung stehen könnte.
-	
+	Danach wird das Ziel sein, auf andere EKPs wie Konzentration umzusteigen, und vielleicht sogar mehrere gleichzeitig zu erkennen, damit wir für den Roboter mehr \enquote{Kontrolldimensionen} haben können, z.B. für Geschwindigkeit, rechts / links, etc. Wenn wir genügend EKPs sicher erkennen können, dann könnten wir sogar die Steuerung einer Drohne versuchen.
+
+	Ein Problem, welches wir hatten, war unsere EEG-Messausrüstung. Sie war sehr anfällig für Störungen: Die Kabel durften nicht berührt werden, nicht zu viele technische Geräte durften in der Nähe sein, und in einigen Räumen / in einigen Zeiträumen war die Signalqualität sehr stark gestört, ohne dass wir wussten, warum. Also wollen wir mögliche Störfaktoren finden und eliminieren, damit wir konsistente Ergebnisse haben können.
+
+	Außerdem wollen wir uns einen Raspberry Pi 4B mit 8\,GB Arbeitsspeicher besorgen. Dieser sollte leistungsfähig genug sein, um unser Programm auch direkt auf dem Roboter ausführen zu können. So wären das EEG-Gerät und der Roboter auch ohne einen extra Laptop nutzbar.
+
+	Weiter ist uns aufgefallen, dass bei unseren Fourier-Analysen sehr hohe Amplituden herauskommen. Sie sind zwar proportional zu dem, was man erwarten würde, und somit sollte dies die Leistung des neuronalen Netzwerkes nicht beeinflusst haben, jedoch würden wir trotzdem gerne die Ursache finden und das Problem beheben. 
+
+
 	\newpage
 
 	\section{Danksagung}
@@ -533,17 +589,17 @@
 
 	\subsection{Unterstützung} \label{Unterstuetzung}
 
-	Vielen Dank an Professor Everling vom \enquote{The Brain and Mind Institute} der Western University in Kanada, der uns geholfen hat, einen Ansatz in diesem komplizierten Thema zu finden und praktische Tipps zum Umgang mit dem EEG gegeben hat. \footnote{\href{https://www.uwo.ca/bmi/investigators/stefan-everling.html}{https://www.uwo.ca/bmi/investigators/stefan-everling.html}}
+	Vielen Dank an Professor Everling vom \enquote{The Brain and Mind Institute} der Western University in Kanada, der uns in einem Gespräch mit ihm geholfen hat, einen Ansatz in diesem komplizierten Thema zu finden, und praktische Tipps zum Umgang mit dem EEG gegeben hat. \footnote{\href{https://www.uwo.ca/bmi/investigators/stefan-everling.html}{https://www.uwo.ca/bmi/investigators/stefan-everling.html}}
 
 	Dank geht auch an Ino Saathoff, der für uns die Hülle der EEG-Platine mit seinem 3D-Drucker erstellt hat.
 
-	Natürlich geht auch Dank Oliver Samkovskij und Ino, die zusammen mit uns den Roboter gebaut haben.
+	Wir danken ebenfalls Oliver Samkovskij, der die Lego-Struktur des Roboters gebaut hat, und Ino, der für die Verkabelung und Stromversorgung verantwortlich war. Der Roboter ist zwar mit viel mehr ausgestattet als für unser Projekt notwendig, aber dank euch mussten wir nicht unnötig einen neuen bauen.
 
 	\section{Quellen \& Referenzen}
 
 	\subsection{Abbildungen}
 
-	Die Vorlage des 10-20-Systems in der Abbildung \ref{10-20-System} stammt von der Dokumentation von OpenBCI. \cite{OpenBCI}
+	Die Vorlage des 10-20-Systems in der Abbildung \ref{10-20-System} stammt von \href{https://en.m.wikipedia.org/wiki/File:21\_electrodes\_of\_International\_10-20\_system\_for\_EEG.svg}{https://en.m.wikipedia.org/wiki/\-File:\-21\_\-electrodes\_of\_International\_10-20\_system\_for\_EEG.svg}. Die Abbildung liegt in der Public Domain.
 	
 	Alle anderen Abbildungen und Fotos wurden von uns selbst erstellt.
 
