@@ -249,9 +249,12 @@
 			\item BSON.jl zum Speichern und Laden von Netzwerken
 				%\footnote{\href{https://github.com/JuliaIO/BSON.jl}{https://github.com/JuliaIO/BSON.jl}}
 			
-			\item ev3dev.jl zum Steuern eines EV3-Roboters durch einen Raspberry Pi
+			\item ev3dev als Betriebssystem auf dem EV3-Brick \cite{ev3dev-docs}
+			
+			\item ev3dev.jl zum Steuern eines EV3-Roboters durch einen Raspberry Pi in Julia
 				%\footnote{\href{https://github.com/AR102/ev3dev.jl}{https://github.com/AR102/ev3dev.jl}}
 				\cite{ev3dev}
+
 			
 		\end{itemize}
 
@@ -279,7 +282,7 @@
 	Um eine Differenz bilden zu können, wird eine zweite Elektrode benötigt. Wir benutzen dafür eine Referenzelektrode, welche am Ohrläppchen befestigt wurde, wo sie ein von Gehirnströmen weitgehend unbeeinflusstes, konstantes Potential ableiten kann. Alle vier am Kopf platzierten Elektroden nutzen diese Referenzelektrode. Somit handelt es sich bei allen vieren um eine unipolare Ableitung. \cite{Praktikum}
 
 	Wir untersuchen ereigniskorrelierte Potentiale (EKPs). Dies sind bestimmte Spannungsschwankungen (\enquote{Potentiale}), welche in Zusammenhang mit einem internen oder externen Ereignis stehen, wie z.B. einem lauten Ton, einer Körperbewegung oder hoher Konzentration. \cite{Birbaumer2010} \cite{Praktikum}
-Dabei haben wir uns zuerst für das Blinzeln entschieden, da wir es im Graphen zumindest mit bloßen Augen sehr gut erkennen konnten (siehe Abbildung \ref{EMG-Blinzeln}).
+	Dabei haben wir uns zuerst für das Blinzeln entschieden, da wir es im Graphen zumindest mit bloßen Augen sehr gut erkennen konnten (siehe Abbildung \ref{EMG-Blinzeln}).
 
 	\begin{figure}[h!]
 		\fig{
@@ -291,7 +294,7 @@ Dabei haben wir uns zuerst für das Blinzeln entschieden, da wir es im Graphen z
 	Weiter ist es möglich, nur durch Gedanken eine Steuerung auszuführen. Dies funktioniert jedoch meist durch instrumentelle oder klassische Konditionierung, also durch das Bestrafen und Belohnen auf Basis der Messungen des EEG. So kann das Gehirn darauf trainiert werden, auf Verlangen eine bestimmte, vorher festgelegte Aktivität auszulösen, die dann gemessen und ausgewertet werden kann. \cite{BCIChaudhary} Darauf wollen wir verzichten, da die Konditionierung Zeit benötigt und nicht unser Ziel einer allgemeinen Anwendbarkeit erfüllen würde.
 	
 
-	Zur Messung des EKPs haben wir zu Beginn zwei Flat Electroden (Elektroden mit glatter Kontaktoberfläche) über den Augen und zwei Spike Elektroden (Elektroden mit langen \enquote{Spitzen}) an den Schläfen platziert (siehe Abbildung \ref{10-20-System}). Flat Elektroden haben zwar aufgrund ihrer größeren Oberfläche auf freier Haut eine etwas bessere Signalqualität, aber die von uns gewählten Stellen an den Schläfen waren leicht behaart. Die Spike Elektroden können durch die Haare leichter Kontakt zur Kopfoberfläche herstellen.
+	Zur Messung des EKPs haben wir zu Beginn zwei Flat Elektroden (Elektroden mit glatter Kontaktoberfläche) über den Augen und zwei Spike Elektroden (Elektroden mit langen \enquote{Spitzen}) an den Schläfen platziert (siehe Abbildung \ref{10-20-System}). Flat Elektroden haben zwar aufgrund ihrer größeren Oberfläche auf freier Haut eine etwas bessere Signalqualität, aber die von uns gewählten Stellen an den Schläfen waren leicht behaart. Die Spike Elektroden können durch die Haare leichter Kontakt zur Kopfoberfläche herstellen.
 
 	\begin{figure}[h!]
 		\fig{
@@ -312,7 +315,7 @@ Dabei haben wir uns zuerst für das Blinzeln entschieden, da wir es im Graphen z
 	Deswegen haben wir uns für die weitere Analyse entschieden, nur die Elektroden 1 und 2 zu verwenden.
 	Wir haben immer eine Sekunde an EMG oder EEG-Daten am Stück aufgenommen, sowohl für die Trainingsdaten als auch die Live-Tests. Der Grund für diese Entscheidung war, dass die Auswirkung von Blinzeln immer in diesem Rahmen erkennbar ist. Ein kürzeres Zeitintervall hätte im Prinzip auch funktioniert,
 %Es wäre zwar auch kürzer gegangen,
-jedoch ist die Fourier-Analyse (siehe unten) effektiver, je länger das Zeitintervall ist.
+	jedoch ist die Fourier-Analyse (siehe unten) effektiver, je länger das Zeitintervall ist.
 	Da jede Elektrode eine zeitliche Auflösung von 200 Hertz (200 Messungen pro Sekunde) hat, messen wir also in der ersten Elektrodenkonfiguration (EMG) $2 * 200 = 400$ und in der zweiten Elektrodenkonfiguration (EEG) $4 * 200 = 800$ Signale pro Sekunde.
 
 	\subsubsection{Fourier-Analyse}
@@ -321,7 +324,7 @@ jedoch ist die Fourier-Analyse (siehe unten) effektiver, je länger das Zeitinte
 
 	Aus der FFT folgt ein Array (eine Liste) an komplexen Zahlen. Der Index eines Wertes in der Liste bestimmt, für welche Frequenz der Wert gilt (erster Wert: 1 Hertz, zweiter Wert: 2 Hertz, etc.). Nun muss für jede komplexe Zahl der Abstand zum Ursprung bestimmt werden, also der absolute Betrag. Dieser entspricht dann der Amplitude der Frequenz. So lässt sich bestimmen, welche Frequenzen am stärksten vorkommen. Außerdem können dann Frequenzen herausgefiltert werden, indem die Werte bei den entsprechenden Indices auf 0 gesetzt werden. 
 
-	Eine FFT kann Elektroenzephalogramme verlustfrei repräsentieren. Dies lässt sich erkennen, wenn man mithilfe der durch die FFT entstandenen Spektralanalyse die Daten rekonstruiert (Inverse Fast Fourier Transformation, IFFT) (siehe Abbildung \ref{EEG-IFFT}). Dazu werden die Sinus-Kurven der Frequenzen mit den entsprechenden Amplituden multipliziert und dann addiert.
+	Eine FFT kann Elektroenzephalogramme verlustfrei repräsentieren. Dies lässt sich erkennen, wenn man mithilfe der durch die FFT entstandenen Spektralanalyse die Daten rekonstruiert (Inverse Fast Fourier Transformation, IFFT) (siehe Abbildung \ref{EEG-IFFT}). Im Prinzip werden dazu die Sinus-Kurven der Frequenzen mit den entsprechenden Amplituden multipliziert und dann addiert.
 
 	Eine große Amplitude bei 50 Hertz, wie z.B. in Abbildung \ref{EEG-IFFT}, kann aufgrund des Wechselstroms in Deutschland entstehen, welcher eine Frequenz von 50 Hertz hat. \cite{Praktikum} Um eine Verwirrung der KI zu verhindern, können wir bei der Verwendung von FFT die Amplitude für 50 Hertz auf 0 setzen.
 
@@ -419,7 +422,7 @@ jedoch ist die Fourier-Analyse (siehe unten) effektiver, je länger das Zeitinte
 		\Delta W_{ij} = \epsilon * \delta_i * a_j
 	\]}
 %
-Hier ist  $\Delta W_{ij}$ der Wert, um den das Gewicht $W$ zwischen den Neuronen $j$ und $i$ verändert werden muss, $\epsilon$ die Lernrate (meist ein kleiner Wert wie 0.001), $\delta_i$ eine Annäherung der Ableitung der Cost des Neurons $i$ im Verhältnis zum Gewicht $W_{ij}$, und $a_j$ die Aktivierung des Neurons $j$. Was dabei oft verwirrend ist: $j$ bezeichnet das Neuron, welches zuerst kommt, und $i$ das Neuron, welches danach kommt (Reihenfolge im Forward-Pass), obwohl es bei $W_{ij}$ andersherum steht.
+	Hier ist  $\Delta W_{ij}$ der Wert, um den das Gewicht $W$ zwischen den Neuronen $j$ und $i$ verändert werden muss, $\epsilon$ die Lernrate (meist ein kleiner Wert wie 0.001), $\delta_i$ eine Annäherung der Ableitung der Cost des Neurons $i$ im Verhältnis zum Gewicht $W_{ij}$, und $a_j$ die Aktivierung des Neurons $j$. Was dabei oft verwirrend ist: $j$ bezeichnet das Neuron, welches zuerst kommt, und $i$ das Neuron, welches danach kommt (Reihenfolge im Forward-Pass), obwohl es bei $W_{ij}$ andersherum steht.
 
 	Für den Bias wird die gleiche Formel benutzt, mit der Ausnahme, dass $a_j$ immer 1 ist und so wegfällt. Der Grund dafür liegt darin, dass der Bias, wie in der Struktur beschrieben, eigentlich nur ein Gewicht ist, das mit einem Neuron verbunden ist, welches immer eine Aktivierung von eins hat.
 
@@ -442,7 +445,7 @@ Hier ist  $\Delta W_{ij}$ der Wert, um den das Gewicht $W$ zwischen den Neuronen
 %
 	\noindent wobei $L$ der nächste Layer, $\delta_L$ der Vektor aller $\delta$'s des Layers $L$, und $W_{Li}$ der Vektor aller Gewichte, die ein Neuron des nächsten Layers und Neuron $i$ verbinden, ist.
 %
-	Da immer der (im Forwardpass gesehene) nächste Layer benötigt wird, ergibt es Sinn, diese Optimierung beim Output Layer zu starten und dann rückwärts die \mbox{$\delta$-Werte} für jeden Layer zu berechnen und für die nächsten Berechnungen zu speichern -- daher auch der Name Backpropagation. \cite{MITNeuronale} \cite{3b1b:nn} \cite{brotcrunsher:backwardpass}
+	Da immer der (im Forward Pass gesehene) nächste Layer benötigt wird, ergibt es Sinn, diese Optimierung beim Output Layer zu starten und dann rückwärts die \mbox{$\delta$-Werte} für jeden Layer zu berechnen und für die nächsten Berechnungen zu speichern -- daher auch der Name Backpropagation. \cite{MITNeuronale} \cite{3b1b:nn} \cite{brotcrunsher:backwardpass}
 
 	\threesub{Flux}
 
@@ -472,8 +475,9 @@ Hier ist  $\Delta W_{ij}$ der Wert, um den das Gewicht $W$ zwischen den Neuronen
 	%
 	Auf dem EV3-Brick wurde mit einer SD-Karte das Betriebssystem ev3dev installiert. Dieses gibt neben komplettem Zugriff auf das Debian-Betriebssystem des Bricks auch Zugriff auf die Motoren. Ev3dev übernimmt die tiefgreifende, direkte Kontrolle der Motoren, und ermöglicht eine Steuerung / einen Informationsabruf über verschiedene Dateien im \filepath{/sys/class} Verzeichnis (s. Beispiele in Tabelle \ref{beispiel-dateien})
 
-	\begin{table}[H]		
-		\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+	\begin{table}[H]
+		{\centering
+		\begin{tabular}{p{0.5\textwidth}p{0.45\textwidth}}
 			\toprule
 			Dateipfad & Funktion \\
 			\midrule
@@ -484,8 +488,8 @@ Hier ist  $\Delta W_{ij}$ der Wert, um den das Gewicht $W$ zwischen den Neuronen
 			... & ...\\
 			\bottomrule
 		\end{tabular}
-		\caption{Einige Beispieldateien für die Steuerung eines Motors auf ev3dev. \filepath{<x>} ist die Nummer des Motors.}
-		\label{beispiel-dateien}
+		\caption{Einige Beispieldateien für die Steuerung eines Motors auf ev3dev. \filepath{<x>} ist die Nummer des Motors. Mehr Informationen dazu gibt es in der Dokumentation von ev3dev. \cite{ev3dev-docs}}
+		\label{beispiel-dateien}}
 	\end{table}
 
 	Auf dem Computer (ein Raspberry Pi 3B+) verwenden wir SSHFS, um einen Mount zu erstellen, mithilfe dessen wir über USB vom Pi aus auf diese Dateien zugreifen können.
@@ -577,20 +581,20 @@ Hier ist  $\Delta W_{ij}$ der Wert, um den das Gewicht $W$ zwischen den Neuronen
 
 	Als Nächstes wollen wir unser Programm auch mit Personen testen, von denen wir vorher keine Trainingsdaten gesammelt haben.
 %
-	Danach wird das Ziel sein, auf andere EKPs wie Konzentration umzusteigen, und vielleicht sogar mehrere gleichzeitig zu erkennen, damit wir für den Roboter mehr \enquote{Kontrolldimensionen} haben können, z.B. für Geschwindigkeit, rechts / links, etc. Wenn wir genügend EKPs sicher erkennen können, dann könnten wir sogar die Steuerung einer Drohne versuchen. Man könnte dafür auch für mehrere Befehle ein EKP nutzen. Z.B. könnte zweimal schnell hintereinander Blinzeln für rechts, dreimal für links, viermal für oben, etc. stehen. Man könnte für eine Texteingabe auch versuchen, \enquote{Protokolle} wie Morsecode zu erkennen. Für eine korrekte Klassifizierung eines einzelnen Ereignisses (z.B. Augenschliessen) braucht unser System eine Sekunde. Das heißt, wir könnten Signale mit einer Datenübertragungsrate von 1 Bit pro Sekunde verarbeiten.
+	Danach wird das Ziel sein, auf andere EKPs wie Konzentration umzusteigen, und vielleicht sogar mehrere gleichzeitig zu erkennen, damit wir für den Roboter mehr \enquote{Kontrolldimensionen} haben können, z.B. für Geschwindigkeit, rechts / links, etc. Wenn wir genügend EKPs sicher erkennen können, dann könnten wir sogar die Steuerung einer Drohne versuchen. Man könnte dafür auch für mehrere Befehle ein EKP nutzen. Z.B. könnte zweimal schnell hintereinander Blinzeln für rechts, dreimal für links, viermal für oben, etc. stehen. Man könnte für eine Texteingabe auch versuchen, \enquote{Protokolle} wie Morsecode zu erkennen. Für eine korrekte Klassifizierung eines einzelnen Ereignisses (z.B. Augenschließen) braucht unser System eine Sekunde. Das heißt, wir könnten Signale mit einer Datenübertragungsrate von 1 Bit pro Sekunde verarbeiten.
 
 	Ein Problem, welches wir hatten, war unsere EEG-Messausrüstung. Sie war sehr anfällig für Störungen: Die Kabel durften nicht berührt werden, nicht zu viele technische Geräte durften in der Nähe sein, und in einigen Räumen war die Signalqualität manchmal sehr stark gestört, ohne dass wir wussten, warum. Also wollen wir mögliche Störfaktoren finden und eliminieren, damit wir konsistente Ergebnisse haben können.
 
 	Außerdem wollen wir uns einen Raspberry Pi 4B mit 8\,GB Arbeitsspeicher besorgen. Dieser sollte leistungsfähig genug sein, um unser Programm auch direkt auf dem Roboter ausführen zu können. So wären das EEG-Gerät und der Roboter auch ohne einen extra Laptop nutzbar.
 
-%	Weiter sind uns bei unseren Fourier-Analysen zwei Dinge aufgefallen:
-%
-%	Erstens erhalten wir immer sehr hohe Amplituden. Sie sind zwar proportional zu dem, was man erwarten würde, und somit sollte dies die Leistung des neuronalen Netzwerkes nicht beeinflusst haben, jedoch würden wir trotzdem gerne die Ursache finden und das Problem beheben. 
-%
-%	Zweitens sind 
+	%	Weiter sind uns bei unseren Fourier-Analysen zwei Dinge aufgefallen:
+	%
+	%	Erstens erhalten wir immer sehr hohe Amplituden. Sie sind zwar proportional zu dem, was man erwarten würde, und somit sollte dies die Leistung des neuronalen Netzwerkes nicht beeinflusst haben, jedoch würden wir trotzdem gerne die Ursache finden und das Problem beheben. 
+	%
+	%	Zweitens sind 
 	
-Eine weitere Verbesserungsmöglichkeit sehen wir in der Fourier-Analyse:
-Bei unserem aktuellen Aufbau sind vor allem die niedrigen Frequenzen wichtig, da wir die Alpha-Blockade zur Erkennung nutzen und am Okzipitalen Kortex die Alpha-Wellen dominant sind. Die Bedeutung des niedrigen Frequenzbereichs kann man auch in Abbildung \ref{EEG-FFT} sehen. Es könnte sich also lohnen, z.B. nur die Amplituden der Frequenzen 1-20 Hertz an das neuronale Netz als Inputs zu geben, um die Leistung und Performance des neuronalen Netzes weiter zu steigern. 
+	Eine weitere Verbesserungsmöglichkeit sehen wir in der Fourier-Analyse:
+	Bei unserem aktuellen Aufbau sind vor allem die niedrigen Frequenzen wichtig, da wir die Alpha-Blockade zur Erkennung nutzen und am Okzipitalen Kortex die Alpha-Wellen dominant sind. Die Bedeutung des niedrigen Frequenzbereichs kann man auch in Abbildung \ref{EEG-FFT} sehen. Es könnte sich also lohnen, z.B. nur die Amplituden der Frequenzen 1-20 Hertz an das neuronale Netz als Inputs zu geben, um die Leistung und Performance des neuronalen Netzes weiter zu steigern. 
 
 	\newpage
 
