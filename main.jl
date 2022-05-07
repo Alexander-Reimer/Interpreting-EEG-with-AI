@@ -158,7 +158,7 @@ function save_weights(model, name, test_losses, train_losses, test_accs, train_a
         :test_accs => test_accs,
         :train_accs => train_accs,
         :epoch => epoch
-        ))
+    ))
 end
 
 function load_data(name)
@@ -265,23 +265,23 @@ function plot_loss(training_plot, epoch, last_epoch, test_data, train_data, mode
     push!(train_accs, train_acc * 100)
 
     println("$(epoch) epochs of $(last_epoch + hyper_params.training_steps): loss is $test_loss, accuracy is $test_acc.")
-    
+
     if plot
         training_plot.line_loss_test.set_data(x, test_losses)
         training_plot.line_loss_train.set_data(x, train_losses)
-    
+
         training_plot.line_acc_test.set_data(x, test_accs)
         training_plot.line_acc_train.set_data(x, train_accs)
-    
+
         training_plot.axe_cost.relim()
         training_plot.axe_cost.autoscale_view()
-    
+
         training_plot.axe_acc.relim()
         training_plot.axe_acc.autoscale_view()
     end
 end
 
-function load_network(path)
+function load_network!(path)
     @info "Loading old network"
     data = load_data(path)
     Flux.loadparams!(model, data[:model_weights])
@@ -317,16 +317,23 @@ function create_training_plot(plot_title; legend_entries=true, subplot=111)
     ylabel("Genauigkeit in %", color="blue")
     axe_acc.tick_params(axis="y", color="blue", labelcolor="blue")
 
-    test_loss_l = "Testdaten Cost"
-    train_loss_l = "Trainingsdaten Cost"
-    test_acc_l = "Testdaten Genauigkeit"
-    train_acc_l = "Trainingsdaten Genauigkeit"
-    
-    line_loss_test = axe_cost.plot([], color="red", label = "Testdaten Cost")[1]
-    line_loss_train = axe_cost.plot([], color="red", linestyle="dashed", label="Trainingsdaten Cost")[1]
+    if legend_entries
+        test_loss_l = "Testdaten Cost"
+        train_loss_l = "Trainingsdaten Cost"
+        test_acc_l = "Testdaten Genauigkeit"
+        train_acc_l = "Trainingsdaten Genauigkeit"
+    else
+        test_loss_l = ""
+        train_loss_l = ""
+        test_acc_l = ""
+        train_acc_l = ""
+    end
 
-    line_acc_test = axe_acc.plot([], color="blue", label = "Testdaten Genauigkeit")[1]
-    line_acc_train = axe_acc.plot([], color="blue", linestyle="dashed", label = "Trainingsdaten Genauigkeit")[1]
+    line_loss_test = axe_cost.plot([], color="red", label=test_loss_l)[1]
+    line_loss_train = axe_cost.plot([], color="red", linestyle="dashed", label=train_loss_l)[1]
+
+    line_acc_test = axe_acc.plot([], color="blue", label=test_acc_l)[1]
+    line_acc_train = axe_acc.plot([], color="blue", linestyle="dashed", label=train_acc_l)[1]
 
     training_plot = TrainingPlot(
         axe_cost,
@@ -360,12 +367,12 @@ function train(training_plot, new=false)
         global train_losses = Float64[]
         global test_accs = Float64[]
         global train_accs = Float64[]
-    
+
         last_epoch = 0
         plot_loss(training_plot, 0, last_epoch, test_data, train_data, model, device)
     else
         # load weights from model.bson and get past accs, losses, & number of epochs
-        last_epoch = load_network("model.bson")
+        last_epoch = load_network!(hyper_params.save_path)
     end
 
     # Move model to device (GPU or CPU)
@@ -377,7 +384,7 @@ function train(training_plot, new=false)
 
     @info "Training"
 
-    for epoch = (last_epoch + 1):(hyper_params.training_steps + last_epoch)
+    for epoch = (last_epoch+1):(hyper_params.training_steps+last_epoch)
         for (x, y) in train_data
             x, y = device(x), device(y) # transfer data to device
             gs = gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
@@ -395,7 +402,7 @@ function train(training_plot, new=false)
     if mod(hyper_params.training_steps + last_epoch, hyper_params.plot_frequency) != 0
         plot_loss(training_plot, epoch, last_epoch, test_data, train_data, model, device)
     end
-    
+
     save_weights(model, hyper_params.save_path, test_losses, train_losses, test_accs, train_accs, hyper_params.training_steps + last_epoch)
     @info "Weights saved at \"$(hyper_params.save_path)\""
 
@@ -408,6 +415,7 @@ function setup_robot()
 end
 
 function test(model, drive_robot)
+    # Rework & Clean up!!!
     setup("Z:/Programming/EEG/mount/sys/class/")
 
     left_motor = Motor(:outB)
@@ -532,7 +540,7 @@ mutable struct Args
     save_path::String
 end
 
-function Args(learning_rate, training_steps, save_path; lower_limit = 1, upper_limit = 100, electrodes = [1, 2, 3, 4],
+function Args(learning_rate, training_steps, save_path; lower_limit=1, upper_limit=100, electrodes=[1, 2, 3, 4],
     plot_frequency=200, fft=true, shuffle=true, batch_size=2, notch=50, cuda=true, one_out=false)
     if fft
         inputs = (upper_limit - lower_limit + 2) * length(electrodes)
@@ -543,30 +551,40 @@ function Args(learning_rate, training_steps, save_path; lower_limit = 1, upper_l
         batch_size, notch, inputs, cuda, one_out, plot_frequency, save_path)
 end
 
+#=
 global hyper_params = Args(0.001, 50, "model.bson", cuda=false, one_out=true, plot_frequency=10, fft=true)
 
-fig = figure("A test")
-training_plot = create_training_plot("Yeah")
+fig = figure("Training plot #1")
+training_plot = create_training_plot("")
 train(training_plot, false)
+=#
 
 #=
 fig = figure("Trainingsprozess EEG: FFT vs. kein FFT")
-train("Ohne FFT", true, subplot=312)
-global hyper_params = Args(0.001, 1000, 1, 100, [1, 2, 3, 4]; cuda=false, one_out=true, plot_frequency=50, fft=true)
-train("Mit FFT", true, legend_entries=true, subplot=313)
-=#
 
+global hyper_params = Args(0.001, 50, "model.bson", cuda=false, one_out=true, plot_frequency=10, fft=false)
+no_fft_plot = create_training_plot("Kein FFT", subplot=312, legend_entries = false)
+train(no_fft_plot, true)
+
+global hyper_params = Args(0.001, 50, "model.bson", cuda=false, one_out=true, plot_frequency=10, fft=true)
+fft_plot = create_training_plot("FFT", subplot=313)
+train(fft_plot, true)
 
 fig.legend(loc="upper left")
 fig.tight_layout()
+=#
 
 #=
-setup_robot()
+global hyper_params = Args(0.001, 50, "model.bson", cuda=false, one_out=true, plot_frequency=10, fft=true)
+# setup_robot()
 device = prepare_cuda()
-model = build_model()
-parameters = old_network()
-Flux.loadparams!(model, parameters)
-test(model, false)
+global model = build_model()
+
+last_epoch = load_network!(hyper_params.save_path)
+
+global train_data, test_data = get_loader(0.9, ["Blink/Okzipital-03-16-2022/"], ["NoBlink/Okzipital-03-16-2022/"])
+
+#test(model, false)
 # =#
 
 end # Module
