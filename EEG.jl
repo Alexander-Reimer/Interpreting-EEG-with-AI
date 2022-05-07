@@ -3,13 +3,32 @@ module EEG
 using BrainFlow, PyPlot, FFTW
 
 function get_some_board_data(board_shim, nsamples)
-    data = BrainFlow.get_current_board_data(nsamples, board_shim) |> transpose
-    eeg_data = data[:, 2:5]
+    data = BrainFlow.get_current_board_data(nsamples, board_shim)# |> transpose
+    #eeg_data = data[:, 2:5]
+    #=
     for chan = 1:4
         eeg_channel_data = view(eeg_data, :, chan)
         BrainFlow.detrend(eeg_channel_data, BrainFlow.CONSTANT)
     end
-    return eeg_data
+    =#
+    #return eeg_data
+end
+
+function read_data_and_trans(num_of_files, location, color)
+    #fig, ax1 = subplot()
+    #ax1.set_ylim(ymin = 0, ymax = 10000, auto = false)
+    for i = 1:num_of_files
+        data = BrainFlow.read_file(location * string(i) * ".csv")
+        data = transpose(data)
+        data = data[:, 2:5]
+        for chan = 1:4
+            eeg_channel_data = view(data, :, chan)
+            BrainFlow.detrend(eeg_channel_data, BrainFlow.CONSTANT)
+            plot(abs.(rfft(eeg_channel_data)), color)
+        end
+        #data = abs.(rfft(data[:, 1:4]))
+        sleep(0.0001)
+    end
 end
 
 function read_data(num_of_files, location, color)
@@ -23,21 +42,21 @@ function read_data(num_of_files, location, color)
     end
 end
 
-function get_latest(path, index)
+function get_file_index(path, index)
     if isfile(path * string(index) * ".csv")
-        get_latest(path, index + 1)
+        get_file_index(path, index + 1)
     else
         return index
     end
 end
 
-function main(board_shim)
+function get_eeg_train_data(board_shim)
     data = Array{Float64,2}
     blink_path = "Blink/Okzipital-03-16-2022/"
     no_blink_path = "NoBlink/Okzipital-03-16-2022/"
 
-    next_i_blink = get_latest(blink_path, 1)
-    next_i_no_blink = get_latest(no_blink_path, 1)
+    next_i_blink = get_file_index(blink_path, 1)
+    next_i_no_blink = get_file_index(no_blink_path, 1)
 
 
     for i = 0:9
@@ -70,45 +89,90 @@ function main(board_shim)
     end
 end
 
+function get_eeg_test_data(board_shim)
+    blink_path = "Blink/livetest_data/Okzipital-05-07-2022/"
+    no_blink_path = "NoBlink/livetest_data/Okzipital-05-07-2022/"
+    blink_data = []
+    no_blink_data = []
+
+    its = 2
+
+    for i = 1:its
+        print("\a")
+        println("Close eyes!")
+        sleep(1)
+        for i2 = 1:3
+            sleep(2)
+            push!(blink_data, get_some_board_data(board_shim, 400))
+        end
+
+        print("\a")
+        println("Open eyes!")
+        sleep(1)
+        for i2 = 1:3
+            sleep(2)
+            push!(no_blink_data, get_some_board_data(board_shim, 400))
+        end
+    end
+
+    next_i_blink = get_file_index(blink_path, 1)
+    next_i_no_blink = get_file_index(no_blink_path, 1)
+
+    for i = 1:length(blink_data)
+        BrainFlow.write_file(blink_data[i], blink_path * string(next_i_blink + i - 1) * ".csv", "w")
+    end
+
+    for i = 1:length(no_blink_data)
+        BrainFlow.write_file(no_blink_data[i], no_blink_path * string(next_i_no_blink + i - 1) * ".csv", "w")
+    end
+
+    BrainFlow.release_session(board_shim)
+
+    read_data_and_trans(next_i_no_blink + its * 3 - 1, "NoBlink/livetest_data/Okzipital-05-07-2022/", "r")
+    read_data_and_trans(next_i_blink + its * 3 - 1, "Blink/livetest_data/Okzipital-05-07-2022/", "g")
+end
+
+function setup_board(port_address) # nothing for synthetic
+    BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
+    if port_address === nothing
+        params = BrainFlowInputParams() # Synthetic board
+        board_shim = BrainFlow.BoardShim(BrainFlow.SYNTHETIC_BOARD, params)
+    else
+        params = BrainFlowInputParams(
+            serial_port=port_address
+        )
+        board_shim = BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
+    end
+    if BrainFlow.is_prepared(board_shim)
+        BrainFlow.release_session(board_shim)
+    end
+    BrainFlow.prepare_session(board_shim)
+    BrainFlow.start_stream(board_shim)
+    return board_shim
+end
+
+function setup_board(os::Symbol) # :WIN for Windows, :LIN for Linux, :SYN for synthetic board
+    if os == :WIN
+        return setup_board("COM4")
+    elseif os == :LIN
+        return setup_board("/dev/cu.usbmodem11")
+    elseif os == :SYN
+        return setup_board(nothing)
+    end
+end
+
+board_shim = setup_board(:WIN)
+get_eeg_test_data(board_shim)
 
 
-
-#=
-BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
-
-# params = BrainFlowInputParams() # Synthetic board
-
-#= params = BrainFlowInputParams(
-    serial_port = "/dev/cu.usbmodem11"
-)=# # Ganglion board Kubuntu
-
-params = BrainFlowInputParams(
-    serial_port = "COM3"
-) # Ganglion board Windows
-#board_shim = BrainFlow.BoardShim(BrainFlow.SYNTHETIC_BOARD, params)
-board_shim = BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
-
-#BrainFlow.release_session(board_shim)
-
-BrainFlow.prepare_session(board_shim)
-BrainFlow.start_stream(board_shim)
-#println(get_some_board_data(board_shim, 200))
-main(board_shim)
-BrainFlow.release_session(board_shim)
-#
-
-# =#
+# get_eeg_train_data(board_shim)
 
 #=
 println("Blinks:")
 read_data(201, "Blink/Okzipital-03-16-2022/", "g")
 println("NoBlinks:")
 read_data(201, "NoBlink/Okzipital-03-16-2022/", "r")
-
-
-#=
-BrainFlow.release_session(board_shim)
 =#
-#read_data(10, "Blink/")
-# =#
+
+
 end
