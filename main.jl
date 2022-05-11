@@ -525,8 +525,8 @@ function get_data(path)
     content = readlines(io)
     close(io)
     outputs = []
-    output = Array{Float64}(undef, length(content), 4)
     for i = 1:200
+        output = Array{Float64}(undef, length(content), 4)
         for i2 = i:i+199
             bar = split(content[i2], "\t")[2:5]
             foo = []
@@ -540,35 +540,36 @@ function get_data(path)
     return outputs
 end
 
-function test2(path, model)
+function test2(path, model; color = "b")
     predicts = []
     for i2 = 1:30
-    for i = 1:10
-        data = get_data(path * string(i2) * ".csv")[i]
-        data = reshape(data, (:, 1))
-        temp_data_x = []
-        # Perform FFT on all channels in hyper_params.electrodes
-        for channel in 1:4
-            # Every channel has 200 values
-            s = (channel - 1) * 200 + 1
-            e = channel * 200
+        data = get_data(path * string(i2) * ".csv")
+        for i = 1:200
+            sample = reshape(data[i], (:, 1))
+            temp_data_x = []
+            # Perform FFT on all channels in hyper_params.electrodes
+            for channel in 1:4
+                # Every channel has 200 values
+                s = (channel - 1) * 200 + 1
+                e = channel * 200
 
-            # Using rfft for better performance, as it is best for real values
-            fft_sample_x = abs.(rfft(data[s:e]))
-            # Remove Amplitude for the frequency in hyper_params.notch
-            fft_sample_x[hyper_params.notch+1] = 0.0
-            # Cut off all frequencies not between hyper_params.lower_limit and hyper_params.upper_limit
-            fft_sample_x = fft_sample_x[hyper_params.lower_limit:(hyper_params.upper_limit+1)]
+                # Using rfft for better performance, as it is best for real values
+                fft_sample_x = abs.(rfft(sample[s:e]))
+                # Remove Amplitude for the frequency in hyper_params.notch
+                fft_sample_x[hyper_params.notch+1] = 0.0
+                # Cut off all frequencies not between hyper_params.lower_limit and hyper_params.upper_limit
+                fft_sample_x = fft_sample_x[hyper_params.lower_limit:(hyper_params.upper_limit+1)]
 
-            append!(temp_data_x, fft_sample_x)
+                append!(temp_data_x, fft_sample_x)
+            end
+            sample = copy(temp_data_x)
+            push!(predicts, model(sample)[1])
         end
-        data = copy(temp_data_x)
-        push!(predicts, model(data)[1])
+        println(i2)
     end
-    println(i2)
-    end
-    hist(predicts)
-    println(predicts)
+    #hist(predicts, color = color, orientation = "middle", rwidth)
+    #println(predicts)
+    return predicts
 end
 
 mutable struct Args
@@ -641,6 +642,7 @@ global hyper_params = Args(0.001, 50, "model.bson", cuda=false, one_out=true, pl
 global model = build_model()
 load_network!("model.bson")
 
-@time test2("NoBlink/livetest_data/Okzipital-05-11-2022/", model)
+global blink_pred = test2("Blink/livetest_data/Okzipital-05-11-2022/", model, color = "green")
+global noblink_pred = test2("NoBlink/livetest_data/Okzipital-05-11-2022/", model, color = "red")
 
 end # Module
