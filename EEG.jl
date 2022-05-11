@@ -4,6 +4,7 @@ using BrainFlow, PyPlot, FFTW
 
 function get_some_board_data(board_shim, nsamples)
     data = BrainFlow.get_current_board_data(nsamples, board_shim)# |> transpose
+    return data
     #eeg_data = data[:, 2:5]
     #=
     for chan = 1:4
@@ -14,7 +15,7 @@ function get_some_board_data(board_shim, nsamples)
     #return eeg_data
 end
 
-function read_data_and_trans(num_of_files, location, color)
+function read_data_and_trans(num_of_files, location, color; delay=0.001)
     #fig, ax1 = subplot()
     #ax1.set_ylim(ymin = 0, ymax = 10000, auto = false)
     for i = 1:num_of_files
@@ -27,7 +28,7 @@ function read_data_and_trans(num_of_files, location, color)
             plot(abs.(rfft(eeg_channel_data)), color)
         end
         #data = abs.(rfft(data[:, 1:4]))
-        sleep(0.0001)
+        sleep(delay)
     end
 end
 
@@ -71,7 +72,7 @@ function get_eeg_train_data(board_shim)
             #clf() 
             #plot(data)
         end
-    
+
         println("Blink")
         sleep(2)
         for i2 = 0:20
@@ -89,18 +90,17 @@ function get_eeg_train_data(board_shim)
     end
 end
 
-function get_eeg_test_data(board_shim)
-    blink_path = "Blink/livetest_data/Okzipital-05-07-2022/"
-    no_blink_path = "NoBlink/livetest_data/Okzipital-05-07-2022/"
+function get_eeg_test_data(board_shim, blink_path, no_blink_path)
+
     blink_data = []
     no_blink_data = []
 
-    its = 2
+    its = 4
 
     for i = 1:its
         print("\a")
         println("Close eyes!")
-        sleep(1)
+        sleep(2.5)
         for i2 = 1:3
             sleep(2)
             push!(blink_data, get_some_board_data(board_shim, 400))
@@ -108,7 +108,7 @@ function get_eeg_test_data(board_shim)
 
         print("\a")
         println("Open eyes!")
-        sleep(1)
+        sleep(2.5)
         for i2 = 1:3
             sleep(2)
             push!(no_blink_data, get_some_board_data(board_shim, 400))
@@ -127,9 +127,6 @@ function get_eeg_test_data(board_shim)
     end
 
     BrainFlow.release_session(board_shim)
-
-    read_data_and_trans(next_i_no_blink + its * 3 - 1, "NoBlink/livetest_data/Okzipital-05-07-2022/", "r")
-    read_data_and_trans(next_i_blink + its * 3 - 1, "Blink/livetest_data/Okzipital-05-07-2022/", "g")
 end
 
 function setup_board(port_address) # nothing for synthetic
@@ -162,7 +159,22 @@ function setup_board(os::Symbol) # :WIN for Windows, :LIN for Linux, :SYN for sy
 end
 
 board_shim = setup_board(:WIN)
-get_eeg_test_data(board_shim)
+blink_path = "Blink/livetest_data/Okzipital-05-11-2022/"
+no_blink_path = "NoBlink/livetest_data/Okzipital-05-11-2022/"
+one_blink_path = "OneBlink/Okzipital-05-11-2022/"
+
+get_eeg_test_data(board_shim, blink_path, one_blink_path)
+
+next_i_blink = get_file_index(blink_path, 1)
+next_i_no_blink = get_file_index(no_blink_path, 1)
+next_i_one_blink = get_file_index(one_blink_path, 1)
+
+read_data_and_trans(next_i_blink - 1, blink_path, "g", delay=0.3)
+sleep(3)
+read_data_and_trans(next_i_no_blink - 1, no_blink_path, "r", delay=0.3)
+sleep(3)
+read_data_and_trans(next_i_one_blink - 1, one_blink_path, "y", delay=0.3)
+
 
 
 # get_eeg_train_data(board_shim)
