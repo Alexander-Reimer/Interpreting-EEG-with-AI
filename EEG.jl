@@ -158,22 +158,22 @@ function setup_board(os::Symbol) # :WIN for Windows, :LIN for Linux, :SYN for sy
     end
 end
 
-board_shim = setup_board(:WIN)
+#board_shim = setup_board(:WIN)
 blink_path = "Blink/livetest_data/Okzipital-05-11-2022/"
 no_blink_path = "NoBlink/livetest_data/Okzipital-05-11-2022/"
 one_blink_path = "OneBlink/Okzipital-05-11-2022/"
 
-get_eeg_test_data(board_shim, blink_path, one_blink_path)
+#get_eeg_test_data(board_shim, blink_path, one_blink_path)
 
 next_i_blink = get_file_index(blink_path, 1)
 next_i_no_blink = get_file_index(no_blink_path, 1)
 next_i_one_blink = get_file_index(one_blink_path, 1)
 
-read_data_and_trans(next_i_blink - 1, blink_path, "g", delay=0.3)
-sleep(3)
-read_data_and_trans(next_i_no_blink - 1, no_blink_path, "r", delay=0.3)
-sleep(3)
-read_data_and_trans(next_i_one_blink - 1, one_blink_path, "y", delay=0.3)
+read_data_and_trans(next_i_blink - 1, blink_path, "g", delay=0.1)
+sleep(1)
+read_data_and_trans(next_i_no_blink - 1, no_blink_path, "r", delay=0.1)
+sleep(1)
+read_data_and_trans(next_i_one_blink - 1, one_blink_path, "y", delay=0.1)
 
 
 
