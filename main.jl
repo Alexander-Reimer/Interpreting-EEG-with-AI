@@ -150,7 +150,7 @@ function get_loader(train_portion=0.9, blink_paths=["Blink/first_samples-before_
 end
 
 function save_weights(model, name, test_losses, train_losses, test_accs, train_accs, epoch)
-    model_weights = deepcopy(collect(params(model)))
+    model_weights = deepcopy(collect(Flux.params(model)))
     bson(name, Dict(
         :model_weights => model_weights,
         :test_losses => test_losses,
@@ -524,24 +524,28 @@ function get_data(path)
     io = open(path)
     content = readlines(io)
     close(io)
+    outputs = []
     output = Array{Float64}(undef, length(content), 4)
-    for i = 1:400
-        bar = split(content[i], "\t")[1:4]
-        foo = []
-        for i = 1:4
-            push!(foo, parse(Float64, String(bar[i])))
+    for i = 1:200
+        for i2 = i:i+199
+            bar = split(content[i2], "\t")[2:5]
+            foo = []
+            for i3 = 1:4
+                push!(foo, parse(Float64, String(bar[i3])))
+            end
+            output[i2, 1:4] = foo
         end
-        output[i,1:4] = foo
+        push!(outputs, output)
     end
-    return output
+    return outputs
 end
 
-function test2(path)
-    data = get_data(path)
-    data = reshape(data, (:, 1))
-    figure()
-    plot(data)
-   
+function test2(path, model)
+    predicts = []
+    for i2 = 1:30
+    for i = 1:10
+        data = get_data(path * string(i2) * ".csv")[i]
+        data = reshape(data, (:, 1))
         temp_data_x = []
         # Perform FFT on all channels in hyper_params.electrodes
         for channel in 1:4
@@ -558,8 +562,13 @@ function test2(path)
 
             append!(temp_data_x, fft_sample_x)
         end
-        data = temp_data_x
-        #plot(data)
+        data = copy(temp_data_x)
+        push!(predicts, model(data)[1])
+    end
+    println(i2)
+    end
+    hist(predicts)
+    println(predicts)
 end
 
 mutable struct Args
@@ -598,7 +607,7 @@ global hyper_params = Args(0.001, 50, "model.bson", cuda=false, one_out=true, pl
 
 fig = figure("Training plot #1")
 training_plot = create_training_plot("")
-train(training_plot, false)
+train(training_plot, true)
 =#
 
 #=
@@ -629,6 +638,9 @@ global train_data, test_data = get_loader(0.9, ["Blink/Okzipital-03-16-2022/"], 
 #test(model, false)
 # =#
 global hyper_params = Args(0.001, 50, "model.bson", cuda=false, one_out=true, plot_frequency=10, fft=true)
-test2("Blink/Okzipital-03-16-2022/1.csv")
+global model = build_model()
+load_network!("model.bson")
+
+@time test2("NoBlink/livetest_data/Okzipital-05-11-2022/", model)
 
 end # Module
