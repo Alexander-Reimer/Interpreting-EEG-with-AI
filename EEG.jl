@@ -160,10 +160,10 @@ function setup_board(os::Symbol) # :WIN for Windows, :LIN for Linux, :SYN for sy
         return setup_board(nothing)
     end
 end
-
+#=
 board_shim = setup_board(:WIN)
 get_eeg_test_data(board_shim)
-
+=#
 
 # get_eeg_train_data(board_shim)
 

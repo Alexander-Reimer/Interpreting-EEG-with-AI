@@ -520,6 +520,48 @@ function test(model, drive_robot)
     #plot(blink_vals, "red", label = "Augen auf")
 end
 
+function get_data(path)
+    io = open(path)
+    content = readlines(io)
+    close(io)
+    output = Array{Float64}(undef, length(content), 4)
+    for i = 1:400
+        bar = split(content[i], "\t")[1:4]
+        foo = []
+        for i = 1:4
+            push!(foo, parse(Float64, String(bar[i])))
+        end
+        output[i,1:4] = foo
+    end
+    return output
+end
+
+function test2(path)
+    data = get_data(path)
+    data = reshape(data, (:, 1))
+    figure()
+    plot(data)
+   
+        temp_data_x = []
+        # Perform FFT on all channels in hyper_params.electrodes
+        for channel in 1:4
+            # Every channel has 200 values
+            s = (channel - 1) * 200 + 1
+            e = channel * 200
+
+            # Using rfft for better performance, as it is best for real values
+            fft_sample_x = abs.(rfft(data[s:e]))
+            # Remove Amplitude for the frequency in hyper_params.notch
+            fft_sample_x[hyper_params.notch+1] = 0.0
+            # Cut off all frequencies not between hyper_params.lower_limit and hyper_params.upper_limit
+            fft_sample_x = fft_sample_x[hyper_params.lower_limit:(hyper_params.upper_limit+1)]
+
+            append!(temp_data_x, fft_sample_x)
+        end
+        data = temp_data_x
+        #plot(data)
+end
+
 mutable struct Args
     learning_rate::Float64
     training_steps::Int
@@ -586,5 +628,7 @@ global train_data, test_data = get_loader(0.9, ["Blink/Okzipital-03-16-2022/"], 
 
 #test(model, false)
 # =#
+global hyper_params = Args(0.001, 50, "model.bson", cuda=false, one_out=true, plot_frequency=10, fft=true)
+test2("Blink/Okzipital-03-16-2022/1.csv")
 
 end # Module
