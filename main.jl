@@ -20,7 +20,7 @@ using BSON: @load
 println("Loading FFTW...")
 # For the Discreete Fourier Transform
 using FFTW
-
+using DelimitedFiles
 using WAV
 
 println("Loading Recover...")
@@ -520,14 +520,17 @@ function test(model, drive_robot)
     #plot(blink_vals, "red", label = "Augen auf")
 end
 
-function get_data(path)
+function get_data(path, is_csv)
     io = open(path)
     content = readlines(io)
     close(io)
     outputs = []
-    output = Array{Float64}(undef, length(content), 4)
+
     for i = 1:200
+    #for i = 1:3
+        output = Array{Float64}(undef, length(content), 4)
         for i2 = i:i+199
+            #println("i2: ",i2)
             bar = split(content[i2], "\t")[2:5]
             foo = []
             for i3 = 1:4
@@ -535,16 +538,20 @@ function get_data(path)
             end
             output[i2, 1:4] = foo
         end
+        #println(output)
         push!(outputs, output)
     end
+
     return outputs
 end
 
 function test2(path, model)
-    predicts = []
+    #=
+    global predicts = []
     for i2 = 1:30
-    for i = 1:10
-        data = get_data(path * string(i2) * ".csv")[i]
+    data2 = get_data(path * string(i2) * ".csv")
+    for i = 1:200
+        data = data2[i]
         data = reshape(data, (:, 1))
         temp_data_x = []
         # Perform FFT on all channels in hyper_params.electrodes
@@ -565,10 +572,14 @@ function test2(path, model)
         data = copy(temp_data_x)
         push!(predicts, model(data)[1])
     end
-    println(i2)
     end
-    hist(predicts)
-    println(predicts)
+    #figure("NoBlink")
+    #hist(predicts, bins = [0.0:0.01:1.0...])
+    #histogram(predicts, bins=0.0:0.1:1.0)
+    #println(predicts)
+    =#
+    predicts = []
+    
 end
 
 mutable struct Args
@@ -603,11 +614,11 @@ function Args(learning_rate, training_steps, save_path; lower_limit=1, upper_lim
 end
 
 #=
-global hyper_params = Args(0.001, 50, "model.bson", cuda=false, one_out=true, plot_frequency=10, fft=true)
+global hyper_params = Args(0.001, 1000, "model.bson", cuda=false, one_out=true, plot_frequency=10, fft=true)
 
 fig = figure("Training plot #1")
 training_plot = create_training_plot("")
-train(training_plot, true)
+train(training_plot, false)
 =#
 
 #=
@@ -637,6 +648,7 @@ global train_data, test_data = get_loader(0.9, ["Blink/Okzipital-03-16-2022/"], 
 
 #test(model, false)
 # =#
+
 global hyper_params = Args(0.001, 50, "model.bson", cuda=false, one_out=true, plot_frequency=10, fft=true)
 global model = build_model()
 load_network!("model.bson")
