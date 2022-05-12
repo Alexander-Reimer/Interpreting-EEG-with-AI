@@ -520,18 +520,12 @@ function test(model, drive_robot)
     #plot(blink_vals, "red", label = "Augen auf")
 end
 
-function get_data(path, is_csv)
+function get_data(path)
     io = open(path)
     content = readlines(io)
     close(io)
     outputs = []
-<<<<<<< HEAD
-
     for i = 1:200
-    #for i = 1:3
-=======
-    for i = 1:200
->>>>>>> 7e4091027373aa9a548475db3f4b45670dcd828a
         output = Array{Float64}(undef, length(content), 4)
         for i2 = i:i+199
             #println("i2: ",i2)
@@ -549,7 +543,7 @@ function get_data(path, is_csv)
     return outputs
 end
 
-function test2(path, model)
+function test2(path, model, color)
     
     global predicts = []
     for i2 = 1:30
@@ -565,7 +559,7 @@ function test2(path, model)
             e = channel * 200
 
                 # Using rfft for better performance, as it is best for real values
-                fft_sample_x = abs.(rfft(sample[s:e]))
+                fft_sample_x = abs.(rfft(data[s:e]))
                 # Remove Amplitude for the frequency in hyper_params.notch
                 fft_sample_x[hyper_params.notch+1] = 0.0
                 # Cut off all frequencies not between hyper_params.lower_limit and hyper_params.upper_limit
@@ -576,12 +570,21 @@ function test2(path, model)
             sample = copy(temp_data_x)
             push!(predicts, model(sample)[1])
         end
-        println(i2)
     end
     
-    #hist(predicts, color = color, orientation = "middle", rwidth)
+    hist(predicts, color = color)
     #println(predicts)
     return predicts
+    
+
+end
+
+function test3(path)
+    io=open(path,"r") do io
+        global content = readlines(io)
+    end
+    predictions = parse.(Float64, content)
+    hist(predictions)
 end
 
 mutable struct Args
@@ -650,12 +653,14 @@ global train_data, test_data = get_loader(0.9, ["Blink/Okzipital-03-16-2022/"], 
 
 #test(model, false)
 # =#
-
+#=
 global hyper_params = Args(0.001, 50, "model.bson", cuda=false, one_out=true, plot_frequency=10, fft=true)
 global model = build_model()
 load_network!("model.bson")
 
-global blink_pred = test2("Blink/livetest_data/Okzipital-05-11-2022/", model, color = "green")
-global noblink_pred = test2("NoBlink/livetest_data/Okzipital-05-11-2022/", model, color = "red")
+global blink_pred = test2("Blink/livetest_data/Okzipital-05-11-2022/", model, "green")
+global noblink_pred = test2("NoBlink/livetest_data/Okzipital-05-11-2022/", model, "red")
+=#
 
+test3("NoBlink/livetest_data/predicts.txt")
 end # Module
