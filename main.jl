@@ -23,6 +23,8 @@ using FFTW
 using DelimitedFiles
 using WAV
 
+using Interpolations
+
 println("Loading Recover...")
 # For loading corrupted endings, see recover_data.jl for more info
 include("recover_data.jl")
@@ -544,19 +546,19 @@ function get_data(path)
 end
 
 function test2(path, model, color)
-    
+
     global predicts = []
     for i2 = 1:30
-    data2 = get_data(path * string(i2) * ".csv")
-    for i = 1:200
-        data = data2[i]
-        data = reshape(data, (:, 1))
-        temp_data_x = []
-        # Perform FFT on all channels in hyper_params.electrodes
-        for channel in 1:4
-            # Every channel has 200 values
-            s = (channel - 1) * 200 + 1
-            e = channel * 200
+        data2 = get_data(path * string(i2) * ".csv")
+        for i = 1:200
+            data = data2[i]
+            data = reshape(data, (:, 1))
+            temp_data_x = []
+            # Perform FFT on all channels in hyper_params.electrodes
+            for channel in 1:4
+                # Every channel has 200 values
+                s = (channel - 1) * 200 + 1
+                e = channel * 200
 
                 # Using rfft for better performance, as it is best for real values
                 fft_sample_x = abs.(rfft(data[s:e]))
@@ -570,35 +572,42 @@ function test2(path, model, color)
             sample = copy(temp_data_x)
             push!(predicts, model(sample)[1])
         end
+        println(i2)
     end
-    
-    hist(predicts, color = color)
+
+    io = open(path * "predictions.txt", "w") do io
+        writedlm(io, predicts)
+    end
+
+    hist(predicts, color=color)
     #println(predicts)
     return predicts
-    
-
 end
 
-function test3(path)
-    io=open(path,"r") do io
+
+
+function test3(path, label; color="blue", fig = "")
+    figure(fig)
+    io = open(path, "r") do io
         global content = readlines(io)
     end
     global predictions = parse.(Float64, content)
     figure("Histogramm von geschlossenen Augen")
-    clf()
+    #clf()
     xlabel("Ausgabe des Neuronalen Netzwerks")
     ylabel("Häufigkeit der Ausgabe")
     #yscale(0.25)
     #xscale("log")
- 
-    hist(predictions, bins = [0.0:0.01:1.0...])
+
+    bins = [0.0:0.01:1.0...]
+    global a = hist(predictions, bins=bins, label=label, color=color, histtype="step", linewidth=1.2)
+    itp_a = interpolate(a[1], BSpline(Cubic(Reflect(OnCell()))))
+
+    plot(bins[2:end], itp_a, color=color, linestyle="--", linewidth=0.9)
     #indices = findall(iszero, predictions)
     #for i = length(indices):-1:1
     #  deleteat!(predictions, indices[i])
     #end
-    io=open(path, "w") do io
-        writedlm(io,predictions)
-    end
 end
 
 mutable struct Args
@@ -667,14 +676,21 @@ global train_data, test_data = get_loader(0.9, ["Blink/Okzipital-03-16-2022/"], 
 
 #test(model, false)
 # =#
-#=
-global hyper_params = Args(0.001, 50, "model.bson", cuda=false, one_out=true, plot_frequency=10, fft=true)
-global model = build_model()
-load_network!("model.bson")
 
-global blink_pred = test2("Blink/livetest_data/Okzipital-05-11-2022/", model, "green")
-global noblink_pred = test2("NoBlink/livetest_data/Okzipital-05-11-2022/", model, "red")
-=#
+# global hyper_params = Args(0.001, 50, "model.bson", cuda=false, one_out=true, plot_frequency=10, fft=true)
+# global model = build_model()
+# load_network!("model.bson")
 
-test3("Blink/livetest_data/predicts.txt")
+# global blink_pred = test2("Blink/livetest_data/Okzipital-05-11-2022/", model, "green")
+# global noblink_pred = test2("NoBlink/livetest_data/Okzipital-05-11-2022/", model, "red")
+
+
+#figure("fig1")
+test3("NoBlink/livetest_data/Okzipital-05-11-2022/predictions.txt", "geöffnete Augen", color="red", fig = "fig1")
+test3("Blink/livetest_data/Okzipital-05-11-2022/predictions.txt", "geschlossene Augen", color="blue", fig = "fig1")
+
+#figure("fig2")
+test3("NoBlink/livetest_data/predicts.txt", "geöffnete Augen", color="green", fig="fig2")
+test3("Blink/livetest_data/predicts.txt", "geschlossene Augen", color="orange", fig="fig2")
+legend()
 end # Module
