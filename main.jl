@@ -525,9 +525,13 @@ function get_data(path, is_csv)
     content = readlines(io)
     close(io)
     outputs = []
+<<<<<<< HEAD
 
     for i = 1:200
     #for i = 1:3
+=======
+    for i = 1:200
+>>>>>>> 7e4091027373aa9a548475db3f4b45670dcd828a
         output = Array{Float64}(undef, length(content), 4)
         for i2 = i:i+199
             #println("i2: ",i2)
@@ -546,7 +550,7 @@ function get_data(path, is_csv)
 end
 
 function test2(path, model)
-    #=
+    
     global predicts = []
     for i2 = 1:30
     data2 = get_data(path * string(i2) * ".csv")
@@ -560,26 +564,24 @@ function test2(path, model)
             s = (channel - 1) * 200 + 1
             e = channel * 200
 
-            # Using rfft for better performance, as it is best for real values
-            fft_sample_x = abs.(rfft(data[s:e]))
-            # Remove Amplitude for the frequency in hyper_params.notch
-            fft_sample_x[hyper_params.notch+1] = 0.0
-            # Cut off all frequencies not between hyper_params.lower_limit and hyper_params.upper_limit
-            fft_sample_x = fft_sample_x[hyper_params.lower_limit:(hyper_params.upper_limit+1)]
+                # Using rfft for better performance, as it is best for real values
+                fft_sample_x = abs.(rfft(sample[s:e]))
+                # Remove Amplitude for the frequency in hyper_params.notch
+                fft_sample_x[hyper_params.notch+1] = 0.0
+                # Cut off all frequencies not between hyper_params.lower_limit and hyper_params.upper_limit
+                fft_sample_x = fft_sample_x[hyper_params.lower_limit:(hyper_params.upper_limit+1)]
 
-            append!(temp_data_x, fft_sample_x)
+                append!(temp_data_x, fft_sample_x)
+            end
+            sample = copy(temp_data_x)
+            push!(predicts, model(sample)[1])
         end
-        data = copy(temp_data_x)
-        push!(predicts, model(data)[1])
+        println(i2)
     end
-    end
-    #figure("NoBlink")
-    #hist(predicts, bins = [0.0:0.01:1.0...])
-    #histogram(predicts, bins=0.0:0.1:1.0)
-    #println(predicts)
-    =#
-    predicts = []
     
+    #hist(predicts, color = color, orientation = "middle", rwidth)
+    #println(predicts)
+    return predicts
 end
 
 mutable struct Args
@@ -653,6 +655,7 @@ global hyper_params = Args(0.001, 50, "model.bson", cuda=false, one_out=true, pl
 global model = build_model()
 load_network!("model.bson")
 
-@time test2("NoBlink/livetest_data/Okzipital-05-11-2022/", model)
+global blink_pred = test2("Blink/livetest_data/Okzipital-05-11-2022/", model, color = "green")
+global noblink_pred = test2("NoBlink/livetest_data/Okzipital-05-11-2022/", model, color = "red")
 
 end # Module
