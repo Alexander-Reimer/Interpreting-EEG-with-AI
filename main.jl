@@ -583,8 +583,22 @@ function test3(path)
     io=open(path,"r") do io
         global content = readlines(io)
     end
-    predictions = parse.(Float64, content)
-    hist(predictions)
+    global predictions = parse.(Float64, content)
+    figure("Histogramm von geschlossenen Augen")
+    clf()
+    xlabel("Ausgabe des Neuronalen Netzwerks")
+    ylabel("Häufigkeit der Ausgabe")
+    #yscale(0.25)
+    #xscale("log")
+ 
+    hist(predictions, bins = [0.0:0.01:1.0...])
+    #indices = findall(iszero, predictions)
+    #for i = length(indices):-1:1
+    #  deleteat!(predictions, indices[i])
+    #end
+    io=open(path, "w") do io
+        writedlm(io,predictions)
+    end
 end
 
 mutable struct Args
@@ -662,5 +676,5 @@ global blink_pred = test2("Blink/livetest_data/Okzipital-05-11-2022/", model, "g
 global noblink_pred = test2("NoBlink/livetest_data/Okzipital-05-11-2022/", model, "red")
 =#
 
-test3("NoBlink/livetest_data/predicts.txt")
+test3("Blink/livetest_data/predicts.txt")
 end # Module
