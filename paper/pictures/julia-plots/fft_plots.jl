@@ -78,7 +78,7 @@ function divide_into_channels(data, channels)
     for i = 1:channels
         i_start = (i - 1) * per_channel + 1
         i_end = i * per_channel
-        push!(split_data, data[i_start:i_end])
+        push!(split_data, convert.(Float64, data[i_start:i_end]))
     end
     return split_data
 end
@@ -90,9 +90,9 @@ function plot_eegs_fft()
     include("main.jl")
     sleep(0.2)
     println(pwd())
-    AI.hyper_params.fft = false
-    AI.hyper_params.inputs = 400
-    global eeg_data = AI.get_loader(0.9, "Blink/Okzipital-03-16-2022/", "NoBlink/Okzipital-03-16-2022/")[1].data[1]
+    #AI.hyper_params.fft = false
+    #AI.hyper_params.inputs = 400
+    global eeg_data = AI.get_loader(["Blink/Okzipital-03-16-2022/"], ["NoBlink/Okzipital-03-16-2022/"])[1].data[1]
     diviser = Int(size(eeg_data)[2] / 2)
     blink_data = eeg_data[:, 1:diviser]
     no_blink_data = eeg_data[:, diviser+1:end]
@@ -101,31 +101,32 @@ function plot_eegs_fft()
 
     eeg_fft_fig = figure("Die FFTs der EEG-Daten")
 
-    xlabel("Frequenz in Herz")
+    xlabel("Frequenz in Hertz")
+    ylabel("Amplitude")
 
     # Channel 1
 
     # Blink:
     global current_data = divide_into_channels(blink_data[:, 1], 4)
     x, y = fft_eeg(current_data[1], 1)
-    plot(x, y, "blue", label = "Geblinzelt")
-
-    for sample_i = 2:size(blink_data)[2]
-        global current_data = divide_into_channels(blink_data[:, sample_i], 4)
-        x, y = fft_eeg(current_data[1], 1)
-        plot(x, y, "blue")
-    end
-
+    plot(x, y, "blue", label = "", visible = false)
+    
+    # for sample_i = 2:size(blink_data)[2]
+    #    global current_data = divide_into_channels(blink_data[:, sample_i], 4)
+    #    x, y = fft_eeg(current_data[1], 1)
+    #    plot(x, y, "blue")
+    # end
+    
     # No blink:
     global current_data = divide_into_channels(no_blink_data[:, 1], 4)
     x, y = fft_eeg(current_data[1], 1)
-    plot(x, y, "red", label = "Nicht geblinzelt")
-
-    for sample_i = 2:size(blink_data)[2]
-        global current_data = divide_into_channels(no_blink_data[:, sample_i], 4)
-        x, y = fft_eeg(current_data[1], 1)
-        plot(x, y, "red")
-    end
+    plot(x, y, "red", label = "Augen offen", visible = true)
+    
+    # for sample_i = 2:size(blink_data)[2]
+    #    global current_data = divide_into_channels(no_blink_data[:, sample_i], 4)
+    #    x, y = fft_eeg(current_data[1], 1)
+    #    plot(x, y, "red")
+    # end
 
     legend()
 

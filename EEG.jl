@@ -53,28 +53,17 @@ end
 
 function get_eeg_train_data(board_shim)
     data = Array{Float64,2}
-    blink_path = "Blink/Okzipital-03-16-2022/"
-    no_blink_path = "NoBlink/Okzipital-03-16-2022/"
+    blink_path = "Blink/Okzipital-05-18-2022/"
+    no_blink_path = "NoBlink/Okzipital-05-18-2022/"
 
     next_i_blink = get_file_index(blink_path, 1)
     next_i_no_blink = get_file_index(no_blink_path, 1)
 
 
-    for i = 0:9
-        println("No Blink")
+    for i = 0:1
         print("\a")
-        sleep(2)
-        for i2 = 0:20
-            sleep(0.25)
-            data = get_some_board_data(board_shim, 200)
-            BrainFlow.write_file(data, no_blink_path * string(next_i_no_blink + i * 20 + i2) * ".csv", "w")
-            #figure("No Blink")
-            #clf() 
-            #plot(data)
-        end
-
         println("Blink")
-        sleep(2)
+        sleep(2.5)
         for i2 = 0:20
             sleep(0.25)
             data = get_some_board_data(board_shim, 200)
@@ -86,6 +75,18 @@ function get_eeg_train_data(board_shim)
             #figure("Blink")
             #clf()
             #plot(abs.(data))
+        end
+
+        print("\a")
+        println("No Blink")
+        sleep(2.5)
+        for i2 = 0:20
+            sleep(0.25)
+            data = get_some_board_data(board_shim, 200)
+            BrainFlow.write_file(data, no_blink_path * string(next_i_no_blink + i * 20 + i2) * ".csv", "w")
+            #figure("No Blink")
+            #clf() 
+            #plot(data)
         end
     end
 end
@@ -157,23 +158,25 @@ function setup_board(os::Symbol) # :WIN for Windows, :LIN for Linux, :SYN for sy
         return setup_board(nothing)
     end
 end
+
 #=
-#board_shim = setup_board(:WIN)
-blink_path = "Blink/livetest_data/Okzipital-05-11-2022/"
-no_blink_path = "NoBlink/livetest_data/Okzipital-05-11-2022/"
+board_shim = setup_board(:WIN)
+blink_path = "Blink/Okzipital-05-18-2022/"
+no_blink_path = "NoBlink/Okzipital-05-18-2022/"
 one_blink_path = "OneBlink/Okzipital-05-11-2022/"
 
-#get_eeg_test_data(board_shim, blink_path, one_blink_path)
+#get_eeg_test_data(board_shim, blink_path, no_blink_path)
+#get_eeg_train_data(board_shim)
 
 next_i_blink = get_file_index(blink_path, 1)
 next_i_no_blink = get_file_index(no_blink_path, 1)
-next_i_one_blink = get_file_index(one_blink_path, 1)
+#next_i_one_blink = get_file_index(one_blink_path, 1)
 
-read_data_and_trans(next_i_blink - 1, blink_path, "g", delay=0.1)
+read_data_and_trans(next_i_blink - 1, blink_path, "g", delay=0)
 sleep(1)
-read_data_and_trans(next_i_no_blink - 1, no_blink_path, "r", delay=0.1)
+read_data_and_trans(next_i_no_blink - 1, no_blink_path, "r", delay=0)
 sleep(1)
-read_data_and_trans(next_i_one_blink - 1, one_blink_path, "y", delay=0.1)
+# read_data_and_trans(next_i_one_blink - 1, one_blink_path, "y", delay=0.1)
 =#
 
 

@@ -33,78 +33,87 @@ println("Recover loaded!")
 
 function get_eeg_data(paths, data_x, data_y, output)
     for path in paths
-        endings = Recover.get_endings_path(path)
+        #endings = Recover.get_endings_path(path)
         sample_number = 1
         while isfile(path * string(sample_number) * ".csv")
             # Read recorded EEG data
-            global sample_data_x = BrainFlow.read_file(path * string(sample_number) * ".csv")
+            global file_data_x = BrainFlow.read_file(path * string(sample_number) * ".csv")
 
-            temp_data_x = Array{Float64}(undef, size(sample_data_x, 1), 0)
+            if typeof(file_data_x) != Array{Float64,2}
+                #file_data_x = transpose(file_data_x)
+            end
 
-            # (Try to) filter 50 / 60 Hz frequencies to remove environmental noise using BrainFlow
-            # It doesnt really do a lot, but at least it's something
-            for i = 1:size(sample_data_x)[2]
-                if hyper_params.notch == 50
-                    notch = BrainFlow.FIFTY
-                elseif hyper_params.notch == 60
-                    notch = BrainFlow.SIXTY
+            if size(file_data_x)[2] !== 4
+                file_data_x = file_data_x[:, 2:5]
+            end
+
+            additional_steps = size(file_data_x)[1] - 199
+
+            for i = 1:additional_steps
+                # temp_data_x = Array{Float64}(undef, size(sample_data_x, 1), 0)
+
+                sample_data_x = file_data_x[0+i:199+i, :]
+                # (Try to) filter 50 / 60 Hz frequencies to remove environmental noise using BrainFlow
+                # It doesnt really do a lot, but at least it's something
+                for i = 1:size(sample_data_x)[2]
+                    if hyper_params.notch == 50
+                        notch = BrainFlow.FIFTY
+                    elseif hyper_params.notch == 60
+                        notch = BrainFlow.SIXTY
+                    else
+                        notch = hyper_params.notch
+                    end
+                    BrainFlow.remove_environmental_noise(view(sample_data_x, :, i), 200, notch)
+                end
+
+                # Make data 1d
+                sample_data_x = reshape(sample_data_x, (:, 1))
+
+                if 4 in hyper_params.electrodes
+                    #sample_data_x[end] = endings[sample_number]
+                end
+
+                if hyper_params.fft == true
+                    temp_data_x = []
+                    # Perform FFT on all channels in hyper_params.electrodes
+                    for channel in hyper_params.electrodes
+                        # Every channel has 200 values
+                        s = (channel - 1) * 200 + 1
+                        e = channel * 200
+
+                        # Using rfft for better performance, as it is best for real values
+                        fft_sample_x = abs.(rfft(sample_data_x[s:e]))
+                        # Remove Amplitude for the frequency in hyper_params.notch
+                        fft_sample_x[hyper_params.notch+1] = 0.0
+                        # Cut off all frequencies not between hyper_params.lower_limit and hyper_params.upper_limit
+                        fft_sample_x = fft_sample_x[hyper_params.lower_limit:(hyper_params.upper_limit+1)]
+
+                        append!(temp_data_x, fft_sample_x)
+                    end
+                    sample_data_x = temp_data_x
                 else
-                    notch = hyper_params.notch
+                    temp_data_x = []
+                    # Only include data from the channels in hyper_params.electrodes
+                    for channel in hyper_params.electrodes
+                        # Every channel has 200 values
+                        s = (channel - 1) * 200 + 1
+                        e = channel * 200
+                        append!(temp_data_x, sample_data_x[s:e])
+                    end
+                    sample_data_x = temp_data_x
                 end
-                BrainFlow.remove_environmental_noise(view(sample_data_x, :, i), 200, notch)
+                # Append to existing data
+                data_x = [data_x sample_data_x]
+                # Append given output to data_y ([1.0, 0.0] for Blink and [0.0, 1.0] for NoBlink)
+                data_y = [data_y output]
             end
-
-            # Make data 1d
-            sample_data_x = reshape(sample_data_x, (:, 1))
-
-            if 4 in hyper_params.electrodes
-                sample_data_x[end] = endings[sample_number]
-            end
-
-            if hyper_params.fft == true
-                temp_data_x = []
-                # Perform FFT on all channels in hyper_params.electrodes
-                for channel in hyper_params.electrodes
-                    # Every channel has 200 values
-                    s = (channel - 1) * 200 + 1
-                    e = channel * 200
-
-                    # Using rfft for better performance, as it is best for real values
-                    fft_sample_x = abs.(rfft(sample_data_x[s:e]))
-                    # Remove Amplitude for the frequency in hyper_params.notch
-                    fft_sample_x[hyper_params.notch+1] = 0.0
-                    # Cut off all frequencies not between hyper_params.lower_limit and hyper_params.upper_limit
-                    fft_sample_x = fft_sample_x[hyper_params.lower_limit:(hyper_params.upper_limit+1)]
-
-                    append!(temp_data_x, fft_sample_x)
-                end
-                sample_data_x = temp_data_x
-            else
-                temp_data_x = []
-                # Only include data from the channels in hyper_params.electrodes
-                for channel in hyper_params.electrodes
-                    # Every channel has 200 values
-                    s = (channel - 1) * 200 + 1
-                    e = channel * 200
-                    append!(temp_data_x, sample_data_x[s:e])
-                end
-                sample_data_x = temp_data_x
-            end
-            # Append to existing data
-            data_x = [data_x sample_data_x]
             sample_number += 1
         end
-
-        # Append given output to data_y ([1.0, 0.0] for Blink and [0.0, 1.0] for NoBlink)
-        for i = 0:sample_number
-            data_y = [data_y output]
-        end
     end
-
     return data_x, data_y
 end
 
-function get_loader(train_portion=0.9, blink_paths=["Blink/first_samples-before_01-15-2022/"], no_blink_paths=["NoBlink/first_samples-before_01-15-2022/"])
+function get_loader(blink_paths, no_blink_paths, train_portion=0.9)
 
     inputs_all_channels = hyper_params.inputs
     if hyper_params.one_out
@@ -192,7 +201,7 @@ function loss_and_accuracy(data_loader, model, dev)
     return loss / num, acc / num / (Int(!hyper_params.one_out) + 1)
 end
 
-function confusion_matrix(data_loader, model)
+function confusion_matrix(data_loader, model, threshold=0.6)
     # Create a confusion matrix for 
     blink_count = 0
     blink_acc = 0
@@ -203,12 +212,12 @@ function confusion_matrix(data_loader, model)
         est = model(x)
         if y[1, 1] == 1.0
             blink_count += 1
-            if est[1, 1] > 1 - est[1, 1]
+            if est[1, 1] > threshold
                 blink_acc += 1
             end
         else
             no_blink_count += 1
-            if est[1, 1] < 1 - est[1, 1]
+            if est[1, 1] < threshold
                 no_blink_acc += 1
             end
         end
@@ -217,7 +226,7 @@ function confusion_matrix(data_loader, model)
     no_blink_acc /= no_blink_count
 
     # Real Blinks: [:, 1], Real No Blinks: [:, 2], Estimated Blinks: [1, :], Estimated No Blinks: [2, :]
-    return [blink_acc (1-no_blink_acc); (1-blink_acc) no_blink_acc] ./ 2
+    return [blink_acc (1-blink_acc); (1-no_blink_acc) no_blink_acc] ./ 2
 end
 
 function build_model()
@@ -355,7 +364,9 @@ function train(training_plot, new=false)
 
     # Load the training data
     # EEG Okzipital:
-    global train_data, test_data = get_loader(0.9, ["Blink/Okzipital-03-16-2022/"], ["NoBlink/Okzipital-03-16-2022/"])
+    global train_data, test_data = get_loader(
+        ["Blink/Okzipital-03-16-2022/"], #, "Blink/Okzipital-03-13-2022/", "Blink/Okzipital-03-13-2022-2/"],
+        ["NoBlink/Okzipital-03-16-2022/"], 0.9) #, "NoBlink/Okzipital-03-13-2022/", "NoBlink/Okzipital-03-13-2022-2/"], 0.9)
     # EMG above eyes:
     #global train_data, test_data = get_loader(0.9, ["Blink/first_samples-before_01-15-2022/"], ["NoBlink/first_samples-before_01-15-2022/"])
 
@@ -389,7 +400,7 @@ function train(training_plot, new=false)
     for epoch = (last_epoch+1):(hyper_params.training_steps+last_epoch)
         for (x, y) in train_data
             x, y = device(x), device(y) # transfer data to device
-            gs = gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
+            gs = Flux.gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
             Flux.Optimise.update!(opt, ps, gs) # update parameters
         end
         if mod(epoch, hyper_params.plot_frequency) == 0
@@ -545,10 +556,41 @@ function get_data(path)
     return outputs
 end
 
+function get_data_foo(path)
+
+end
+
+function save_predictions(data, model, path)
+    blink_predictions = Float64[]
+    noblink_predictions = Float64[]
+
+    for (x, y) in data
+        est = model(x)
+        if y[1] == 1.0
+            push!(blink_predictions, est[1])
+        elseif y[1] == 0.0
+            push!(noblink_predictions, est[1])
+        else
+            println(y)
+            @error "Whatjshnsou?"
+        end
+    end
+
+    io = open(path * "predictions-blink.txt", "w") do io
+        writedlm(io, blink_predictions)
+    end
+
+    io = open(path * "predictions-noblink.txt", "w") do io
+        writedlm(io, noblink_predictions)
+    end
+
+    return blink_predictions, noblink_predictions
+end
+
 function test2(path, model, color)
 
     global predicts = []
-    for i2 = 1:30
+    for i2 = 1:24
         data2 = get_data(path * string(i2) * ".csv")
         for i = 1:200
             data = data2[i]
@@ -579,14 +621,14 @@ function test2(path, model, color)
         writedlm(io, predicts)
     end
 
-    hist(predicts, color=color)
+    #hist(predicts, color=color)
     #println(predicts)
     return predicts
 end
 
 
 
-function test3(path, label; color="blue", fig = "")
+function test3(path, label; color="blue", fig="")
     figure(fig)
     io = open(path, "r") do io
         global content = readlines(io)
@@ -641,13 +683,15 @@ function Args(learning_rate, training_steps, save_path; lower_limit=1, upper_lim
         batch_size, notch, inputs, cuda, one_out, plot_frequency, save_path)
 end
 
-#=
-global hyper_params = Args(0.001, 1000, "model.bson", cuda=false, one_out=true, plot_frequency=10, fft=true)
+# global hyper_params = Args(0.001, 1000, "model.bson", cuda=false, one_out=true, plot_frequency=100, fft=false, batch_size=1)
 
+#global hyper_params = Args(0.001, 1000, "model.bson", cuda=false, one_out=true, plot_frequency=100, fft=true, lower_limit=1, upper_limit=20, batch_size = 2)
+
+#=
 fig = figure("Training plot #1")
 training_plot = create_training_plot("")
-train(training_plot, false)
-=#
+train(training_plot, true)
+
 
 #=
 fig = figure("Trainingsprozess EEG: FFT vs. kein FFT")
@@ -675,22 +719,29 @@ last_epoch = load_network!(hyper_params.save_path)
 global train_data, test_data = get_loader(0.9, ["Blink/Okzipital-03-16-2022/"], ["NoBlink/Okzipital-03-16-2022/"])
 
 #test(model, false)
-# =#
-
-# global hyper_params = Args(0.001, 50, "model.bson", cuda=false, one_out=true, plot_frequency=10, fft=true)
-# global model = build_model()
-# load_network!("model.bson")
-
-# global blink_pred = test2("Blink/livetest_data/Okzipital-05-11-2022/", model, "green")
-# global noblink_pred = test2("NoBlink/livetest_data/Okzipital-05-11-2022/", model, "red")
+# =# =#
 
 
-#figure("fig1")
-test3("NoBlink/livetest_data/Okzipital-05-11-2022/predictions.txt", "geöffnete Augen", color="red", fig = "fig1")
-test3("Blink/livetest_data/Okzipital-05-11-2022/predictions.txt", "geschlossene Augen", color="blue", fig = "fig1")
+global hyper_params = Args(0.001, 0, "model.bson", cuda=false, one_out=true, plot_frequency=100, fft=true, lower_limit=1, upper_limit=20, batch_size=1)
+global model = build_model()
+load_network!("model.bson")
 
-#figure("fig2")
-test3("NoBlink/livetest_data/predicts.txt", "geöffnete Augen", color="green", fig="fig2")
-test3("Blink/livetest_data/predicts.txt", "geschlossene Augen", color="orange", fig="fig2")
+global blink_pred = test2("Blink/livetest_data/Okzipital-05-18-2022/", model, "green")
+global noblink_pred = test2("NoBlink/livetest_data/Okzipital-05-18-2022/", model, "red")
+
+
+# global train_data, test_data = get_loader(
+#     ["Blink/Okzipital-03-16-2022/", "Blink/Okzipital-03-13-2022/", "Blink/Okzipital-03-13-2022-2/"],
+#     ["NoBlink/Okzipital-03-16-2022/", "NoBlink/Okzipital-03-13-2022/", "NoBlink/Okzipital-03-13-2022-2/"], 0.9)
+
+
+#save_predictions(test_data, model, "")
+
+test3("NoBlink/livetest_data/Okzipital-05-18-2022/predictions.txt", "geöffnete Augen", color="red", fig="fig1")
+test3("Blink/livetest_data/Okzipital-05-18-2022/predictions.txt", "geschlossene Augen", color="blue", fig="fig1")
+
+# test3("predictions-noblink.txt", "geöffnete Augen", color="red", fig="fig3")
+# test3("predictions-blink.txt", "geschlossene Augen", color="blue", fig="fig3")
 legend()
+# =#
 end # Module
