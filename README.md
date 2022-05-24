@@ -42,7 +42,7 @@ To gather the training data, we coded our own little program which you can find 
 
 This data is saved in Blink/ and NoBlink/.
 
-The neural network has two possible output configurations, controlled by one_out. If one_out is true, then there is one output neuron, with 1.0 being a prediction of Blink and 0.0 bein a prediction of NoBlink. If one_out is false, the network has one output neuron for Blink and one for NoBlink. To determine the networks decision, we check which neuron has the higher value.
+The neural network has two possible output configurations, controlled by one_out. If `one_out` is `true`, then there is one output neuron, with 1.0 being a prediction of Blink and 0.0 bein a prediction of NoBlink. If `one_out` is `false`, the network has one output neuron for Blink and one for NoBlink. To determine the networks decision, we check which neuron has the higher value.
 
 ### Other packages
 
