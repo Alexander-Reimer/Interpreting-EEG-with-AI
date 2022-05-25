@@ -19,13 +19,13 @@ end
 drive(robot, 0)
 
 function robot_test(modelo)
-    
+
     BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
     params = BrainFlowInputParams(
-        serial_port = "COM3"
-        )
-        board_shim = BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
-    
+        serial_port="COM3"
+    )
+    board_shim = BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
+
     try
         BrainFlow.release_session(board_shim)
     catch
@@ -40,23 +40,24 @@ function robot_test(modelo)
     println("")
     blink_vals = []
     no_blink_vals = []
-    for i = 1:200
+    for i = 1:40
         sample = EEG.get_some_board_data(board_shim, 200)
         #clf()
         #plot(sample)
-        sample = [make_fft(sample[1:200])..., make_fft(sample[201:400])...]
-    
+        sample = [make_fft(sample[1:200])..., make_fft(sample[201:400])...,
+            make_fft(sample[401:600])..., make_fft(sample[601:800])...]
+
         y = model(sample)
-    
+
         push!(blink_vals, y[1])
         push!(no_blink_vals, y[2])
-    
-        if y[1] > y[2]# + 0.08
+
+        if y[1] > 0.5
             drive(robot, 70)
         else
             drive(robot, 0)
         end
-    
+
         clf()
         plot(blink_vals, "green")
         plot(no_blink_vals, "red")
@@ -70,8 +71,8 @@ end
 #train(true)
 
 
-device = prepare_cuda()
-model = build_model()
-parameters = old_network()
-Flux.loadparams!(model, parameters)
+global hyper_params = Args(0.001, 0, "model.bson", cuda=false, one_out=true, plot_frequency=100, fft=true, lower_limit=1, upper_limit=20, batch_size=1)
+global model = build_model()
+load_network!("model.bson")
+
 robot_test(model)

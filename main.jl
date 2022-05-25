@@ -721,7 +721,7 @@ global train_data, test_data = get_loader(0.9, ["Blink/Okzipital-03-16-2022/"], 
 #test(model, false)
 # =# =#
 
-
+#=
 global hyper_params = Args(0.001, 0, "model.bson", cuda=false, one_out=true, plot_frequency=100, fft=true, lower_limit=1, upper_limit=20, batch_size=1)
 global model = build_model()
 load_network!("model.bson")
