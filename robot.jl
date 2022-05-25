@@ -3,7 +3,7 @@ using BrainFlow
 
 ev3dev_path = "../ev3dev.jl/ev3dev.jl"
 include(ev3dev_path)
-setup("Z:/Programming/EEG/mount/sys/class/")
+setup()
 
 #left_middle = Motor(:outC)
 #right_middle = Motor(:outA)
