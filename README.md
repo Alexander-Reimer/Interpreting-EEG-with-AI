@@ -38,11 +38,11 @@ Before, the inputs of the neural network were just all voltages of all channels 
 
 But now, we first perform a dicrete Fourier transformation on the 200 samples of each channel and give the output of that to the network. We also cut off all frequencies above an upper limit or below a lower limit. These two values can also be found in main.jl → mutable struct `Args`. So in the end, the index of an input neuron corresponds to a certain frequency and the value is the amplitude of it. This means that the amount of input neurons depends on which frequencies you choose (lower and upper limit). For the Fourier transform, we used the package [FFTW](https://github.com/JuliaMath/FFTW.jl).
 
-To gather the training data, we coded our own little program which you can find at EEG.jl. The EEG device we use is the Ganglion board by OpenBCI with 2 flat electrodes, 2 spike electrodes, and 2 earclips (1 for grounding, 1 for reference). The library we are using for reading the data of the EEG and saving it is [BrainFlow](https://brainflow.org).
+To gather the training data, we coded our own little program which you can find at EEG.jl. The EEG device we use is the Ganglion board by OpenBCI with 4 electrodes, and 2 earclips (1 for grounding, 1 for reference). The library we are using for reading the data of the EEG and saving it is [BrainFlow](https://brainflow.org).
 
 This data is saved in Blink/ and NoBlink/.
 
-The neural network has 2 output neurons: The first one for Blink and the second one for Not a blink. To determine the networks decision, we check which neuron has the higher value.
+The neural network has two possible output configurations, controlled by one_out. If `one_out` is `true`, then there is one output neuron, with 1.0 being a prediction of Blink and 0.0 bein a prediction of NoBlink. If `one_out` is `false`, the network has one output neuron for Blink and one for NoBlink. To determine the networks decision, we check which neuron has the higher value.
 
 ### Other packages
 
@@ -50,4 +50,5 @@ Other packages we use are
 
 - [PyPlot](https://github.com/JuliaPy/PyPlot.jl) for plotting the cost development,
 - [BSON](https://github.com/JuliaIO/BSON.jl) for saving and loading the network weights and cost history, and
-- [CUDA](https://github.com/JuliaGPU/CUDA.jl) for utilising the GPU if available.
+- [CUDA](https://github.com/JuliaGPU/CUDA.jl) for utilising a Nvidia GPU if available.
+- [Interpolations](https://github.com/JuliaMath/Interpolations.jl) for smoothing out the curves in some plots
