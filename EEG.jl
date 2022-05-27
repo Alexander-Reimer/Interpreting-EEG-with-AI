@@ -3,16 +3,16 @@ module EEG
 using BrainFlow, PyPlot, FFTW
 
 function get_some_board_data(board_shim, nsamples)
-    data = BrainFlow.get_current_board_data(nsamples, board_shim)# |> transpose
-    return data
-    #eeg_data = data[:, 2:5]
-    #=
+    data = BrainFlow.get_current_board_data(nsamples, board_shim) |> transpose
+    eeg_data = data[:, 2:5]
+    
     for chan = 1:4
         eeg_channel_data = view(eeg_data, :, chan)
         BrainFlow.detrend(eeg_channel_data, BrainFlow.CONSTANT)
     end
-    =#
-    #return eeg_data
+    
+    return eeg_data
+    return data
 end
 
 function read_data_and_trans(num_of_files, location, color; delay=0.001)

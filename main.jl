@@ -428,22 +428,24 @@ function setup_robot()
 end
 
 function test(model, drive_robot)
-    # Rework & Clean up!!!
-    setup("Z:/Programming/EEG/mount/sys/class/")
+    if drive_robot
+        # Rework & Clean up!!!
+        setup("Z:/Programming/EEG/mount/sys/class/")
 
-    left_motor = Motor(:outB)
-    right_motor = Motor(:outD)
+        left_motor = Motor(:outB)
+        right_motor = Motor(:outD)
 
-    robot = Robot(left_motor, right_motor)
+        robot = Robot(left_motor, right_motor)
 
-    drive(robot, 0)
+        drive(robot, 0)
+    end
 
     counter = 200
     BrainFlow.enable_dev_logger(BrainFlow.BOARD_CONTROLLER)
     params = BrainFlowInputParams(
-        serial_port="COM3"
+        serial_port="COM4"
     )
-    board_shim = BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
+    global board_shim = BrainFlow.BoardShim(BrainFlow.GANGLION_BOARD, params)
     samples = []
     if BrainFlow.is_prepared(board_shim)
         BrainFlow.release_session(board_shim)
@@ -480,42 +482,46 @@ function test(model, drive_robot)
         y = sin.(2pi * f * t) * 0.1
     end
 
-    for i = 1:200
-        for i = 1:500
-            counter -= 20
+    for i = 1:40
+        for i = 1:10
+            sleep(0.01)
             sample = EEG.get_some_board_data(board_shim, 200)
+            println("EEG #1: ", )
             #clf()
             #plot(sample)
             for i = 0:3
                 BrainFlow.remove_environmental_noise(sample[i*200+1:(i+1)*200], 200, BrainFlow.FIFTY)
             end
             sample = reshape(sample, (:, 1))
-            sample = [abs.(rfft(sample[1:200]))..., abs.(rfft((sample[201:400])))...] #, abs.(rfft((sample[401:600])))..., abs.(rfft((sample[601:800])))...
+            println("EEG: ", sample[10])
+            sample = [abs.(rfft(sample[1:200]))[1:21]..., abs.(rfft((sample[201:400])))[1:21]..., abs.(rfft((sample[401:600])))[1:21]..., abs.(rfft((sample[601:800])))[1:21]...]
+            println("FFT: ", sample[10])
             y = model(sample)
             println(y)
             push!(blink_vals, y[1])
             #push!(no_blink_vals, y[2])
-
+        
             #push!(x, x[end] + 0.01)
-
+        
             #clf()
             #plot(blink_vals, "green")
             #line2[1].set_data(x, no_blink_vals)
-
+        
             if y[1] > 0.7
                 if drive_robot
                     drive(robot, 50)
                 else
-                    wavplay(y, fs)
+                    print("\a")
+                    #wavplay(y, fs)
                 end
             else
                 if drive_robot
                     drive(robot, 0)
                 end
             end
-
+        
             #plot(no_blink_vals, "red")
-
+        
             #push!(samples, sample)
             #print("\b\b\b\b\b")
             #println(counter)
@@ -525,9 +531,11 @@ function test(model, drive_robot)
         #line1[1].set_data(x, blink_vals)
     end
     BrainFlow.release_session(board_shim)
-    drive(robot, 0)
-    drive(robot, 0)
-    drive(robot, 0)
+    if drive_robot
+        drive(robot, 0)
+        drive(robot, 0)
+        drive(robot, 0)
+    end
     #clf()
     #plot(blink_vals, "green", label = "Augen zu")
     #plot(blink_vals, "red", label = "Augen auf")
@@ -721,11 +729,14 @@ global train_data, test_data = get_loader(0.9, ["Blink/Okzipital-03-16-2022/"], 
 #test(model, false)
 # =# =#
 
-#=
+
 global hyper_params = Args(0.001, 0, "model.bson", cuda=false, one_out=true, plot_frequency=100, fft=true, lower_limit=1, upper_limit=20, batch_size=1)
 global model = build_model()
 load_network!("model.bson")
+# test(model, false)
 
+
+#=
 global blink_pred = test2("Blink/livetest_data/Okzipital-05-18-2022/", model, "green")
 global noblink_pred = test2("NoBlink/livetest_data/Okzipital-05-18-2022/", model, "red")
 
