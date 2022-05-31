@@ -4,7 +4,7 @@ using PyPlot
 
 ev3dev_path = "../ev3dev.jl/ev3dev.jl"
 include(ev3dev_path)
-setup("R:/sys/class")
+# setup("R:/sys/class")
 
 #left_middle = Motor(:outC)
 #right_middle = Motor(:outA)
@@ -46,7 +46,7 @@ function robot_test(modelo)
     println("")
     blink_vals = []
     no_blink_vals = []
-    for i = 1:100
+    for i = 1:200
         sample = AI.EEG.get_some_board_data(board_shim, 200)
         #clf()
         #plot(sample)
@@ -58,7 +58,7 @@ function robot_test(modelo)
         push!(blink_vals, y[1])
         # push!(no_blink_vals, y[2])
 
-        if y[1] > 0.6
+        if y[1] > 0.3
             drive(robot, 70)
         else
             drive(robot, 0)
@@ -66,9 +66,11 @@ function robot_test(modelo)
 
         clf()
         plot(blink_vals, "green")
+        xlabel("Zeit")
+        ylabel("Ausgabe des NN")
         # plot(no_blink_vals, "red")
 
-        sleep(0.25)
+        sleep(0.1)
     end
     BrainFlow.release_session(board_shim)
     drive(robot, 0)
