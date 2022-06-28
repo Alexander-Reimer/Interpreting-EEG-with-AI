@@ -1,5 +1,5 @@
 *.bson
-*.vscode
+**/.vscode
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
