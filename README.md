@@ -9,6 +9,9 @@ Currently, we are at the beginning so we are just training the network to recogn
 We want to participate in the German STEM-competition Jugend Forscht 2022 with it.
 
 ## How do I use this?
+!!! Outdated !!!
+Please wait a bit until we get to updating this
+
 We are still in the development stages, so for now, this isn't at all user friendly or well documented or commented as we mostly communicate in person or online and it's only the two of us working on the code.
 
 Of course, if you are interested in this project or have questions, you can feel free to ask us (just check our profiles for contact information).
