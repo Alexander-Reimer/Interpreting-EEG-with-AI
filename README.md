@@ -2,11 +2,18 @@
 ## What is this?
 This is a project by Alexander Reimer and Matteo Friedrich.
 
-We are trying to teach a neural network to interpret event-related potentials of the human brain. For this we use EEG data which we are gathering with our 4 channel Ganglion board from OpenBCI.
+We are trying to create an open-source interface for recognizing ERPs of the human brain, for usage in brain–computer interfaces (BCIs). It is being made with people in mind who don't have a lot of experience or knowledge in the fields of EEG and AI.
 
-Currently, we are at the beginning so we are just training the network to recognize blinks for now. But the endgoal is for a human to control a roboter real-time using this.
+We hope to give these people a chance to learn about these things and wake some interest and make lifes easier for people needing to use this technology.
 
-We want to participate in the German STEM-competition Jugend Forscht 2022 with it.
+We're just at the beginnings ourselves and also want to learn and grow through this prject.
+
+This project is being developed with the German STEM competition Jugend Forscht in mind.
+
+### Specific goals
+
+- Provide best possible results with any EEG, no matter how cheap
+- Easy adjustability, while still providing good default options
 
 ## How do I use this?
 !!! Outdated !!!
