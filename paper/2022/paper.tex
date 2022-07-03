@@ -145,18 +145,20 @@
 		\end{center}
 	}
 
+	\newpage
 
+	\pagenumbering{roman}
+	
+	\tableofcontents
 
-
-
-
+	\begin{abstract}
+		Brain-computer interfaces (BCIs) werden in den Medien immer präsenter, meist in Form von Durchbrüchen durch Universitäten, Institute oder große Unternehmen.
+		Wir haben uns vorgenommen, mit günstiger Hardware und eigener Software selbst ein BCI zu entwickeln - ein BCI, das anderen Leuten die Entwicklung von BCIs leichter macht, und dafür nicht an einen bestimmten Zweck gebunden ist.
+	\end{abstract}
+	
 	\newpage
 
 	\pagenumbering{arabic}
-	
-	\tableofcontents
-	
-	\newpage
 
 	\section{Kurzfassung}
 
@@ -569,9 +571,11 @@
 
 	\section{Diskussion}
 
-	Wir sind zufrieden damit, dass wir unser erstes Teilziel erreicht haben: Der Roboter fährt sicher, und es gibt kaum eine Verzögerung. Die Kosten der benutzten Hardware halten sich noch in Grenzen: Beim Kauf hat die gesamte EEG-Ausstattung ca. 550€ gekostet, was zwar eigentlich eine hohe Summe ist (danke an den Förderverein für die Finanzierung!), aber professionelle Ausrüstung kostet deutlich mehr. Die Performance des Programms kann außerdem zwar noch verbessert werden, jedoch dauern beim Trainieren 1000 Epochen (genug für ca. 100\% Genauigkeit) auf dem Test-System bereits lediglich 5 Minuten. 
+	Wir sind zufrieden damit, dass wir unser erstes Teilziel erreicht haben: Der Roboter fährt sicher, und es gibt kaum eine Verzögerung. Die Kosten der benutzten Hardware halten sich noch in Grenzen: Beim Kauf hat die gesamte EEG-Ausstattung ca. 550€ gekostet, was zwar eigentlich eine hohe Summe ist (danke an den Förderverein für die Finanzierung!), aber professionelle Ausrüstung kostet deutlich mehr. Die Performance des Programms kann außerdem zwar noch verbessert werden, jedoch dauern beim Trainieren 1000 Epochen (genug für ca. 100\% Genauigkeit) auf dem Test-System bereits lediglich 5 Minuten.
 
-	Als Nächstes wollen wir unser Programm auch mit Personen testen, von denen wir vorher keine Trainingsdaten gesammelt haben.
+	Die Anpassbarkeit ist begrenzt gegeben, da es zwar theoretisch funktioniert, wie unser Wechsel von EMG zu EEG zeigt, aber noch nicht sehr leicht machbar ist. Zuerst fokussieren wir uns darauf, das BCI an sich möglichst gut zu machen und bis an seine Grenzen zu bringen, da wir durch die dafür benötigten Verbesserungen auch die Limits für zukünftige Nutzer erhöhen können. Trotzdem hoffen wir, möglichst bald das Programm nutzerfreundlich zu machen, womöglich sogar mit einem GUI.
+
+	Um diese Limits zu erreichen, wollen wir als Nächstes unser Programm auch mit Personen testen, von denen wir vorher keine Trainingsdaten gesammelt haben.
 %
 	Danach wird das Ziel sein, auf andere EKPs wie Konzentration umzusteigen, und vielleicht sogar mehrere gleichzeitig zu erkennen, damit wir für den Roboter mehr \enquote{Kontrolldimensionen} haben können, z.B. für Geschwindigkeit, rechts / links, etc. Wenn wir genügend EKPs sicher erkennen können, dann könnten wir sogar die Steuerung einer Drohne versuchen. Man könnte dafür auch für mehrere Befehle ein EKP nutzen. Z.B. könnte zweimal schnell hintereinander Blinzeln für rechts, dreimal für links, viermal für oben, etc. stehen. Man könnte für eine Texteingabe auch versuchen, \enquote{Protokolle} wie Morsecode zu erkennen. Für eine korrekte Klassifizierung eines einzelnen Ereignisses (z.B. Augenschließen) braucht unser System eine Sekunde. Das heißt, wir könnten Signale mit einer Datenübertragungsrate von 1 Bit pro Sekunde verarbeiten.
 
@@ -598,7 +602,7 @@
 
 	\subsection{Unterstützung} \label{Unterstuetzung}
 
-	Vielen Dank an Professor Everling vom \enquote{The Brain and Mind Institute} der Western University in Kanada \footnote{\url{https://www.uwo.ca/bmi/investigators/stefan-everling.html}}, der uns in einem Gespräch mit ihm geholfen hat, einen Ansatz in diesem komplizierten Thema zu finden, und praktische Tipps zum Umgang mit dem EEG gegeben hat.
+	Vielen Dank an Professor Everling vom \enquote{The Brain and Mind Institute} der Western University in Kanada (\href{https://www.uwo.ca/bmi/investigators/stefan-everling.html}{\url{https://www.uwo.ca/bmi/investigators/stefan-everling.html}}), der uns in einem Gespräch mit ihm geholfen hat, einen Ansatz in diesem komplizierten Thema zu finden, und praktische Tipps zum Umgang mit dem EEG gegeben hat.
 
 	Dank geht auch an Ino Saathoff, der für uns die Hülle der EEG-Platine mit seinem 3D-Drucker erstellt hat.
 
