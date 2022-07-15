@@ -1,19 +1,22 @@
+[comment]: <> "LTeX: language=en-US"
 # Interpreting EEG with AI
 ## What is this?
 This is a project by Alexander Reimer and Matteo Friedrich.
 
 We are trying to create an open-source interface for recognizing ERPs of the human brain, for usage in brain–computer interfaces (BCIs). It is being made with people in mind who don't have a lot of experience or knowledge in the fields of EEG and AI.
 
-We hope to give these people a chance to learn about these things and wake some interest and make lifes easier for people needing to use this technology.
+We hope to give these people a chance to learn about these things and wake some interest, and make lives easier for people needing to use this technology.
 
-We're just at the beginnings ourselves and also want to learn and grow through this prject.
+We're just at the beginnings ourselves, however, and also want to learn and grow through this project. Any help and advice is appreciated!
 
-This project is being developed with the German STEM competition Jugend Forscht in mind.
+This project is being developed with the German STEM competition Jugend forscht in mind.
 
-### Specific goals
+### Goals
 
 - Provide best possible results with any EEG, no matter how cheap
-- Easy adjustability, while still providing good default options
+- Easy to use
+    - provide good default options
+    - uncomplicated adjustments to important parameters
 
 ## How do I use this?
 !!! Outdated !!!
