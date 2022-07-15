@@ -3,9 +3,9 @@
 ## What is this?
 This is a project by Alexander Reimer and Matteo Friedrich.
 
-We are trying to create an open-source interface for recognizing ERPs of the human brain, for usage in brain–computer interfaces (BCIs). It is being made with people in mind who don't have a lot of experience or knowledge in the fields of EEG and AI.
+We are trying to create an open-source interface for recognizing ERPs of the human brain, for usage in brain–computer interfaces (BCIs). It is being developed with simplicity and ease of use in mind.
 
-We hope to give these people a chance to learn about these things and wake some interest, and make lives easier for people needing to use this technology.
+We hope to make peoples lives easier and give beginners like ourselves a better chance to develop their own BCIs.
 
 We're just at the beginnings ourselves, however, and also want to learn and grow through this project. Any help and advice is appreciated!
 
