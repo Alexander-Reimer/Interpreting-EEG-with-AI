@@ -5,6 +5,8 @@ np = pyimport("numpy")
 using Flux: crossentropy, train!
 using BSON: @save, @load
 
+include("default_config.jl") # provide default options, don't change
+include("config.jl") # overwrite default options, you just need to set the variables
 
 function get_data(path)
     return np.load(path)
@@ -83,26 +85,8 @@ function get_accuracy(model, data_x, data_y)
     return correct / total
 end
 
-# ARGUMENTS DATA
-
-BATCH_SIZE = 32
-NUM_CHANNELS = 16 # Number of EEG channels
-MAX_FREQUENCY = 60 # Range of frequency produced by FFT (eg. here 1-60 Hz)
-NUM_SAMPLES_TRAIN = 284375 # Total number of training samples
-NUM_SAMPLES_TEST = 35250 # Total number of testing samples
-
-path_prefix = "../model_data/"
-TRAIN_DATA = [
-    (path_prefix * "directions/data/left/", [1.0, 0.0, 0.0]),
-    (path_prefix * "directions/data/right/", [0.0, 1.0, 0.0]),
-    (path_prefix * "directions/data/left/", [0.0, 0.0, 1.0])
-] # (folder with files, desired outputs for each case)
-TEST_DATA = [
-    (path_prefix * "directions/validation_data/left/", [1.0, 0.0, 0.0]),
-    (path_prefix * "directions/validation_data/right/", [0.0, 1.0, 0.0]),
-    (path_prefix * "directions/validation_data/left/", [0.0, 0.0, 1.0])
-] # (folder with files, desired outputs for each case)
-
+# *************************************************************************************************************************
+# DATA
 num_outputs = length(TRAIN_DATA[1][2])
 
 # Pre-initialise arrays to improve performance
@@ -112,7 +96,7 @@ global Y_traindata = Array{Float32}(undef, num_outputs, NUM_SAMPLES_TRAIN)
 global X_testdata = Array{Float32}(undef, MAX_FREQUENCY, 1, NUM_CHANNELS, NUM_SAMPLES_TEST)
 global Y_testdata = Array{Float32}(undef, num_outputs, NUM_SAMPLES_TEST)
 
-# Populate arrays with data
+# Populate arrays with eeg data
 global index = 0
 for (path, output) in TRAIN_DATA
     get_formatted_data(path, output, false)
@@ -128,32 +112,15 @@ global train_data = Flux.Data.DataLoader((X_traindata, Y_traindata), batchsize=B
 global test_data = Flux.Data.DataLoader((X_testdata, Y_testdata), batchsize=BATCH_SIZE, shuffle=true, partial=false)
 
 # Clear unnecessary data
-X_traindata = nothing
-Y_traindata = nothing
-X_testdata = nothing
-Y_testdata = nothing
+# X_traindata = nothing
+# Y_traindata = nothing
+# X_testdata = nothing
+# Y_testdata = nothing
 
+# *************************************************************************************************************************
+# TRAINING
 
-# ARGUMENTS TRAINING
-
-OPTIMIZER = ADAM # optimizer for training
-LEARNING_RATE = 0.001
-# Define model structure
-MODEL = Chain(
-    Conv((3, 1), 16 => 64, relu),
-    Conv((2, 1), 64 => 128, relu),
-    MaxPool((2, 1)),
-    Conv((2, 1), 128 => 64, relu),
-    MaxPool((2, 1)),
-    Conv((2, 1), 64 => 64, relu),
-    MaxPool((2, 1)),
-    Flux.flatten,
-    Dense(384, 256, tanh),
-    Dense(256, 128, tanh),
-    Dense(128, 3),
-    softmax
-)
-model = MODEL
+model = MODEL()
 
 #=
 model = Chain(
