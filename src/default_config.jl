@@ -27,8 +27,8 @@ TEST_DATA = [
 
 OPTIMIZER = ADAM
 LEARNING_RATE = 0.001
+LOSS = crossentropy
 # Define model structure
-
 MODEL() = Chain(
     Conv((3, 1), 16 => 64, relu),
     Conv((2, 1), 64 => 128, relu),

@@ -136,7 +136,7 @@ model = Chain(
 =#
 
 
-loss(x, y) = crossentropy(model(x), y)
+loss(x, y) = LOSS(model(x), y)
 ps = Flux.params(model)
 opt = OPTIMIZER(LEARNING_RATE)
 
