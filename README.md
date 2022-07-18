@@ -1,6 +1,11 @@
 [comment]: <> "LTeX: language=en-US"
-# Interpreting EEG with AI
-## What is this?
+## Table of Contents  
+1. [Introduction](#introduction)  
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Documentation](#documentation)
+# Introduction
+
 This is a project by Alexander Reimer and Matteo Friedrich.
 
 We are trying to create an open-source interface for recognizing ERPs of the human brain, for usage in brain–computer interfaces (BCIs). It is being developed with simplicity and ease of use in mind.
@@ -9,59 +14,43 @@ We hope to make peoples lives easier and give beginners like ourselves a better 
 
 We're just at the beginnings ourselves, however, and also want to learn and grow through this project. Any help and advice is appreciated!
 
-This project is being developed with the German STEM competition Jugend forscht in mind.
+# Installation
 
-### Goals
+1. Clone this GitHub Repository: \
+    ``git clone https://github.com/AR102/Interpreting-EEG-with-AI``
 
-- Provide best possible results with any EEG, no matter how cheap
-- Easy to use
-    - provide good default options
-    - uncomplicated adjustments to important parameters
+2. Create the file __config.jl__ in the folder __src__.
 
-## How do I use this?
-!!! Outdated !!!
-Please wait a bit until we get to updating this
+To update, use ``git pull``.
 
-We are still in the development stages, so for now, this isn't at all user friendly or well documented or commented as we mostly communicate in person or online and it's only the two of us working on the code.
+# Usage
 
-Of course, if you are interested in this project or have questions, you can feel free to ask us (just check our profiles for contact information).
+When executing the program, your working directory should be in __src__.
 
-And if you for some reason decided to look through the code / theory and have suggestions or have found mistakes, feel free to tell us.
+The way this program is made, it should be able to run by default. So the first think you should do is execute __train.jl__ in __src__ and check if any errors occur.
 
-### If you want to execute what we already have,
+This file is responsible for training the neural network. The files __gather_data.jl__ and __main.jl__ are responsible for collecting your own training/test data and using the BCI live, respectively. However, they aren't finished yet.
 
-- clone this repository,
-- start Julia (make sure you're in the repo folder),
-- open the package terminal by pressing `]`,
-- type in `activate .`,
-- type in `instantiate`,
-- exit the package terminal by pressing backspace,
-- type in `include("main.jl")` (note: the first start will take a long time).
+If there aren't any errors or problems, you can start customizing the program! 
 
-To change parameters etc. you have to change the code itself for now (see **How does this work?** for further details).
+You can put your own configuration in the __config.jl__ file you created during the installation.
 
-## How does this work?
-We are using the programming language Julia for this project.
+You can look at the default parameters in __default_config.jl__.
 
-For the neural network we are using the library [Flux](https://github.com/FluxML/Flux.jl). The network structure so far only consists of dense layers, the activation function we are using is the 𝜎-function. The structure itself isn't yet determined, we are always changing things like the amount of layers and the amount of neurons in each one (you can find the most recent one by looking in main.jl → function `build_model`).
+Some examples you could put into your config file:
 
-The same goes for the training parameters like batchsize, learning rate, and whether the training data is shuffled after each iteration. You can find those in main.jl → mutable struct `Args`.
+```
+# Decrease number of available EEG channels to 8
+NUM_CHANNELS = 8
+```
 
-Before, the inputs of the neural network were just all voltages of all channels of the last second (4 channels, each 200hz → 4 * 200 = 800 inputs) so that the network has enough data but can also react quickly enough to make real-time control sensible.
+```
+# Increase learning rate to 0.002
+LEARNING_RATE = 0.002
+```
 
-But now, we first perform a dicrete Fourier transformation on the 200 samples of each channel and give the output of that to the network. We also cut off all frequencies above an upper limit or below a lower limit. These two values can also be found in main.jl → mutable struct `Args`. So in the end, the index of an input neuron corresponds to a certain frequency and the value is the amplitude of it. This means that the amount of input neurons depends on which frequencies you choose (lower and upper limit). For the Fourier transform, we used the package [FFTW](https://github.com/JuliaMath/FFTW.jl).
+You can also create multiple config files and switch between them by replacing ``include("config.jl")`` with ``include("config2.jl")`` or whatever you named the file.
 
-To gather the training data, we coded our own little program which you can find at EEG.jl. The EEG device we use is the Ganglion board by OpenBCI with 4 electrodes, and 2 earclips (1 for grounding, 1 for reference). The library we are using for reading the data of the EEG and saving it is [BrainFlow](https://brainflow.org).
+# Documentation
 
-This data is saved in Blink/ and NoBlink/.
-
-The neural network has two possible output configurations, controlled by one_out. If `one_out` is `true`, then there is one output neuron, with 1.0 being a prediction of Blink and 0.0 bein a prediction of NoBlink. If `one_out` is `false`, the network has one output neuron for Blink and one for NoBlink. To determine the networks decision, we check which neuron has the higher value.
-
-### Other packages
-
-Other packages we use are
-
-- [PyPlot](https://github.com/JuliaPy/PyPlot.jl) for plotting the cost development,
-- [BSON](https://github.com/JuliaIO/BSON.jl) for saving and loading the network weights and cost history, and
-- [CUDA](https://github.com/JuliaGPU/CUDA.jl) for utilising a Nvidia GPU if available.
-- [Interpolations](https://github.com/JuliaMath/Interpolations.jl) for smoothing out the curves in some plots
+The detailed documentation of all parameters can be found [here](Documentation.md).
