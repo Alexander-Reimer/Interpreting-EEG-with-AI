@@ -1,4 +1,5 @@
 function save_model()
+    model = cpu(model)
     bson(SAVE_PATH,
         model=model,
         channels=NUM_CHANNELS,
@@ -26,5 +27,5 @@ function load_model()
     global test_loss_history = test_loss_history
     global train_accuracy_history = train_accuracy_history
     global test_accuracy_history = test_accuracy_history
-    global model = model
+    global model = model |> device
 end

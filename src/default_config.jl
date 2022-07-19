@@ -26,6 +26,7 @@ TEST_DATA = [
 # |----------------------------------------|
 
 ITERATIONS = 2
+USE_CUDA = true
 OPTIMIZER = ADAM
 LEARNING_RATE = 0.001
 LOSS = crossentropy

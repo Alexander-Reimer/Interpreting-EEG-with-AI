@@ -1,6 +1,6 @@
 module AI
 
-using PyCall, Flux, PyPlot, BSON, ProgressMeter
+using PyCall, Flux, PyPlot, BSON, ProgressMeter, CUDA
 np = pyimport("numpy")
 using Flux: crossentropy, train!, onecold
 
@@ -107,12 +107,14 @@ function get_loss_accuracy_batch(data_loader)
     accurate = 0
     l = Float32(0)
     @showprogress 1 "    Calculating model performance..." for (x, y) in data_loader
+        x, y = x |> device, y |> device
         est = model(x)
         l += LOSS(est, y)
         if onecold(est) == onecold(y)
             accurate += 1
         end
         total += 1
+        x, y = x |> cpu, y |> cpu
     end
     return (loss=l/total, accuracy=accurate / total)
 end
@@ -185,7 +187,7 @@ end
 
 function init_model()
     if isempty(LOAD_PATH)
-        global model = MODEL()
+        global model = MODEL() |> device
         global x_history = []
         global train_loss_history = []
         global test_loss_history = []
@@ -196,6 +198,19 @@ function init_model()
         load_model()
     end
     global ps = Flux.params(model)
+end
+
+function init_cuda()
+    if USE_CUDA == true
+        if CUDA.functional()
+            global device = gpu
+        else
+            global device = cpu
+            @warn "Despite USE_CUDA = true, CUDA is disabled as it isn't supported."
+        end
+    else
+        global device = cpu
+    end
 end
 
 # DATA
@@ -261,11 +276,13 @@ end
 
 opt = OPTIMIZER(LEARNING_RATE)
 
+init_cuda()
 init_plot()
 init_model()
 
 for iteration = 1:ITERATIONS
     @showprogress "Training..." for (x, y) in train_data
+        x, y = x |> device, y |> device
         gs = Flux.gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
         Flux.Optimise.update!(opt, ps, gs) # update parameters
     end
