@@ -1,10 +1,3 @@
-mutable struct ResultHistory
-    train_loss_history::Array{Float64, 1}
-    test_loss_history::Array{Float64, 1}
-    train_accuracy_history::Array{Float64, 1}
-    test_accuracy_history::Array{Float64, 1}
-end
-
 function save_model()
     bson(SAVE_PATH,
         model=model,

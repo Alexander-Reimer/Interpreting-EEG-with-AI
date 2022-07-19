@@ -86,6 +86,37 @@ function get_accuracy(model, data_x, data_y)
     return correct / total
 end
 
+function get_loss_accuracy_all(data_x, data_y)
+    l = Float32(0)
+    total = 0
+    correct = 0
+    all_out = model(data_x)
+    for i = 1:size(data_x)[4]
+        est = all_out[:, i]
+        l += LOSS(est, data_y[:, i])
+        if argmax(est) == argmax(data_y[:, i])
+            correct += 1
+        end
+        total += 1
+    end
+    return (loss=l/size(data_x)[4], accuracy=correct/total)
+end
+
+function get_loss_accuracy_batch(data_loader)
+    total = 0
+    accurate = 0
+    l = Float32(0)
+    for (x, y) in data_loader
+        est = model(x)
+        l += LOSS(est, y)
+        if onecold(est) == onecold(y)
+            accurate += 1
+        end
+        total += 1
+    end
+    return (loss=l/total, accuracy=accurate / total)
+end
+
 mutable struct Plot
     fig
     train_loss
@@ -111,43 +142,42 @@ function advance_history()
     else
         push!(x_history, x_history[end] + 1)
     end
+
     println("Iteration $(x_history[end]):")
-    if HISTORY_TRAINLOSS[1] && mod(x_history[end], HISTORY_TRAINLOSS[2]) == 0
-        push!(train_loss_history, loss(X_traindata, Y_traindata))
+    if HISTORY_TRAIN[1] && mod(x_history[end], HISTORY_TRAIN[2]) == 0
+        train_loss, train_acc = loss_accuracy(:train)
+    
+        push!(train_loss_history, train_loss)
+        push!(train_accuracy_history, train_acc)
+    
         println("   train loss: ", train_loss_history[end])
+        println("   train accurracy: $(train_accuracy_history[end])%")
         if PLOT[1] && mod(x_history[end], PLOT[2]) == 0
             the_plot.train_loss.set_data(x_history, train_loss_history)
+            the_plot.train_acc.set_data(x_history, train_accuracy_history)
         end
     else
         push!(train_loss_history, nothing)
+        push!(train_accuracy_history, nothing)
     end
-    if HISTORY_TESTLOSS[1] && mod(x_history[end], HISTORY_TESTLOSS[2]) == 0
-        push!(test_loss_history, loss(X_testdata, Y_testdata))
+
+    if HISTORY_TEST[1] && mod(x_history[end], HISTORY_TEST[2]) == 0
+        test_loss, test_acc = loss_accuracy(:test)
+    
+        push!(test_loss_history, test_loss)
+        push!(test_accuracy_history, test_acc)
+    
         println("   test loss: ", test_loss_history[end])
+        println("   test accurracy: $(test_accuracy_history[end])%")
         if PLOT[1] && mod(x_history[end], PLOT[2]) == 0
             the_plot.test_loss.set_data(x_history, test_loss_history)
+            the_plot.test_acc.set_data(x_history, test_accuracy_history)
         end
     else
         push!(test_loss_history, nothing)
-    end
-    if HISTORY_TRAINACCURACY[1] && mod(x_history[end], HISTORY_TRAINACCURACY[2]) == 0
-        push!(train_accuracy_history, accuracy(X_traindata, Y_traindata))
-        println("   train accuracy: ", train_accuracy_history[end])
-        if PLOT[1] && mod(x_history[end], PLOT[2]) == 0
-            the_plot.train_accuracy.set_data(x_history, train_accuracy_history)
-        end
-    else
-        push!(train_accuracy_history, nothing)
-    end
-    if HISTORY_TESTACCURACY[1] && mod(x_history[end], HISTORY_TESTACCURACY[2]) == 0
-        push!(test_accuracy_history, accuracy(X_testdata, Y_testdata))
-        println("   test accuracy: ", test_accuracy_history[end])
-        if PLOT[1] && mod(x_history[end], PLOT[2]) == 0
-            the_plot.test_accuracy.set_data(x_history, test_accuracy_history)
-        end
-    else
         push!(test_accuracy_history, nothing)
     end
+
     if PLOT[1]
         PyPlot.show()
     end
@@ -197,22 +227,45 @@ end
 global train_data = Flux.Data.DataLoader((X_traindata, Y_traindata), batchsize=BATCH_SIZE, shuffle=true, partial=false)
 global test_data = Flux.Data.DataLoader((X_testdata, Y_testdata), batchsize=BATCH_SIZE, shuffle=true, partial=false)
 
-# Clear unnecessary data
-# X_traindata = nothing
-# Y_traindata = nothing
-# X_testdata = nothing
-# Y_testdata = nothing
-
 
 # TRAINING
 # *************************************************************************************************************************
 
 
 loss(x, y) = LOSS(model(x), y)
+if LOSS_ACCURACY_GLOBAL
+    function loss_accuracy(type)
+        if type == :train
+            return get_loss_accuracy_all(X_traindata, Y_traindata)
+        elseif type == :test
+            return get_loss_accuracy_all(X_testdata, Y_testdata)
+        else
+            @error "Unknown option $(type)"
+        end
+    end
+else
+    # Clear unnecessary data
+    X_traindata = nothing
+    Y_traindata = nothing
+    X_testdata = nothing
+    Y_testdata = nothing
+
+    function loss_accuracy(type)
+        if type == :train
+            return get_loss_accuracy_batch(train_data)
+        elseif type == :test
+            return get_loss_accuracy_batch(test_data)
+        else
+            @error "Unknown option $(type)"
+        end
+    end
+end
+
 opt = OPTIMIZER(LEARNING_RATE)
 
 init_plot()
 init_model()
+
 for iteration = 1:ITERATIONS
     for (x, y) in train_data
         gs = Flux.gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient

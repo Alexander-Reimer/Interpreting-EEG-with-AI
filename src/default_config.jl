@@ -52,9 +52,8 @@ SAVE_PATH = "saved_models/mymodel.bson"
 # |----------------------------------------|
 
 PLOT = (true, 1)
-HISTORY_TRAINLOSS = (true, 1)
-HISTORY_TESTLOSS = (true, 1)
-HISTORY_TESTACCURACY = (false, 1)
-HISTORY_TRAINACCURACY = (false, 1)
 
 LOSS_ACCURACY_GLOBAL = false
+
+HISTORY_TRAIN = (true, 1)
+HISTORY_TEST = (true, 1)
