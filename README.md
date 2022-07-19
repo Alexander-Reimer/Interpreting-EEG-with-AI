@@ -53,4 +53,4 @@ You can also create multiple config files and switch between them by replacing `
 
 # Documentation
 
-The detailed documentation of all parameters can be found [here](Documentation.md).
+The detailed documentation of all parameters can be found [here](https://github.com/AR102/Interpreting-EEG-with-AI/wiki/Documentation).
