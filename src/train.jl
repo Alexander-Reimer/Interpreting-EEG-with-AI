@@ -2,8 +2,9 @@ module AI
 
 using PyCall, Flux, PyPlot
 np = pyimport("numpy")
-using Flux: crossentropy, train!
-using BSON: @save, @load
+using Flux: crossentropy, train!, onecold
+using BSON
+include("common_functions.jl")
 
 include("default_config.jl") # provide default options, don't change
 include("config.jl") # overwrite default options, you just need to set the variables
@@ -85,8 +86,93 @@ function get_accuracy(model, data_x, data_y)
     return correct / total
 end
 
-# *************************************************************************************************************************
+mutable struct Plot
+    fig
+    train_loss
+    test_loss
+    train_acc
+    test_acc
+end
+
+function init_plot()
+    if PLOT[1]
+        fig = figure("Model performance history")
+        train_loss = plot([], [])[1]
+        test_loss = plot([], [])[1]
+        train_acc = plot([], [])[1]
+        test_acc = plot([], [])[1]
+        global the_plot = Plot(fig, train_loss, test_loss, train_acc, test_acc)
+    end
+end
+
+function advance_history()
+    if isempty(x_history)
+        push!(x_history, 0)
+    else
+        push!(x_history, x_history[end] + 1)
+    end
+    println("Iteration $(x_history[end]):")
+    if HISTORY_TRAINLOSS[1] && mod(x_history[end], HISTORY_TRAINLOSS[2]) == 0
+        push!(train_loss_history, loss(X_traindata, Y_traindata))
+        println("   train loss: ", train_loss_history[end])
+        if PLOT[1] && mod(x_history[end], PLOT[2]) == 0
+            the_plot.train_loss.set_data(x_history, train_loss_history)
+        end
+    else
+        push!(train_loss_history, nothing)
+    end
+    if HISTORY_TESTLOSS[1] && mod(x_history[end], HISTORY_TESTLOSS[2]) == 0
+        push!(test_loss_history, loss(X_testdata, Y_testdata))
+        println("   test loss: ", test_loss_history[end])
+        if PLOT[1] && mod(x_history[end], PLOT[2]) == 0
+            the_plot.test_loss.set_data(x_history, test_loss_history)
+        end
+    else
+        push!(test_loss_history, nothing)
+    end
+    if HISTORY_TRAINACCURACY[1] && mod(x_history[end], HISTORY_TRAINACCURACY[2]) == 0
+        push!(train_accuracy_history, accuracy(X_traindata, Y_traindata))
+        println("   train accuracy: ", train_accuracy_history[end])
+        if PLOT[1] && mod(x_history[end], PLOT[2]) == 0
+            the_plot.train_accuracy.set_data(x_history, train_accuracy_history)
+        end
+    else
+        push!(train_accuracy_history, nothing)
+    end
+    if HISTORY_TESTACCURACY[1] && mod(x_history[end], HISTORY_TESTACCURACY[2]) == 0
+        push!(test_accuracy_history, accuracy(X_testdata, Y_testdata))
+        println("   test accuracy: ", test_accuracy_history[end])
+        if PLOT[1] && mod(x_history[end], PLOT[2]) == 0
+            the_plot.test_accuracy.set_data(x_history, test_accuracy_history)
+        end
+    else
+        push!(test_accuracy_history, nothing)
+    end
+    if PLOT[1]
+        PyPlot.show()
+    end
+end
+
+function init_model()
+    if isempty(LOAD_PATH)
+        global model = MODEL()
+
+        global x_history = []
+        global train_loss_history = []
+        global test_loss_history = []
+        global train_accuracy_history = []
+        global test_accuracy_history = []
+
+        advance_history()
+    else
+        load_model()
+    end
+    global ps = Flux.params(model)
+end
+
 # DATA
+# *************************************************************************************************************************
+
 num_outputs = length(TRAIN_DATA[1][2])
 
 # Pre-initialise arrays to improve performance
@@ -117,64 +203,26 @@ global test_data = Flux.Data.DataLoader((X_testdata, Y_testdata), batchsize=BATC
 # X_testdata = nothing
 # Y_testdata = nothing
 
-# *************************************************************************************************************************
+
 # TRAINING
-
-model = MODEL()
-
-#=
-model = Chain(
-   Conv((5,1), 16=>64, relu),
-   Conv((5,1), 64=>128, relu),
-   Conv((5,1), 128=>256, relu),
-   Conv((5,1), 256=>512, relu),
-   Conv((16,1), 512=>3, relu),
-   Flux.flatten,
-   Dense(87, 3),
-   softmax
-)
-=#
+# *************************************************************************************************************************
 
 
 loss(x, y) = LOSS(model(x), y)
-ps = Flux.params(model)
 opt = OPTIMIZER(LEARNING_RATE)
 
-train_loss_history = []
-test_loss_history = []
-
-train_loss = loss(X_traindata, Y_traindata)
-test_loss = loss(X_testdata, Y_testdata)
-
-push!(train_loss_history, train_loss)
-push!(test_loss_history, test_loss)
-println(0, " train: ", train_loss)
-println(0, " test: ", test_loss)
-println(get_accuracy(model, X_testdata, Y_testdata))
-
-
-for i = 1:1
-    #println(check_NaN(model))
+init_plot()
+init_model()
+for iteration = 1:ITERATIONS
     for (x, y) in train_data
         gs = Flux.gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
         Flux.Optimise.update!(opt, ps, gs) # update parameters
-        #println("calculadet batch")
     end
-
-    #train!(loss, ps, train_data, opt)
-
-    if i % 1 == 0
-        train_loss = loss(X_traindata, Y_traindata)
-        test_loss = loss(X_testdata, Y_testdata)
-        push!(train_loss_history, train_loss)
-        push!(test_loss_history, test_loss)
-        println(i, " train: ", train_loss)
-        println(i, " test: ", test_loss)
-    end
+    advance_history()
 end
-@save "model.bson" model
-plot(train_loss_history)
-plot(test_loss_history)
+
+save_model()
+
 println(model(X_traindata[:, :, :, 1:1]))
 
 #=
