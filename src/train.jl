@@ -1,9 +1,9 @@
 module AI
 
-using PyCall, Flux, PyPlot
+using PyCall, Flux, PyPlot, BSON, ProgressMeter
 np = pyimport("numpy")
 using Flux: crossentropy, train!, onecold
-using BSON
+
 include("common_functions.jl")
 
 include("default_config.jl") # provide default options, don't change
@@ -106,7 +106,7 @@ function get_loss_accuracy_batch(data_loader)
     total = 0
     accurate = 0
     l = Float32(0)
-    for (x, y) in data_loader
+    @showprogress 1 "    Calculating model performance..." for (x, y) in data_loader
         est = model(x)
         l += LOSS(est, y)
         if onecold(est) == onecold(y)
@@ -150,8 +150,8 @@ function advance_history()
         push!(train_loss_history, train_loss)
         push!(train_accuracy_history, train_acc)
     
-        println("   train loss: ", train_loss_history[end])
-        println("   train accurracy: $(train_accuracy_history[end])%")
+        println("    train loss: ", train_loss_history[end])
+        println("    train accurracy: $(train_accuracy_history[end])%")
         if PLOT[1] && mod(x_history[end], PLOT[2]) == 0
             the_plot.train_loss.set_data(x_history, train_loss_history)
             the_plot.train_acc.set_data(x_history, train_accuracy_history)
@@ -186,13 +186,11 @@ end
 function init_model()
     if isempty(LOAD_PATH)
         global model = MODEL()
-
         global x_history = []
         global train_loss_history = []
         global test_loss_history = []
         global train_accuracy_history = []
         global test_accuracy_history = []
-
         advance_history()
     else
         load_model()
@@ -267,7 +265,7 @@ init_plot()
 init_model()
 
 for iteration = 1:ITERATIONS
-    for (x, y) in train_data
+    @showprogress "Training..." for (x, y) in train_data
         gs = Flux.gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
         Flux.Optimise.update!(opt, ps, gs) # update parameters
     end
@@ -275,8 +273,6 @@ for iteration = 1:ITERATIONS
 end
 
 save_model()
-
-println(model(X_traindata[:, :, :, 1:1]))
 
 #=
 data_ = [Array{Float32}(data_[i,:,:]) for i in 1:size(data_)[1]]

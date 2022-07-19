@@ -2,7 +2,7 @@
 # | ARGUMENTS DATA                                                           |
 # |--------------------------------------------------------------------------|
 
-BATCH_SIZE = 10000 # Number of mini-batches
+BATCH_SIZE = 35250 # Number of mini-batches
 NUM_CHANNELS = 16 # Number of EEG channels
 MAX_FREQUENCY = 60 # Range of frequency produced by FFT (eg. here 1-60 Hz)
 NUM_SAMPLES_TRAIN = 284375 # Total number of training samples
