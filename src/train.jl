@@ -60,6 +60,11 @@ function get_formatted_data(path, output, test)
     global index += size(data)[3]
 end
 
+function noise(x)
+    # Function for gaussian random noise, from https://fluxml.ai/tutorials/2021/02/07/convnet.html
+    return x .+ device(0.1f0 * randn(eltype(x), size(x)))
+end
+
 function check_NaN(model)
     # See if gradients contain NaNs
     ps = Flux.params(model)
@@ -118,7 +123,7 @@ function init_plot()
         fig = figure("Training history")
         clf()
         (ax_loss, ax_accuracy) = fig.subplots(2, 1, sharex=true)
-    
+
         ax_loss.set_ylabel("Loss")
         ax_loss.autoscale_view()
 
@@ -128,12 +133,12 @@ function init_plot()
         ax_accuracy.set_ylim(0, 100)
         ax_accuracy.autoscale_view(scalex=true, scaley=false)
         xlabel("Epoch")
-    
+
         train_loss = ax_loss.plot([], [], label="Train", color="orange")[1]
         test_loss = ax_loss.plot([], [], label="Test", color="green")[1]
         train_acc = ax_accuracy.plot([], [], color="orange")[1]
         test_acc = ax_accuracy.plot([], [], color="green")[1]
-    
+
         ax_loss.legend()
         fig.tight_layout()
         PyPlot.show()
