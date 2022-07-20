@@ -25,14 +25,15 @@ TEST_DATA = [
 # | ARGUMENTS TRAINING                     |
 # |----------------------------------------|
 
-EPOCHS = 300
+EPOCHS = 500
 USE_CUDA = true
 OPTIMIZER = ADAM
-LEARNING_RATE = 0.0001
+LEARNING_RATE = 0.00005
 LOSS = crossentropy
 # Define model structure
 MODEL() = Chain(
     Conv((3, 1), 16 => 64, relu),
+    Dropout(0.5),
     Conv((2, 1), 64 => 128, relu),
     MaxPool((2, 1)),
     Conv((2, 1), 128 => 64, relu),
@@ -40,6 +41,7 @@ MODEL() = Chain(
     Conv((2, 1), 64 => 64, relu),
     MaxPool((2, 1)),
     Flux.flatten,
+    Dropout(0.5), 
     Dense(384, 256, tanh),
     Dense(256, 128, tanh),
     Dense(128, 3),
@@ -52,7 +54,7 @@ SAVE_PATH = "saved_models/mymodel.bson"
 # | ARGUMENTS HISTORY                      |
 # |----------------------------------------|
 
-PLOT = (true, 15)
+PLOT = (true, 5)
 
 LOSS_ACCURACY_PORTION = 1.0 # 0.1: 10% of batches gets randomly selected to test loss and accuracy; 1.0: using all data
 
