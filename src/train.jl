@@ -1,6 +1,7 @@
 module AI
 
 using PyCall, Flux, PyPlot, BSON, ProgressMeter, CUDA
+using CUDA: CuIterator
 np = pyimport("numpy")
 using Flux: crossentropy, train!, onecold
 
@@ -99,28 +100,43 @@ function get_loss_accuracy_all(data_x, data_y)
         end
         total += 1
     end
-    return (loss=l/size(data_x)[4], accuracy=correct/total)
+    return (loss=l / size(data_x)[4], accuracy=correct / total)
 end
 
-function get_loss_accuracy_batch(data_loader)
+function loss_accuracy(type::Symbol)
+    if type == :train
+        return loss_accuracy(train_data, string(type))
+    elseif type == :test
+        return loss_accuracy(test_data, string(type))
+    else
+        @warn "Type $type unknown!"
+    end
+end
+
+function loss_accuracy(data_loader::Flux.Data.DataLoader, name::String)
     total = 0
     accurate = 0
     l = Float32(0)
-    @showprogress 1 "    Calculating model performance..." for (x, y) in data_loader
-        x, y = x |> device, y |> device
-        est = model(x)
-        l += LOSS(est, y)
-        if onecold(est) == onecold(y)
-            accurate += 1
+    i = 0
+    # 
+    @showprogress 2 "    Calculating $(name) performance..." for (x, y) in (data_loader)
+        i += 1
+        if mod(i, (1.0 / LOSS_ACCURACY_PORTION)) == 0
+            x, y = x |> device, y |> device
+            est = model(x)
+            l += LOSS(est, y)
+            same_result_bitarray = onecold(est) .== onecold(y)
+            accurate += sum(same_result_bitarray)
+            total += length(same_result_bitarray)
         end
-        total += 1
-        x, y = x |> cpu, y |> cpu
     end
-    return (loss=l/total, accuracy=accurate / total)
+    return (loss=l / total, accuracy=accurate / total)
 end
 
 mutable struct Plot
     fig
+    ax_loss
+    ax_accuracy
     train_loss
     test_loss
     train_acc
@@ -129,13 +145,42 @@ end
 
 function init_plot()
     if PLOT[1]
-        fig = figure("Model performance history")
-        train_loss = plot([], [])[1]
-        test_loss = plot([], [])[1]
-        train_acc = plot([], [])[1]
-        test_acc = plot([], [])[1]
-        global the_plot = Plot(fig, train_loss, test_loss, train_acc, test_acc)
+        fig = figure("Training history")
+        clf()
+        (ax_loss, ax_accuracy) = fig.subplots(2, 1, sharex=true)
+    
+        ax_loss.set_ylabel("Loss")
+        ax_loss.autoscale_view()
+
+        ax_accuracy.set_ylabel("Accuracy in %")
+        # ax_accuracy.set_autoscaley_on(false)
+        # ax_accuracy.set_autoscalex_on(true)
+        ax_accuracy.set_ylim(0, 100)
+        ax_accuracy.autoscale_view(scalex=true, scaley=false)
+        xlabel("Epoch")
+    
+        train_loss = ax_loss.plot([], [], label="Train", color="orange")[1]
+        test_loss = ax_loss.plot([], [], label="Test", color="green")[1]
+        train_acc = ax_accuracy.plot([], [], color="orange")[1]
+        test_acc = ax_accuracy.plot([], [], color="green")[1]
+    
+        ax_loss.legend()
+        fig.tight_layout()
+        PyPlot.show()
+        global the_plot = Plot(fig, ax_loss, ax_accuracy, train_loss, test_loss, train_acc, test_acc)
     end
+end
+
+function remove_nothing(train_history)
+    x = []
+    y = []
+    for i = 1:length(train_history)
+        if train_history[i] !== nothing
+            push!(x, x_history[i])
+            push!(y, train_history[i])
+        end
+    end
+    return x, y
 end
 
 function advance_history()
@@ -145,18 +190,23 @@ function advance_history()
         push!(x_history, x_history[end] + 1)
     end
 
-    println("Iteration $(x_history[end]):")
+    if (HISTORY_TRAIN[1] && mod(x_history[end], HISTORY_TRAIN[2]) == 0) || (HISTORY_TEST[1] && mod(x_history[end], HISTORY_TEST[2]) == 0)
+        println("Epoch $(x_history[end]):")
+    end
+
     if HISTORY_TRAIN[1] && mod(x_history[end], HISTORY_TRAIN[2]) == 0
         train_loss, train_acc = loss_accuracy(:train)
-    
+
         push!(train_loss_history, train_loss)
         push!(train_accuracy_history, train_acc)
-    
+
         println("    train loss: ", train_loss_history[end])
         println("    train accurracy: $(train_accuracy_history[end])%")
         if PLOT[1] && mod(x_history[end], PLOT[2]) == 0
-            the_plot.train_loss.set_data(x_history, train_loss_history)
-            the_plot.train_acc.set_data(x_history, train_accuracy_history)
+            x, y = remove_nothing(train_loss_history)
+            the_plot.train_loss.set_data(x, y)
+            x, y = remove_nothing(train_accuracy_history)
+            the_plot.train_acc.set_data(x, y .* 100)
         end
     else
         push!(train_loss_history, nothing)
@@ -165,15 +215,17 @@ function advance_history()
 
     if HISTORY_TEST[1] && mod(x_history[end], HISTORY_TEST[2]) == 0
         test_loss, test_acc = loss_accuracy(:test)
-    
+
         push!(test_loss_history, test_loss)
         push!(test_accuracy_history, test_acc)
-    
-        println("   test loss: ", test_loss_history[end])
-        println("   test accurracy: $(test_accuracy_history[end])%")
+
+        println("    test loss: ", test_loss_history[end])
+        println("    test accurracy: $(test_accuracy_history[end])%")
         if PLOT[1] && mod(x_history[end], PLOT[2]) == 0
-            the_plot.test_loss.set_data(x_history, test_loss_history)
-            the_plot.test_acc.set_data(x_history, test_accuracy_history)
+            x, y = remove_nothing(test_loss_history)
+            the_plot.test_loss.set_data(x, y)
+            x, y = remove_nothing(test_accuracy_history)
+            the_plot.test_acc.set_data(x, y .* 100)
         end
     else
         push!(test_loss_history, nothing)
@@ -181,6 +233,10 @@ function advance_history()
     end
 
     if PLOT[1]
+        the_plot.ax_loss.relim()
+        the_plot.ax_accuracy.relim()
+        the_plot.ax_loss.autoscale_view()
+        the_plot.ax_accuracy.autoscale_view(scalex=true, scaley=false)
         PyPlot.show()
     end
 end
@@ -240,48 +296,24 @@ end
 global train_data = Flux.Data.DataLoader((X_traindata, Y_traindata), batchsize=BATCH_SIZE, shuffle=true, partial=false)
 global test_data = Flux.Data.DataLoader((X_testdata, Y_testdata), batchsize=BATCH_SIZE, shuffle=true, partial=false)
 
+# Clear unnecessary data
+X_traindata = nothing
+Y_traindata = nothing
+X_testdata = nothing
+Y_testdata = nothing
 
 # TRAINING
 # *************************************************************************************************************************
 
-
 loss(x, y) = LOSS(model(x), y)
-if LOSS_ACCURACY_GLOBAL
-    function loss_accuracy(type)
-        if type == :train
-            return get_loss_accuracy_all(X_traindata, Y_traindata)
-        elseif type == :test
-            return get_loss_accuracy_all(X_testdata, Y_testdata)
-        else
-            @error "Unknown option $(type)"
-        end
-    end
-else
-    # Clear unnecessary data
-    X_traindata = nothing
-    Y_traindata = nothing
-    X_testdata = nothing
-    Y_testdata = nothing
-
-    function loss_accuracy(type)
-        if type == :train
-            return get_loss_accuracy_batch(train_data)
-        elseif type == :test
-            return get_loss_accuracy_batch(test_data)
-        else
-            @error "Unknown option $(type)"
-        end
-    end
-end
-
 opt = OPTIMIZER(LEARNING_RATE)
 
 init_cuda()
 init_plot()
 init_model()
 
-for iteration = 1:ITERATIONS
-    @showprogress "Training..." for (x, y) in train_data
+for epoch = 1:EPOCHS
+    @showprogress "Epoch $(x_history[end]+1)..." for (x, y) in train_data
         x, y = x |> device, y |> device
         gs = Flux.gradient(() -> Flux.Losses.mse(model(x), y), ps) # compute gradient
         Flux.Optimise.update!(opt, ps, gs) # update parameters

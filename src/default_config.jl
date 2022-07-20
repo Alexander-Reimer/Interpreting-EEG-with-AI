@@ -2,7 +2,7 @@
 # | ARGUMENTS DATA                                                           |
 # |--------------------------------------------------------------------------|
 
-BATCH_SIZE = 35250 # Number of mini-batches
+BATCH_SIZE = 10000 # Size of mini-batches
 NUM_CHANNELS = 16 # Number of EEG channels
 MAX_FREQUENCY = 60 # Range of frequency produced by FFT (eg. here 1-60 Hz)
 NUM_SAMPLES_TRAIN = 284375 # Total number of training samples
@@ -25,10 +25,10 @@ TEST_DATA = [
 # | ARGUMENTS TRAINING                     |
 # |----------------------------------------|
 
-ITERATIONS = 2
+EPOCHS = 300
 USE_CUDA = true
 OPTIMIZER = ADAM
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.0001
 LOSS = crossentropy
 # Define model structure
 MODEL() = Chain(
@@ -52,9 +52,9 @@ SAVE_PATH = "saved_models/mymodel.bson"
 # | ARGUMENTS HISTORY                      |
 # |----------------------------------------|
 
-PLOT = (true, 1)
+PLOT = (true, 15)
 
-LOSS_ACCURACY_GLOBAL = false
+LOSS_ACCURACY_PORTION = 1.0 # 0.1: 10% of batches gets randomly selected to test loss and accuracy; 1.0: using all data
 
-HISTORY_TRAIN = (true, 1)
-HISTORY_TEST = (true, 1)
+HISTORY_TRAIN = (true, 5)
+HISTORY_TEST = (true, 5)

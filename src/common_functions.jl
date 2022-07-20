@@ -1,5 +1,6 @@
 function save_model()
-    model = cpu(model)
+    global model
+    model = model |> cpu
     bson(SAVE_PATH,
         model=model,
         channels=NUM_CHANNELS,
@@ -12,7 +13,9 @@ function save_model()
 end
 
 function load_model()
-    data = BSON.load(LOAD_PATH)
+    data = BSON.load(LOAD_PATH, @__MODULE__)
+    5 + 5 
+    println("ohumi")
     if data[:channels] != NUM_CHANNELS
         NUM_CHANNELS = data[:channels]
         @warn "Replaced NUM_CHANNELS in config by NUM_CHANNELS used for loaded model since they don't match."
