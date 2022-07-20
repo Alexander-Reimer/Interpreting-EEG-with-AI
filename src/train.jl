@@ -73,36 +73,6 @@ function check_NaN(model)
     return search_NaN
 end
 
-function get_accuracy(model, data_x, data_y)
-    total = 0
-    correct = 0
-    all_out = model(data_x)
-    for i = 1:size(data_x)[4]
-        est = all_out[:, i]
-        if argmax(est) == argmax(data_y[:, i])
-            correct += 1
-        end
-        total += 1
-    end
-    return correct / total
-end
-
-function get_loss_accuracy_all(data_x, data_y)
-    l = Float32(0)
-    total = 0
-    correct = 0
-    all_out = model(data_x)
-    for i = 1:size(data_x)[4]
-        est = all_out[:, i]
-        l += LOSS(est, data_y[:, i])
-        if argmax(est) == argmax(data_y[:, i])
-            correct += 1
-        end
-        total += 1
-    end
-    return (loss=l / size(data_x)[4], accuracy=correct / total)
-end
-
 function loss_accuracy(type::Symbol)
     if type == :train
         return loss_accuracy(train_data, string(type))
