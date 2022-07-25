@@ -5,19 +5,19 @@
 BATCH_SIZE = 10000 # Size of mini-batches
 NUM_CHANNELS = 16 # Number of EEG channels
 MAX_FREQUENCY = 60 # Range of frequency produced by FFT (eg. here 1-60 Hz)
-NUM_SAMPLES_TRAIN = 284375 # Total number of training samples
+NUM_SAMPLES_TRAIN = 284625 # Total number of training samples
 NUM_SAMPLES_TEST = 35250 # Total number of testing samples
 
 path_prefix = "../model_data/"
 TRAIN_DATA = [
     (path_prefix * "directions/data/left/", [1.0, 0.0, 0.0]),
-    (path_prefix * "directions/data/right/", [0.0, 1.0, 0.0]),
-    (path_prefix * "directions/data/left/", [0.0, 0.0, 1.0])
+    (path_prefix * "directions/data/none/", [0.0, 1.0, 0.0]),
+    (path_prefix * "directions/data/right/", [0.0, 0.0, 1.0])
 ] # (folder with files, desired outputs for each case)
 TEST_DATA = [
     (path_prefix * "directions/validation_data/left/", [1.0, 0.0, 0.0]),
-    (path_prefix * "directions/validation_data/right/", [0.0, 1.0, 0.0]),
-    (path_prefix * "directions/validation_data/left/", [0.0, 0.0, 1.0])
+    (path_prefix * "directions/validation_data/none/", [0.0, 1.0, 0.0]),
+    (path_prefix * "directions/validation_data/right/", [0.0, 0.0, 1.0])
 ] # (folder with files, desired outputs for each case)
 
 
