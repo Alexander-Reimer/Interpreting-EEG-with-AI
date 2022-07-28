@@ -5,10 +5,10 @@ using CUDA: CuIterator
 np = pyimport("numpy")
 using Flux: crossentropy, train!, onecold
 
-include("common_functions.jl")
 
 include("default_config.jl") # provide default options, don't change
 include("config.jl") # overwrite default options, you just need to set the variables
+include("common_functions.jl")
 
 function get_data(path)
     return np.load(path)
@@ -176,7 +176,7 @@ function advance_history()
         push!(train_accuracy_history, train_acc)
 
         println("    train loss: ", train_loss_history[end])
-        println("    train accurracy: $(train_accuracy_history[end])%")
+        println("    train accurracy: $(train_accuracy_history[end] * 100)%")
         if PLOT[1] && mod(x_history[end], PLOT[2]) == 0
             x, y = remove_nothing(train_loss_history)
             the_plot.train_loss.set_data(x, y)
@@ -195,7 +195,7 @@ function advance_history()
         push!(test_accuracy_history, test_acc)
 
         println("    test loss: ", test_loss_history[end])
-        println("    test accurracy: $(test_accuracy_history[end])%")
+        println("    test accurracy: $(test_accuracy_history[end] * 100)%")
         if PLOT[1] && mod(x_history[end], PLOT[2]) == 0
             x, y = remove_nothing(test_loss_history)
             the_plot.test_loss.set_data(x, y)
@@ -227,6 +227,20 @@ function init_model()
         advance_history()
     else
         load_model()
+        global model = model |> device
+        println("Epoch $(x_history[end]):")
+        if train_loss_history[end] !== nothing
+            println("    train loss: ", train_loss_history[end])
+        end
+        if train_accuracy_history[end] !== nothing
+            println("    train accurracy: $(train_accuracy_history[end] * 100)%")
+        end
+        if test_loss_history[end] !== nothing
+            println("    test loss: ", test_loss_history[end])
+        end
+        if test_accuracy_history[end] !== nothing
+            println("    test accurracy: $(test_accuracy_history[end] * 100)%")
+        end
     end
     global ps = Flux.params(model)
 end
@@ -252,7 +266,6 @@ num_outputs = length(TRAIN_DATA[1][2])
 # Pre-initialise arrays to improve performance
 global X_traindata = Array{Float32}(undef, MAX_FREQUENCY, 1, NUM_CHANNELS, NUM_SAMPLES_TRAIN)
 global Y_traindata = Array{Float32}(undef, num_outputs, NUM_SAMPLES_TRAIN)
-
 global X_testdata = Array{Float32}(undef, MAX_FREQUENCY, 1, NUM_CHANNELS, NUM_SAMPLES_TEST)
 global Y_testdata = Array{Float32}(undef, num_outputs, NUM_SAMPLES_TEST)
 
@@ -261,7 +274,6 @@ global index = 0
 for (path, output) in TRAIN_DATA
     get_formatted_data(path, output, false)
 end
-
 global index = 0
 for (path, output) in TEST_DATA
     get_formatted_data(path, output, true)
