@@ -5,8 +5,6 @@
 BATCH_SIZE = 10000 # Size of mini-batches
 NUM_CHANNELS = 16 # Number of EEG channels
 MAX_FREQUENCY = 60 # Range of frequency produced by FFT (eg. here 1-60 Hz)
-NUM_SAMPLES_TRAIN = 284625 # Total number of training samples
-NUM_SAMPLES_TEST = 35250 # Total number of testing samples
 
 path_prefix = "../model_data/"
 TRAIN_DATA = [
