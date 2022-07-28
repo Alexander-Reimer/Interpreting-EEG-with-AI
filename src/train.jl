@@ -14,50 +14,73 @@ function get_data(path)
     return np.load(path)
 end
 
-function get_all_data(folder)
-    # Get data of all files in $folder
-    # Return 3D-Array, (sample, channel, amplitude of frequency given by fft)
-    files = readdir(folder)
-    l = 0
-    for file in files
-        d = get_data(folder * file)
-        l += size(d)[1]
+function ignore_file(path)
+    # Return true if file should be ignored
+    name = split(path, "/")[end]
+    if name[1] == "-"
+        return true
+    else
+        return false
     end
-
-    data = zeros(Float32, l, 16, 60)
-    i = 0
-    index = 1
-
-    for file in files
-        #println(i)
-        d = get_data(folder * file)
-        i += 1
-        data[index:index+size(d)[1]-1, :, :] = d
-        index += size(d)[1]
-    end
-    return data
 end
 
-function get_formatted_data(path, output, test)
-    # Transform data, add outputs
-    # Add data X and Y to global variables X_traindata, X_testdata, Y_traindata, Y_testdata
-    data = get_all_data(path)
-    data = mapslices(rotr90, data, dims=[1, 3])
-
-    if test
-        global X_testdata[:, 1, :, index+1:index+size(data)[3]] = data
-    else
-        global X_traindata[:, 1, :, index+1:index+size(data)[3]] = data
-    end
-
-    for i = 1:size(data)[3]
-        if test
-            global Y_testdata[:, index+i] = output
-        else
-            global Y_traindata[:, index+i] = output
+function get_data_length(data_info)
+    samples = 0
+    for classification in data_info
+        for file in readdir(classification[1])
+            path = classification[1] * file
+            if ignore_file(path) == false
+                d = mapslices(rotr90, get_data(path), dims=[1, 3])
+                samples += size(d)[3]
+            end
         end
     end
-    global index += size(data)[3]
+    return samples
+end
+
+function set_all_data()
+    i = [1, 0]
+    for classification in TRAIN_DATA
+        for file in readdir(classification[1])
+            path = classification[1] * file
+            if ignore_file(path) == false
+                d = mapslices(rotr90, get_data(path), dims=[1, 3])
+                i[2] += size(d)[3]
+                X_traindata[:, 1, :, i[1]:i[2]] = d
+                # println("i1: $(i[1]), i2: $(i[2])")
+                # println(size(Y_traindata[:, i[1]:i[2]]))
+                Y_traindata[:, i[1]:i[2]] .= classification[2]
+                i[1] += size(d)[3]
+            end
+        end
+    end
+
+    i = [1, 0]
+    for classification in TEST_DATA
+        for file in readdir(classification[1])
+            path = classification[1] * file
+            if ignore_file(path) == false
+                d = mapslices(rotr90, get_data(path), dims=[1, 3])
+                i[2] += size(d)[3]
+                X_testdata[:, 1, :, i[1]:i[2]] = d
+                Y_testdata[:, i[1]:i[2]] .= classification[2]
+                i[1] += size(d)[3]
+            end
+        end
+    end
+end
+
+function init_data()
+    global num_samples_train = get_data_length(TRAIN_DATA)
+    global num_samples_test = get_data_length(TEST_DATA)
+
+    # Pre-initialise arrays to improve performance
+    global X_traindata = Array{Float32}(undef, MAX_FREQUENCY, 1, NUM_CHANNELS, num_samples_train)
+    global Y_traindata = Array{Float32}(undef, num_outputs, num_samples_train)
+    global X_testdata = Array{Float32}(undef, MAX_FREQUENCY, 1, NUM_CHANNELS, num_samples_test)
+    global Y_testdata = Array{Float32}(undef, num_outputs, num_samples_test)
+
+    set_all_data()
 end
 
 function noise(x)
@@ -263,25 +286,11 @@ end
 
 num_outputs = length(TRAIN_DATA[1][2])
 
-# Pre-initialise arrays to improve performance
-global X_traindata = Array{Float32}(undef, MAX_FREQUENCY, 1, NUM_CHANNELS, NUM_SAMPLES_TRAIN)
-global Y_traindata = Array{Float32}(undef, num_outputs, NUM_SAMPLES_TRAIN)
-global X_testdata = Array{Float32}(undef, MAX_FREQUENCY, 1, NUM_CHANNELS, NUM_SAMPLES_TEST)
-global Y_testdata = Array{Float32}(undef, num_outputs, NUM_SAMPLES_TEST)
-
-# Populate arrays with eeg data
-global index = 0
-for (path, output) in TRAIN_DATA
-    get_formatted_data(path, output, false)
-end
-global index = 0
-for (path, output) in TEST_DATA
-    get_formatted_data(path, output, true)
-end
+init_data()
 
 # Turn data into Flux DataLoaders
-global train_data = Flux.Data.DataLoader((X_traindata, Y_traindata), batchsize=BATCH_SIZE, shuffle=true, partial=false)
-global test_data = Flux.Data.DataLoader((X_testdata, Y_testdata), batchsize=BATCH_SIZE, shuffle=true, partial=false)
+train_data = Flux.Data.DataLoader((X_traindata, Y_traindata), batchsize=BATCH_SIZE, shuffle=true, partial=false)
+test_data = Flux.Data.DataLoader((X_testdata, Y_testdata), batchsize=BATCH_SIZE, shuffle=true, partial=false)
 
 # Clear unnecessary data
 X_traindata = nothing
