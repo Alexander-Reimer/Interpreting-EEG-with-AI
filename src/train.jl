@@ -217,15 +217,7 @@ function advance_history()
 end
 
 function init_model()
-    if isempty(LOAD_PATH)
-        global model = MODEL() |> device
-        global x_history = []
-        global train_loss_history = []
-        global test_loss_history = []
-        global train_accuracy_history = []
-        global test_accuracy_history = []
-        advance_history()
-    else
+    if (!isempty(LOAD_PATH)) && isfile(LOAD_PATH)
         load_model()
         global model = model |> device
         println("Epoch $(x_history[end]):")
@@ -241,6 +233,14 @@ function init_model()
         if test_accuracy_history[end] !== nothing
             println("    test accurracy: $(test_accuracy_history[end] * 100)%")
         end
+    else
+        global model = MODEL() |> device
+        global x_history = []
+        global train_loss_history = []
+        global test_loss_history = []
+        global train_accuracy_history = []
+        global test_accuracy_history = []
+        advance_history()
     end
     global ps = Flux.params(model)
 end
