@@ -25,7 +25,7 @@ TEST_DATA = [
 # | ARGUMENTS TRAINING                     |
 # |----------------------------------------|
 
-EPOCHS = 500
+EPOCHS = 250
 USE_CUDA = true
 OPTIMIZER = ADAM
 LEARNING_RATE = 0.00005
