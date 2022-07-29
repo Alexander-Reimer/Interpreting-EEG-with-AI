@@ -5,7 +5,6 @@ using CUDA: CuIterator
 np = pyimport("numpy")
 using Flux: crossentropy, train!, onecold
 
-
 include("default_config.jl") # provide default options, don't change
 include("config.jl") # overwrite default options, you just need to set the variables
 include("common_functions.jl")
@@ -24,62 +23,83 @@ function ignore_file(path)
     end
 end
 
-function get_data_length(data_info)
+function get_data_length(data_info, total_files=1, name="")
+    p = Progress(total_files, 1, "Initializing $(name)data arrays...")
     samples = 0
-    for classification in data_info
-        for file in readdir(classification[1])
-            path = classification[1] * file
+    for classifications in data_info
+        for file in readdir(classifications[1])
+            path = classifications[1] * file
             if ignore_file(path) == false
                 d = mapslices(rotr90, get_data(path), dims=[1, 3])
                 samples += size(d)[3]
+                next!(p)
             end
         end
     end
     return samples
 end
 
+function get_total_files(classifications)
+    total_files = 0
+    for classifications in TRAIN_DATA
+        for file in readdir(classifications[1])
+            path = classifications[1] * file
+            if ignore_file(path) == false
+                total_files += 1
+            end
+        end
+    end
+    return total_files
+end
+
 function set_all_data()
+    p = Progress(train_total_files, 1, "Reading train data...")
     i = [1, 0]
-    for classification in TRAIN_DATA
-        for file in readdir(classification[1])
-            path = classification[1] * file
+    for classifications in TRAIN_DATA
+        for file in readdir(classifications[1])
+            path = classifications[1] * file
             if ignore_file(path) == false
                 d = mapslices(rotr90, get_data(path), dims=[1, 3])
                 i[2] += size(d)[3]
                 X_traindata[:, 1, :, i[1]:i[2]] = d
                 # println("i1: $(i[1]), i2: $(i[2])")
                 # println(size(Y_traindata[:, i[1]:i[2]]))
-                Y_traindata[:, i[1]:i[2]] .= classification[2]
+                Y_traindata[:, i[1]:i[2]] .= classifications[2]
                 i[1] += size(d)[3]
+                next!(p)
             end
         end
     end
 
+    p = Progress(test_total_files, 1, "Reading test data...")
     i = [1, 0]
-    for classification in TEST_DATA
-        for file in readdir(classification[1])
-            path = classification[1] * file
+    for classifications in TEST_DATA
+        for file in readdir(classifications[1])
+            path = classifications[1] * file
             if ignore_file(path) == false
                 d = mapslices(rotr90, get_data(path), dims=[1, 3])
                 i[2] += size(d)[3]
                 X_testdata[:, 1, :, i[1]:i[2]] = d
-                Y_testdata[:, i[1]:i[2]] .= classification[2]
+                Y_testdata[:, i[1]:i[2]] .= classifications[2]
                 i[1] += size(d)[3]
+                next!(p)
             end
         end
     end
 end
 
 function init_data()
-    global num_samples_train = get_data_length(TRAIN_DATA)
-    global num_samples_test = get_data_length(TEST_DATA)
+    global train_total_files = get_total_files(TRAIN_DATA)
+    global test_total_files = get_total_files(TEST_DATA)
+
+    global num_samples_train = get_data_length(TRAIN_DATA, train_total_files, "train ")
+    global num_samples_test = get_data_length(TEST_DATA, test_total_files, "test ")
 
     # Pre-initialise arrays to improve performance
     global X_traindata = Array{Float32}(undef, MAX_FREQUENCY, 1, NUM_CHANNELS, num_samples_train)
     global Y_traindata = Array{Float32}(undef, num_outputs, num_samples_train)
     global X_testdata = Array{Float32}(undef, MAX_FREQUENCY, 1, NUM_CHANNELS, num_samples_test)
     global Y_testdata = Array{Float32}(undef, num_outputs, num_samples_test)
-
     set_all_data()
 end
 
