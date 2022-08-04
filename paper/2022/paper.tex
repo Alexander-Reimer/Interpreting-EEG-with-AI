@@ -153,7 +153,7 @@
 
 	\begin{abstract}
 		Brain-computer interfaces (BCIs) werden in den Medien immer präsenter, meist in Form von Durchbrüchen durch Universitäten, Institute oder große Unternehmen.
-		Wir haben uns vorgenommen, mit günstiger Hardware und eigener Software selbst ein BCI zu entwickeln - ein BCI, das anderen Leuten die Entwicklung von BCIs leichter macht, und dafür nicht an einen bestimmten Zweck gebunden ist.
+		Wir haben uns vorgenommen, mit günstiger Hardware und eigener Software selbst ein BCI zu entwickeln. Unser BCI soll anderen Leuten die Entwicklung von BCIs leichter machen, und dafür nicht an einen bestimmten Zweck gebunden sein.
 	\end{abstract}
 	
 	\newpage
@@ -273,7 +273,7 @@
 
 	Bei der Elektroenzephalographie (EEG) werden Elektroden an der Kopfoberfläche platziert. Diese können sehr kleine Spannungen messen, die durch Potentialänderungen in Neuronengruppen im Gehirn entstehen und durch den Schädel dringen. Eine Elektrode kann meist nur die Summe aller lokalen Potentialänderungen messen. Man kann also auch nur ungefähr sagen, wo genau im Gehirn eine Potentialänderung stattgefunden hat. Mit mehr Elektroden kann die Genauigkeit erhöht werden. \cite{wiki:EEG} \cite{Birbaumer2010}
 
-	Um eine Differenz bilden zu können, wird eine zweite Elektrode benötigt. Wir benutzen dafür eine Referenzelektrode, welche am Ohrläppchen befestigt wurde, wo sie ein von Gehirnströmen weitgehend unbeeinflusstes, konstantes Potential ableiten kann. Alle vier am Kopf platzierten Elektroden nutzen diese Referenzelektrode. Somit handelt es sich bei allen vieren um eine unipolare Ableitung. \cite{Praktikum}
+	Um eine Differenz bilden zu können, wird eine Referenzelektrode benötigt. Wir befestigen diese am Ohrläppchen, wo sie ein von Gehirnströmen weitgehend unbeeinflusstes, konstantes Potential ableiten kann. Alle vier am Kopf platzierten Elektroden nutzen diese Referenzelektrode. Somit handelt es sich bei allen vieren um eine unipolare Ableitung. \cite{Praktikum}
 
 	Wir untersuchen ereigniskorrelierte Potentiale (EKPs). Dies sind bestimmte Spannungsschwankungen (\enquote{Potentiale}), welche in Zusammenhang mit einem internen oder externen Ereignis stehen, wie z.B. einem lauten Ton, einer Körperbewegung oder hoher Konzentration. \cite{Birbaumer2010} \cite{Praktikum}
 	Dabei haben wir uns zuerst für das Blinzeln entschieden, da wir es im Graphen zumindest mit bloßen Augen sehr gut erkennen konnten (siehe Abbildung \ref{EMG-Blinzeln}).
@@ -301,7 +301,7 @@
 	Aber wir haben EMG trotzdem zu Beginn genutzt, da wir erstmal eine funktionierende Basis schaffen wollten.
 
 	Nachdem die Analyse von EMG funktioniert hat, haben wir dann tatsächliche Elektroenzephalographie genutzt. Dabei haben wir weiterhin Blinzeln untersucht. Die Elektroden haben wir dafür alle nebeneinander am Okzipitalen Kortex (Visueller Kortex) platziert (siehe Abbildung \ref{10-20-System} rechts), welcher sich am Hinterkopf befindet und sehr stark mit den Augen und dem Sehvermögen verknüpft ist. \cite{Birbaumer2010} 
-	Wir entschieden uns, trotz des Umstiegs auf EEG bei Blinzeln zu bleiben, da wir bereits wussten, dass geschlossene Augen klar erkennbar sein sollten: Bei offenen Augen findet eine sogenannte Alpha-Blockade statt, bei der -- vor allem im Okzipitalem Kortex -- die Alphawellen (ca. 7-13 Hertz) stark sinken. Entsprechend steigen sie stark an, wenn die Augen geschlossen sind. \cite{Springer:Berger} \cite{Praktikum} \cite{wiki:Berger-Effekt}
+	Wir entschieden uns, trotz des Umstiegs auf EEG bei Blinzeln als EKP zu bleiben, da wir bereits wussten, dass geschlossene Augen klar erkennbar sein sollten: Bei offenen Augen findet eine sogenannte Alpha-Blockade statt, bei der -- vor allem im Okzipitalem Kortex -- die Alphawellen (ca. 7-13 Hertz) stark sinken. Entsprechend steigen sie stark an, wenn die Augen geschlossen sind. \cite{Springer:Berger} \cite{Praktikum} \cite{wiki:Berger-Effekt}
 
 	%Insgesamt stehen uns zwei Earclips, die an den Ohren befestigt werden und zum Filtern von Störungen dienen, und vier Messelektroden, jeweils mit einer zeitlichen Auflösung von 200 Hertz (200 Messungen pro Sekunde), zur Verfügung. Zwei dieser Elektroden haben wir auf der Stirn platziert (links: Elektrode 1, rechts: Elektrode 2), zwei jeweils links (Elektrode 3) und rechts (Elektrode 4) auf dem Schädel, etwas über und vor dem Ohr (siehe Abbildung \ref{10-20-System}). Wir haben uns für diese Platzierung entschieden, da die Elektroden so direkt über Muskeln sitzen, die beim Blinzeln bewegt werden. %!!!
 
@@ -318,7 +318,7 @@
 
 	Aus der FFT folgt ein Array (eine Liste) an komplexen Zahlen. Der Index eines Wertes in der Liste bestimmt, für welche Frequenz der Wert gilt (erster Wert: 1 Hertz, zweiter Wert: 2 Hertz, etc.). Nun muss für jede komplexe Zahl der Abstand zum Ursprung bestimmt werden, also der absolute Betrag. Dieser entspricht dann der Amplitude der Frequenz. So lässt sich bestimmen, welche Frequenzen am stärksten vorkommen. Außerdem können dann Frequenzen herausgefiltert werden, indem die Werte bei den entsprechenden Indices auf 0 gesetzt werden. 
 
-	Eine FFT kann Elektroenzephalogramme verlustfrei repräsentieren. Dies lässt sich erkennen, wenn man mithilfe der durch die FFT entstandenen Spektralanalyse die Daten rekonstruiert (Inverse Fast Fourier Transformation, IFFT) (siehe Abbildung \ref{EEG-IFFT}). Im Prinzip werden dazu die Sinus-Kurven der Frequenzen mit den entsprechenden Amplituden multipliziert und dann addiert.
+	Eine FFT kann Elektroenzephalogramme fast verlustfrei repräsentieren. Dies lässt sich erkennen, wenn man mithilfe der durch die FFT entstandenen Spektralanalyse die Daten rekonstruiert (Inverse Fast Fourier Transformation, IFFT) (siehe Abbildung \ref{EEG-IFFT}). Es werden dazu die Sinus-Kurven der Frequenzen mit den entsprechenden Amplituden multipliziert und dann addiert.
 
 	Eine große Amplitude bei 50 Hertz, wie z.B. in Abbildung \ref{EEG-IFFT}, kann aufgrund des Wechselstroms in Deutschland entstehen, welcher eine Frequenz von 50 Hertz hat. \cite{Praktikum} Um eine Verwirrung der KI zu verhindern, können wir bei der Verwendung von FFT die Amplitude für 50 Hertz auf 0 setzen.
 
@@ -328,7 +328,7 @@
 		\label{EEG-IFFT}
 	\end{figure}
 
-	Vor der Implementation von FFT haben wir zuerst getestet, ob eine Spektralanalyse für unseren Zweck überhaupt sinnvoll wäre. Dazu haben wir die Ergebnisse der FFT von Elektroenzephalogrammen mit Blinzeln und ohne Blinzeln verglichen. Wie man in Abbildung \ref{EEG-FFT} sehen kann, gibt es vor allem im niedrigeren Frequenzbereich einen klaren Unterschied.
+	Vor der Implementation von FFT haben wir zuerst getestet, ob eine Spektralanalyse für unseren Zweck überhaupt sinnvoll wäre. Dazu haben wir die Ergebnisse der FFT von Elektroenzephalogrammen mit Blinzeln und ohne Blinzeln verglichen. Wie man in Abbildung \ref{EEG-FFT} sehen kann, gibt es aufgrund des Berger-Effekts vor allem im niedrigeren Frequenzbereich einen klaren Unterschied zwischen geöffneten und geschlossenen Augen.
 	Die KI sollte in der Lage sein, diesen Unterschied zu erkennen. Eine FFT wäre also zur Vorverarbeitung der Daten geeignet.
 
 	%\begin{figure}[H]
@@ -351,14 +351,14 @@
 
 	Die FFT ist außerdem sehr schnell, auf unserem Test-System braucht sie für die Verarbeitung von einer Sekunde Messdaten von zwei Elektroden im Schnitt \qty{22}{\micro\second}. Ein weiterer Vorteil der FFT ist, dass wir weniger Inputs haben. Wir brauchen allerhöchstens die Amplituden für 1-100 Hertz, alles darüber hinaus kann unser EEG sowieso nicht akkurat wahrnehmen. Mit 100 Inputs (die Frequenzen) statt 200 Inputs (jede einzelne Spannungsdifferenz) kann unsere KI schneller lernen und schneller eine Erkennung durchführen.
 
-	Dennoch wollen wir das Programm auch ohne FFT ausprobieren -- wenn die Ergebnisse gleich gut sind, würde es sich trotzdem lohnen, auf FFT zu verzichten, da für FFT auch die Installation eines weiteren Packages (FFTW) notwendig ist. 
+	Dennoch wollen wir das Programm auch ohne FFT ausprobieren.
 
 	\subsubsection{Neuronales Netz}
 
 	Ein neuronales Netzwerk besteht aus drei Teilen: dem Input Layer, den Hidden Layers und dem Output Layer. 
 	Der Input Layer ist eine Liste aus Zahlen zwischen 0 und 1. Er gibt an, welche Eingaben (Inputs) das Netzwerk bekommen soll, z. B. die Grauwerte der Pixel eines Bildes.
 	Die Hidden Layers sind eine Ansammlung von in mehrere Layer (Schichten) unterteilten Neuronen.
-	Jedes Neuron besitzt eine Aktivierung (Activation), die als Zahl zwischen 0 und 1 angegeben werden kann, und einen Bias (Verzerrung), der eine beliebige Zahl sein kann. Die Neuronen verschiedener Layer sind alle durch sogenannte Gewichte (Weights) verbunden, die ebenfalls einen beliebigen Wert haben können.
+	Jedes Neuron besitzt eine Aktivierung (Activation), die als Zahl zwischen 0 und 1 angegeben werden kann, und einen Bias (Verzerrung), der eine beliebige Zahl ist. Die Neuronen verschiedener Layer sind alle durch sogenannte Gewichte (Weights) verbunden, die ebenfalls einen beliebigen Wert haben.
 	Die Outputs sind dann lediglich die Aktivierungen der Neuronen im Output Layer.
 
 	\threesub{Forward Pass}
@@ -405,12 +405,13 @@
 	
 	Um die Cost zu berechnen, muss man also für alle Output Neuronen die Differenz der gegebenen und der richtigen Aktivierungen bilden. Danach muss man diese Differenzen quadrieren und am Ende alle Ergebnisse aufsummieren. Dies kann man für alle Trainingsdatensätze wiederholen und von allen Costs den Durchschnitt nehmen, um die allgemeine Performance eines Netzwerkes zu überprüfen. Diese Art der Cost-Funktion wird mittlere quadratische Abweichung (mean squared error, kurz MSE) genannt. 
 	
-	Zusammenfassend kann man also sagen, dass die Cost die Abweichung von den berechneten und den richtigen Outputs angibt. Aufgrund des Trainingsdatensatzes weiß man nun, wie der Output Layer verändert werden
-	muss.
+	Zusammenfassend kann man also sagen, dass die Cost die Abweichung von den berechneten und den richtigen Outputs angibt. Aufgrund des Trainingsdatensatzes weiß man nun, wie der Output Layer verändert werden muss.
 
 	\threesub{Backpropagation}
 
-	Doch wie verändert man nun die Aktivierungen des Output-Layers? Es müssen alle Gewichte und Biases davor angepasst werden. Um nun zu wissen, wie ein Gewicht verändert werden muss, gibt es folgende Funktion:
+	Die von uns verwendete Form der Backpropagation ist der simple sogenannte Gradient Descent.
+
+	Um die Aktivierungen des Output-Layers anzupassen, müssen alle Gewichte und Biases davor angepasst werden. Um nun zu wissen, wie ein Gewicht verändert werden muss, gibt es folgende Funktion:
 
 	\form{\[
 		\Delta W_{ij} = \epsilon * \delta_i * a_j
@@ -418,7 +419,7 @@
 %
 	Hier ist  $\Delta W_{ij}$ der Wert, um den das Gewicht $W$ zwischen den Neuronen $j$ und $i$ verändert werden muss, $\epsilon$ die Lernrate (meist ein kleiner Wert wie 0.001), $\delta_i$ eine Annäherung der Ableitung der Cost des Neurons $i$ im Verhältnis zum Gewicht $W_{ij}$, und $a_j$ die Aktivierung des Neurons $j$. Was dabei oft verwirrend ist: $j$ bezeichnet das Neuron, welches zuerst kommt, und $i$ das Neuron, welches danach kommt (Reihenfolge im Forward-Pass), obwohl es bei $W_{ij}$ andersherum steht.
 
-	Für den Bias wird die gleiche Formel benutzt, mit der Ausnahme, dass $a_j$ immer 1 ist und so wegfällt. Der Grund dafür liegt darin, dass der Bias, wie in der Struktur beschrieben, eigentlich nur ein Gewicht ist, das mit einem Neuron verbunden ist, welches immer eine Aktivierung von eins hat.
+	Für den Bias wird die gleiche Formel benutzt, mit der Ausnahme, dass $a_j$ immer 1 ist und so wegfällt. Der Grund dafür liegt darin, dass der Bias, wie im Forward Pass beschrieben, eigentlich nur ein Gewicht ist, das mit einem Neuron verbunden ist, welches immer eine Aktivierung von eins hat.
 
 	Um nun $\delta_i$ für den Output Layer zu berechnen, gibt es folgende Gleichung: 
 
@@ -443,7 +444,7 @@
 
 	\threesub{Flux}
 
-	Wir haben in unserem letzten Projekt bereits ein neuronales Netzwerk mit dieser Funktionsweise selbst programmiert, um es besser verstehen zu können. \cite{AIComposer} Für dieses Projekt haben wir allerdings das Package Flux benutzt, welches die gleichen oder bessere Ergebnisse liefern sollte, mit deutlich besserer Performance, da es stark optimiert und sehr viel weiter entwickelt wurde. \cite{Flux.jl-2018}
+	Wir haben in unserem letzten Projekt bereits ein neuronales Netzwerk mit dieser Funktionsweise selbst programmiert, um es besser verstehen zu können. \cite{AIComposer} Für dieses Projekt haben wir allerdings das Package Flux benutzt, welches die gleichen oder besseren Ergebnisse liefern sollte, mit deutlich besserer Performance, da es stark optimiert und sehr viel weiter entwickelt wurde. \cite{Flux.jl-2018}
 
 	\subsubsection{Roboter}
 
@@ -522,7 +523,7 @@
 
 	\section{Ergebnisse}
 
-	Beim Erkennen von Blinzeln mit EMG (Konfiguration 1) erhielten wir, sowohl mit als auch ohne FFT, eine Testdaten-Genauigkeit von 95\% (siehe Abbildung \ref{training-emg}), in einigen undokumentierten Durchläufen auch 100\%. Mit der Genauigkeit ist gemeint, welchen Anteil der gegebenen Datensätze das neuronale Netzwerk korrekt klassifizieren konnte. Dabei ist vor allem die Testdaten-Genauigkeit relevant, da diese die Genauigkeit mit den Testdaten angibt. Die Testdaten sind nicht in den Trainingsdaten enthalten, sodass das neuronale Netzwerk nicht mit ihnen trainiert wurde und so mit ihnen komplett neue, unbekannte Fälle simuliert werden können.
+	Beim Erkennen von Blinzeln mit EMG (Konfiguration 1) erhielten wir, sowohl mit als auch ohne FFT, eine Testdaten-Genauigkeit von 95\% (siehe Abbildung \ref{training-emg}), in einigen undokumentierten Durchläufen auch 100\%. Mit der Genauigkeit ist gemeint, welchen Anteil der gegebenen Datensätze das neuronale Netzwerk korrekt klassifizieren konnte. Dabei ist vor allem die Testdaten-Genauigkeit relevant, da diese die Genauigkeit mit den Testdaten angibt. Die Testdaten sind nicht in den Trainingsdaten enthalten, sodass das neuronale Netzwerk nicht mit ihnen trainiert wurde und so komplett neue, unbekannte Fälle simuliert werden können.
 
 	\begin{figure}[H]
 		\fig{
@@ -591,6 +592,8 @@
 	
 	Eine weitere Verbesserungsmöglichkeit sehen wir in der Fourier-Analyse:
 	Bei unserem aktuellen Aufbau sind vor allem die niedrigen Frequenzen wichtig, da wir die Alpha-Blockade zur Erkennung nutzen und am Okzipitalen Kortex die Alpha-Wellen dominant sind. Die Bedeutung des niedrigen Frequenzbereichs kann man auch in Abbildung \ref{EEG-FFT} sehen. Es könnte sich also lohnen, z.B. nur die Amplituden der Frequenzen 1-20 Hertz an das neuronale Netz als Inputs zu geben, um die Leistung und Performance des neuronalen Netzes weiter zu steigern. 
+
+	Außerdem ist der Aufbau des Netzwerks sehr einfach, da er nur aus den beschriebenen, einfachen fully connected Layern besteht. Es gibt inzwischen schon fortgeschrittenere Layer-Arten, wie Convolutional Layer. Außerdem ist Gradient Descent ein sehr grundlegender Optimierungs-Algorithmus. Inzwischen sind viel fortgeschrittenere entwickelt worden, wie z.B. ADAM, was inzwischen praktische der Standard in Machine Learning ist. Wir erhoffen uns durch eine Verbesserung des neuronalen Netzwerkes die Anwendungsmöglichkeiten des BCIs stark zu erweitern.
 
 	\newpage
 
