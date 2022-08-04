@@ -38,6 +38,11 @@ function get_data_length(data_info)
     return samples
 end
 
+function clip_scale(data)
+    data = clamp.(data, -10, 10) ./ 10
+    return data
+end
+
 function set_all_data()
     i = [1, 0]
     for classification in TRAIN_DATA
@@ -45,6 +50,7 @@ function set_all_data()
             path = classification[1] * file
             if ignore_file(path) == false
                 d = mapslices(rotr90, get_data(path), dims=[1, 3])
+                d = clip_scale(d)
                 i[2] += size(d)[3]
                 X_traindata[:, 1, :, i[1]:i[2]] = d
                 # println("i1: $(i[1]), i2: $(i[2])")
@@ -61,6 +67,7 @@ function set_all_data()
             path = classification[1] * file
             if ignore_file(path) == false
                 d = mapslices(rotr90, get_data(path), dims=[1, 3])
+                d = clip_scale(d)
                 i[2] += size(d)[3]
                 X_testdata[:, 1, :, i[1]:i[2]] = d
                 Y_testdata[:, i[1]:i[2]] .= classification[2]
@@ -182,6 +189,7 @@ function remove_nothing(train_history)
 end
 
 function advance_history()
+    testmode!(model)
     if isempty(x_history)
         push!(x_history, 0)
     else
@@ -237,12 +245,14 @@ function advance_history()
         the_plot.ax_accuracy.autoscale_view(scalex=true, scaley=false)
         PyPlot.show()
     end
+    trainmode!(model)
 end
 
 function init_model()
     if (!isempty(LOAD_PATH)) && isfile(LOAD_PATH)
         load_model()
         global model = model |> device
+        testmode!(model)
         println("Epoch $(x_history[end]):")
         if train_loss_history[end] !== nothing
             println("    train loss: ", train_loss_history[end])
@@ -256,6 +266,7 @@ function init_model()
         if test_accuracy_history[end] !== nothing
             println("    test accurracy: $(test_accuracy_history[end] * 100)%")
         end
+        trainmode!(model)
     else
         global model = MODEL() |> device
         global x_history = []
@@ -301,7 +312,8 @@ Y_testdata = nothing
 # TRAINING
 # *************************************************************************************************************************
 
-loss(x, y) = LOSS(model(x), y)
+sqnorm(x) = sum(abs2, x)
+loss(x, y) = LOSS(model(x), y) + sum(sqnorm, Flux.params(model))
 opt = OPTIMIZER(LEARNING_RATE)
 
 init_cuda()
@@ -318,14 +330,5 @@ for epoch = 1:EPOCHS
 end
 
 save_model()
-
-#=
-data_ = [Array{Float32}(data_[i,:,:]) for i in 1:size(data_)[1]]
-data = Vector{Matrix{Float32}}(undef, length(data_))
-for i = 1:length(data_)
-    data[i] = reshape(data_[i], 1, :)
-end
-println("transformed data", length(data))
-=#
 
 end #module

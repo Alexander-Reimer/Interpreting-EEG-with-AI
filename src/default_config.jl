@@ -2,7 +2,7 @@
 # | ARGUMENTS DATA                                                           |
 # |--------------------------------------------------------------------------|
 
-BATCH_SIZE = 10000 # Size of mini-batches
+BATCH_SIZE = 256 # Size of mini-batches
 NUM_CHANNELS = 16 # Number of EEG channels
 MAX_FREQUENCY = 60 # Range of frequency produced by FFT (eg. here 1-60 Hz)
 
@@ -26,23 +26,22 @@ TEST_DATA = [
 EPOCHS = 250
 USE_CUDA = true
 OPTIMIZER = ADAM
-LEARNING_RATE = 0.00005
+LEARNING_RATE = 0.00001
 LOSS = crossentropy
 # Define model structure
 MODEL() = Chain(
     Conv((3, 1), 16 => 64, relu),
-    Dropout(0.5),
-    Conv((2, 1), 64 => 128, relu),
+    Dropout(0.2),
     MaxPool((2, 1)),
-    Conv((2, 1), 128 => 64, relu),
+    Conv((2, 1), 64 => 32, relu),
     MaxPool((2, 1)),
-    Conv((2, 1), 64 => 64, relu),
+    Conv((2, 1), 32 => 16, relu),
     MaxPool((2, 1)),
     Flux.flatten,
-    Dropout(0.5), 
-    Dense(384, 256, tanh),
-    Dense(256, 128, tanh),
-    Dense(128, 3),
+    Dropout(0.2),
+    Dense(96, 64, tanh),
+    Dense(64, 16, tanh),
+    Dense(16, 3),
     softmax
 )
 
