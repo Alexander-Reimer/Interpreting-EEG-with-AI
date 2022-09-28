@@ -351,27 +351,35 @@ function get_activations()
     end
 end
 
-function remove(layer::Flux.Conv, i)
+function remove(layer::Flux.Conv, i, dim)
     c = i
-    new_weights = cat(weights[:, :, :, 1:c-1],weights[:, :, :, c+1:end], dims=4)
+    if dim == 4
+        new_weights = cat(weights[:, :, :, 1:c-1],weights[:, :, :, c+1:end], dims=4)
+    else
+        new_weights = cat(weights[:, :, 1:c-1, :],weights[:, :, c+1:end, :], dims=3)
+    end
     h, w, d, n = size(new_weights)
     new_l = Conv((h, w), d => n, relu)
     new_l.weight .= new_weights
     return new_l
 end
 
-function remove(layer::Flux.Dense, i)
+function remove_next(layer::Flux.Dense, i)
     weights = layer.weight
-    new_weights = cat(weights[1:i-1, :], weights[i+1:end, :], dims=1)
+
     h, w = size(new_weights)
     new_l = Dense(w, h, tanh)
     new_l.weight .= new_weights
     return new_l
 end
 
-function remove_next(layer::Flux.Dense, i)
+function remove(layer::Flux.Dense, i, dim)
     weights = layer.weight
-    new_weights = cat(weights[:, 1:i-1], weights[:, i+1:end], dims=2)
+    if dim == 1
+        new_weights = cat(weights[1:i-1, :], weights[i+1:end, :], dims=1)
+    else
+        new_weights = cat(weights[:, 1:i-1], weights[:, i+1:end], dims=2)
+    end
     h, w = size(new_weights)
     new_l = Dense(w, h, tanh)
     new_l.weight .= new_weights
@@ -395,13 +403,20 @@ function adjust_network!()
     layers = [l for l in model.layers]
     global i2_2 = 0
     for i in w_layers
-        i2 = argmax(diffs[i])[2]
-        println(i2)
+        i2 = argmax(diffs[i])[1]
         l = layers[i]
-        layers[i] = remove(l, i2)
+        if typeof(l) == Flux.Dense
+            layers[i] = remove(l, i2, 1)
+            layers[i+1] = remove(layers[i+1], i2, 2)
+        elseif typeof(l) == Flux.Conv
+            layers[i] = remove(l, i2, 3)
+            layers[i+1] = remove(layers[i+1], i2, 4)
+        end
         i2_2 = i2
+
+        
     end
-    layers[end] = remove_next(layers[end], i2_2)
+    #layers[end] = remove_next(layers[end], i2_2)
     model = new_chain(layers)
 end
 
@@ -438,12 +453,7 @@ init_model()
 sqnorm(x) = sum(abs2, x)
 loss(x, y) = LOSS(model(x), y) # + 0.1 * sum(sqnorm, Flux.params(model)) # L2 weight regularisation
 
-@info "Gathering activations..."
-get_activations()
-@info "Adjusting network..."
-adjust_network!()
-
-#=
+advance_history()
 for epoch = 1:EPOCHS
     @showprogress "Epoch $(x_history[end]+1)..." for (x, y) in train_data
         x, y = noise(x |> device), y |> device
@@ -451,7 +461,8 @@ for epoch = 1:EPOCHS
         Flux.Optimise.update!(opt, ps, gs) # update parameters
     end
     advance_history()
-    if train_accuracy_history[end] > test_accuracy_history[end] + 0.1
+    if train_loss_history[end] < test_loss_history[end]
+        @info "Adjusting Network"
         get_activations()
         adjust_network!()
     end
@@ -459,7 +470,7 @@ end
 
 # train_data = train_data |> device
 save_model()
-=#
+
 
 
 end #module
