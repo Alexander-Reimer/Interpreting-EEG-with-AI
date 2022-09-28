@@ -20,7 +20,7 @@ We're just at the beginnings ourselves, however, and also want to learn and grow
     ``git clone https://github.com/AR102/Interpreting-EEG-with-AI``
 
 2. Create the file __config.jl__ in the folder __src__.
-
+(3. `pip install matplotlib`)
 To update, use ``git pull``.
 
 # Usage

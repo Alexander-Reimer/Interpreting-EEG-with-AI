@@ -27,7 +27,7 @@ EPOCHS = 250
 USE_CUDA = true
 OPTIMIZER = ADAM
 LEARNING_RATE = 0.00001
-LOSS = crossentropy
+LOSS = Flux.Losses.mse
 # Define model structure
 MODEL() = Chain(
     Conv((3, 1), 16 => 64, relu),
@@ -57,3 +57,11 @@ LOSS_ACCURACY_PORTION = 1.0 # 0.1: 10% of batches gets randomly selected to test
 
 HISTORY_TRAIN = (true, 5)
 HISTORY_TEST = (true, 5)
+
+function gaussian(x)
+    # Function for gaussian random noise, from https://fluxml.ai/tutorials/2021/02/07/convnet.html
+    return x .+ device(0.25f0 * randn(eltype(x), size(x)))
+end
+
+NOISE = true
+NOISE_FUNCTION = gaussian
