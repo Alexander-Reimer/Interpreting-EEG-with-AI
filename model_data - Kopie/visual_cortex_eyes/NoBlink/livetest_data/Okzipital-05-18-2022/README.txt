@@ -1,1 +1,0 @@
-Okzipital, 18.05.2022, Glade, hinterer Bioraum
