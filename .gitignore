@@ -1,4 +1,4 @@
-config.jl
+# config.jl
 documentation
 *.bson
 .vscode
