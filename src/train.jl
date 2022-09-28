@@ -118,7 +118,7 @@ function loss_accuracy(data_loader::Flux.Data.DataLoader, name::String)
     accurate = 0
     l = Float32(0)
     i = 0
-    # 
+
     @showprogress 2 "    Calculating $(name) performance..." for (x, y) in (data_loader)
         global x_i = x
         global y_i = y
@@ -271,7 +271,7 @@ function init_model()
         global test_loss_history = []
         global train_accuracy_history = []
         global test_accuracy_history = []
-        # advance_history()
+        advance_history()
     end
     global ps = Flux.params(model)
 end
@@ -290,6 +290,7 @@ function init_cuda()
 end
 
 function get_activations()
+    testmode!(model)
     global test_activations = []
     global train_activations = []
 
@@ -349,10 +350,12 @@ function get_activations()
         push!(train_means, train_mean)
         # push!(train_stds, train_std)
     end
+    trainmode!(model)
 end
 
 function remove(layer::Flux.Conv, i, dim)
     c = i
+    weights = layer.weight
     if dim == 4
         new_weights = cat(weights[:, :, :, 1:c-1],weights[:, :, :, c+1:end], dims=4)
     else
@@ -366,7 +369,6 @@ end
 
 function remove_next(layer::Flux.Dense, i)
     weights = layer.weight
-
     h, w = size(new_weights)
     new_l = Dense(w, h, tanh)
     new_l.weight .= new_weights
@@ -381,6 +383,7 @@ function remove(layer::Flux.Dense, i, dim)
         new_weights = cat(weights[:, 1:i-1], weights[:, i+1:end], dims=2)
     end
     h, w = size(new_weights)
+    println("Dense: new h $h, new w $w")
     new_l = Dense(w, h, tanh)
     new_l.weight .= new_weights
     return new_l
@@ -396,6 +399,7 @@ end
 
 function adjust_network!()
     global model
+    model = model |> cpu
     global layers
     diffs = train_means - test_means
     diffs = [abs.(i) for i in diffs]
@@ -405,19 +409,29 @@ function adjust_network!()
     for i in w_layers
         i2 = argmax(diffs[i])[1]
         l = layers[i]
-        if typeof(l) == Flux.Dense
+        if typeof(l) <: Flux.Dense
+            println("Reducing dense...")
             layers[i] = remove(l, i2, 1)
-            layers[i+1] = remove(layers[i+1], i2, 2)
-        elseif typeof(l) == Flux.Conv
-            layers[i] = remove(l, i2, 3)
-            layers[i+1] = remove(layers[i+1], i2, 4)
+            i3 = i + 1
+            while !(typeof(layers[i3]) <: Flux.Dense)
+                i3 += 1
+            end
+            layers[i3] = remove(layers[i3], i2, 4)
+        elseif typeof(l) <: Flux.Conv
+            println("Reducing Conv...")
+            layers[i] = remove(l, i2, 4)
+            i3 = i + 1
+            while !(typeof(layers[i3]) <: Flux.Conv)
+                i3 += 1
+            end
+            layers[i3] = remove(layers[i3], i2, 3)
         end
         i2_2 = i2
 
         
     end
     #layers[end] = remove_next(layers[end], i2_2)
-    model = new_chain(layers)
+    model = new_chain(layers) |> device
 end
 
 # DATA
@@ -453,24 +467,24 @@ init_model()
 sqnorm(x) = sum(abs2, x)
 loss(x, y) = LOSS(model(x), y) # + 0.1 * sum(sqnorm, Flux.params(model)) # L2 weight regularisation
 
-advance_history()
-for epoch = 1:EPOCHS
-    @showprogress "Epoch $(x_history[end]+1)..." for (x, y) in train_data
-        x, y = noise(x |> device), y |> device
-        gs = Flux.gradient(() -> loss(x, y), ps) # compute gradient
-        Flux.Optimise.update!(opt, ps, gs) # update parameters
+try
+    for epoch = 1:EPOCHS
+        if (train_accuracy_history[end] !== nothing) && (train_accuracy_history[end] > test_accuracy_history[end] + 0.1)
+            println("$(train_accuracy_history[end])% train accuracy, $(test_accuracy_history[end])% test accuracy")
+            @info "Adjusting Network"
+            get_activations()
+            adjust_network!()
+        end
+        @showprogress "Epoch $(x_history[end]+1)..." for (x, y) in train_data
+            x, y = noise(x |> device), y |> device
+            gs = Flux.gradient(() -> loss(x, y), ps) # compute gradient
+            Flux.Optimise.update!(opt, ps, gs) # update parameters
+        end
+        advance_history()
     end
-    advance_history()
-    if train_loss_history[end] < test_loss_history[end]
-        @info "Adjusting Network"
-        get_activations()
-        adjust_network!()
-    end
+finally
+    save_model()
 end
-
-# train_data = train_data |> device
-save_model()
-
 
 
 end #module

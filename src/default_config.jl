@@ -27,7 +27,8 @@ EPOCHS = 250
 USE_CUDA = true
 OPTIMIZER = ADAM
 LEARNING_RATE = 0.00001
-LOSS = Flux.Losses.mse
+# LOSS = Flux.Losses.mse
+LOSS = Flux.Losses.logitcrossentropy
 # Define model structure
 MODEL() = Chain(
     Conv((3, 1), 16 => 64, relu),
