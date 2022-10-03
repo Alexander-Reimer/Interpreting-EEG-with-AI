@@ -1,7 +1,7 @@
 # LOAD_PATH = "saved_models/amodel4.bson"
 SAVE_PATH = "saved_models/amodel5.bson"
 EPOCHS = 4
-USE_CUDA = false
+USE_CUDA = true
 PLOT = (true, 1)
 HISTORY_TRAIN = (true, 1)
 HISTORY_TEST = (true, 1)
@@ -45,8 +45,8 @@ w_layers = [1,2,3,7] =#
     Dense(1536, 64, tanh),
     Dense(64, 3, tanh)
 ) =#
-#=
- MODEL() = Chain(
+
+ #= MODEL() = Chain(
      Dropout(0.05),
      Conv((3, 1), 16 => 32, relu),
      MaxPool((2, 1)),
@@ -54,16 +54,17 @@ w_layers = [1,2,3,7] =#
      Dense(928, 64, tanh),
      Dense(64, 3, tanh)
  )
-=#
+w_layers = [] =#
 
 MODEL() = Chain(
     Conv((7, 1), 16=> 64, relu),
-    Dropout(0.1),
+    Dropout(0.2),
+    Conv((7, 1), 64=> 128, relu),
     MaxPool((2, 1)),
-    Conv((2, 1), 64=> 16, relu),
+    Conv((2, 1), 128 => 16, relu),
     MaxPool((2, 1)),
     Flux.flatten,
-    Dense(208, 32, tanh),
+    Dense(176, 32, tanh),
     Dense(32, 3)
 )
 w_layers = [1, 7]
