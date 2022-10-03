@@ -1,6 +1,7 @@
 module AI
 
 using PyCall, Flux, PyPlot, BSON, ProgressMeter, CUDA
+pygui(true)
 using CUDA: CuIterator
 np = pyimport("numpy")
 using Flux: crossentropy, train!, onecold
