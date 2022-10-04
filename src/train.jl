@@ -31,7 +31,9 @@ function get_data_length(data_info)
         for file in readdir(classification[1])
             path = classification[1] * file
             if ignore_file(path) == false
-                d = mapslices(rotr90, get_data(path), dims=[1, 3])
+                d = mapslices(rotr90, get_data(path), dims=[1, 2])
+                d = mapslices(rotr90, d, dims=[2, 3])
+                # d = mapslices(rotr90, d, dims=[1, 3])
                 samples += size(d)[3]
             end
         end
@@ -50,7 +52,9 @@ function set_all_data()
         for file in readdir(classification[1])
             path = classification[1] * file
             if ignore_file(path) == false
-                d = mapslices(rotr90, get_data(path), dims=[1, 3])
+                d = mapslices(rotr90, get_data(path), dims=[1, 2])
+                d = mapslices(rotr90, d, dims=[2, 3])
+                # d = mapslices(rotr90, d, dims=[1, 3])
                 d = clip_scale(d)
                 i[2] += size(d)[3]
                 X_traindata[:, 1, :, i[1]:i[2]] = d
@@ -67,7 +71,8 @@ function set_all_data()
         for file in readdir(classification[1])
             path = classification[1] * file
             if ignore_file(path) == false
-                d = mapslices(rotr90, get_data(path), dims=[1, 3])
+                d = mapslices(rotr90, get_data(path), dims=[1, 2])
+                d = mapslices(rotr90, d, dims=[2, 3])
                 d = clip_scale(d)
                 i[2] += size(d)[3]
                 X_testdata[:, 1, :, i[1]:i[2]] = d
@@ -83,9 +88,9 @@ function init_data()
     global num_samples_test = get_data_length(TEST_DATA)
 
     # Pre-initialise arrays to improve performance
-    global X_traindata = Array{Float32}(undef, MAX_FREQUENCY, 1, NUM_CHANNELS, num_samples_train)
+    global X_traindata = Array{Float32}(undef, NUM_CHANNELS, 1, MAX_FREQUENCY, num_samples_train)
     global Y_traindata = Array{Float32}(undef, num_outputs, num_samples_train)
-    global X_testdata = Array{Float32}(undef, MAX_FREQUENCY, 1, NUM_CHANNELS, num_samples_test)
+    global X_testdata = Array{Float32}(undef, NUM_CHANNELS, 1, MAX_FREQUENCY, num_samples_test)
     global Y_testdata = Array{Float32}(undef, num_outputs, num_samples_test)
 
     set_all_data()
@@ -304,7 +309,7 @@ end
 
 function add_dim(data)
     s = size(data)
-    return reshape(data, (s..., 1))
+    return reshape(data, (:, 1, :, :))
 end
 
 function determine_sizes(sample, model)
@@ -333,7 +338,7 @@ function get_activations2()
     # cpu!(train_data, test_data, model)
     train_data, test_data, model = cpu.([train_data, test_data, model])
     # TODO: generalize
-    sample = train_data.data[1][:, :, :, 1]
+    sample = train_data.data[1][:, :, :, 1:1]
     activation_sizes = determine_sizes(sample, model)
 
     # Init arrays
@@ -363,7 +368,7 @@ function get_activations2()
         end
     end
     train_activations ./= num_train
-    
+
     # Add activations of test data samples
     num_test = size(test_data.data[1])[end]
     @showprogress "Test data..." for (activations, _) in test_data
@@ -559,10 +564,26 @@ init_model()
 sqnorm(x) = sum(abs2, x)
 loss(x, y) = LOSS(model(x), y) # + 0.1 * sum(sqnorm, Flux.params(model)) # L2 weight regularisation
 
-activation_differences = device(Array{Array{Float32}, 1}(undef, 0))
+activation_differences = device(Array{Array{Float32},1}(undef, 0))
+@info "Getting activations..."
+train_act, test_act = get_activations2()
+diff_act = [abs.(layer) for layer in (train_act - test_act)]
+push!(activation_differences, diff_act)
+@info "Got 'em!"
+
+function change_rate!(learning_rate)
+    global opt
+    opt = OPTIMIZER(learning_rate)
+end
+
+function reload!()
+    # TODO
+end
+
 # function main()
-    try
-        global model, opt
+#     try
+        # global model, opt, ps
+        model = device(model)
         for epoch = 1:EPOCHS
             # if (train_accuracy_history[end] !== nothing) && (train_accuracy_history[end] > test_accuracy_history[end] + 0.1)
             #     println("$(train_accuracy_history[end])% train accuracy, $(test_accuracy_history[end])% test accuracy")
@@ -570,11 +591,6 @@ activation_differences = device(Array{Array{Float32}, 1}(undef, 0))
             #     push!(activation_differences, get_activations())
             #     # adjust_network!()
             # end
-            @info "Getting activations..."
-            train_act, test_act = get_activations2()
-            diff_act = [abs.(layer) for layer in (train_act - test_act)]
-            push!(activation_differences, diff_act)
-            @info "Got 'em!"
             trainmode!(model)
             @showprogress "Epoch $(x_history[end]+1)..." for (x, y) in train_data
                 x, y = noise(x |> device), y |> device
@@ -582,10 +598,17 @@ activation_differences = device(Array{Array{Float32}, 1}(undef, 0))
                 Flux.Optimise.update!(opt, ps, gs) # update parameters
             end
             advance_history()
+            if mod(epoch, 5) == 0
+                @info "Getting activations..."
+                train_act, test_act = get_activations2()
+                diff_act = [abs.(layer) for layer in (train_act - test_act)]
+                push!(activation_differences, diff_act)
+                @info "Got 'em!"
+            end
         end
-    finally
-        save_model()
-    end
+#     finally
+#         save_model()
+#     end
 # end
 
 println("Everything set up!")
