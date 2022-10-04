@@ -1,15 +1,15 @@
-# LOAD_PATH = "saved_models/amodel3.bson"
-SAVE_PATH = "saved_models/amodel4.bson"
-EPOCHS = 20
+LOAD_PATH = "saved_models/amodel4.bson"
+SAVE_PATH = "saved_models/amodel5.bson"
+EPOCHS = 2
 USE_CUDA = false
 PLOT = (true, 1)
 HISTORY_TRAIN = (true, 1)
 HISTORY_TEST = (true, 1)
 LOSS_ACCURACY_PORTION = 1.0
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.0009
 
 BATCH_SIZE = 256
-
+#=
 MODEL() = Chain(
     Conv((5, 1), 16 => 64, relu),
     Conv((5, 1), 64 => 128, relu),
@@ -21,7 +21,8 @@ MODEL() = Chain(
     Dense(50, 3, tanh),
     softmax
 )
-w_layers = [1,2,3,4,7]
+=#
+
 #= MODEL() = Chain(
     Dropout(0.05),
     Conv((3, 1), 16 => 32, relu),
@@ -42,18 +43,20 @@ w_layers = [1,2,3,4,7]
      Dense(64, 3, tanh)
  )
 =#
-#=
+
 MODEL() = Chain(
     Conv((7, 1), 16=> 64, relu),
-    Dropout(0.5),
-    MaxPool((2, 1)),
-    Conv((2, 1), 64=> 16, relu),
-    MaxPool((2, 1)),
+    Dropout(0.2),
+    MaxPool((3, 1)),
+    Conv((3, 1), 64=> 32, relu),
+    MaxPool((3, 1)),
+    Conv((3, 1), 32=> 16, relu),
+    MaxPool((3, 1)),
     Flux.flatten,
-    Dense(208, 32, tanh),
-    Dense(32, 3)
+    Dense(16, 16, tanh),
+    Dense(16, 3)
 )
-=#
+w_layers = [1,7]
 
 #= MODEL() = Chain(
     Conv((5,1), 16 => 64, pad = SamePad(), relu),

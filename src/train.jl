@@ -1,6 +1,6 @@
 module AI
 
-using PyCall, Flux, PyPlot, BSON, ProgressMeter, CUDA, Statistics
+using PyCall, Flux, PyPlot, BSON, ProgressMeter, CUDA, Statistics, Random
 using CUDA: CuIterator
 np = pyimport("numpy")
 using Flux: crossentropy, train!, onecold
@@ -49,6 +49,7 @@ function set_all_data()
         for file in readdir(classification[1])
             path = classification[1] * file
             if ignore_file(path) == false
+
                 d = mapslices(rotr90, get_data(path), dims=[1, 3])
                 d = clip_scale(d)
                 i[2] += size(d)[3]
@@ -309,7 +310,7 @@ function get_activations()
     global test_stds = []
     global train_means = []
     global train_stds = []
-    for i3 = 1:length(train_activations)
+    @showprogress "gather activations" for i3 = 1:length(train_activations)
         layer = i3
         if length(size(train_activations[layer])) == 4
             train_mean = zeros(Float32, size(train_activations[layer])[1], size(train_activations[layer])[3])
@@ -450,26 +451,32 @@ init_cuda()
 init_plot()
 init_model()
 
+#=
 sqnorm(x) = sum(abs2, x)
 loss(x, y) = LOSS(model(x), y) # + 0.1 * sum(sqnorm, Flux.params(model)) # L2 weight regularisation
-
 advance_history()
-for epoch = 1:EPOCHS
-    @showprogress "Epoch $(x_history[end]+1)..." for (x, y) in train_data
-        x, y = noise(x |> device), y |> device
-        gs = Flux.gradient(() -> loss(x, y), ps) # compute gradient
-        Flux.Optimise.update!(opt, ps, gs) # update parameters
-    end
-    advance_history()
-    if train_loss_history[end] < test_loss_history[end]
-        @info "Adjusting Network"
-        get_activations()
-        adjust_network!()
-    end
-end
+try
+    for epoch = 1:EPOCHS
 
+
+        @showprogress "Epoch $(x_history[end]+1)..." for (x, y) in train_data
+            x, y = noise(x |> device), y |> device
+            gs = Flux.gradient(() -> loss(x, y), ps) # compute gradient
+            Flux.Optimise.update!(opt, ps, gs) # update parameters
+        end
+
+        #if train_loss_history[end] < test_loss_history[end]
+        #    @info "Adjusting Network"
+        #    get_activations()
+        #    adjust_network!()
+        #end
+        advance_history()
+    end
+finally
+    save_model()
+end
 # train_data = train_data |> device
-save_model()
+=#
 
 
 
