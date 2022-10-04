@@ -27,10 +27,10 @@ EPOCHS = 250
 USE_CUDA = true
 OPTIMIZER = ADAM
 LEARNING_RATE = 0.00001
-LOSS = Flux.Losses.mse
+LOSS = Flux.logitcrossentropy
 # Define model structure
 MODEL() = Chain(
-    Conv((3, 1), 16 => 64, relu),
+    Conv((3, 1), 60 => 64, relu),
     Dropout(0.2),
     MaxPool((2, 1)),
     Conv((2, 1), 64 => 32, relu),
@@ -39,10 +39,10 @@ MODEL() = Chain(
     MaxPool((2, 1)),
     Flux.flatten,
     Dropout(0.2),
-    Dense(96, 64, tanh),
+    Dense(16, 64, tanh),
     Dense(64, 16, tanh),
     Dense(16, 3),
-    softmax
+    # softmax
 )
 
 LOAD_PATH = ""
@@ -63,5 +63,5 @@ function gaussian(x)
     return x .+ device(0.25f0 * randn(eltype(x), size(x)))
 end
 
-NOISE = true
+NOISE = false
 NOISE_FUNCTION = gaussian

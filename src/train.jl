@@ -1,6 +1,7 @@
 module AI
 
-using PyCall, Flux, PyPlot, BSON, ProgressMeter, CUDA, Statistics, Random
+using PyCall, Flux, PyPlot, BSON, ProgressMeter, CUDA, Statistics
+pygui(true)
 using CUDA: CuIterator
 np = pyimport("numpy")
 using Flux: crossentropy, train!, onecold
@@ -30,7 +31,9 @@ function get_data_length(data_info)
         for file in readdir(classification[1])
             path = classification[1] * file
             if ignore_file(path) == false
-                d = mapslices(rotr90, get_data(path), dims=[1, 3])
+                d = mapslices(rotr90, get_data(path), dims=[1, 2])
+                d = mapslices(rotr90, d, dims=[2, 3])
+                # d = mapslices(rotr90, d, dims=[1, 3])
                 samples += size(d)[3]
             end
         end
@@ -49,8 +52,9 @@ function set_all_data()
         for file in readdir(classification[1])
             path = classification[1] * file
             if ignore_file(path) == false
-
-                d = mapslices(rotr90, get_data(path), dims=[1, 3])
+                d = mapslices(rotr90, get_data(path), dims=[1, 2])
+                d = mapslices(rotr90, d, dims=[2, 3])
+                # d = mapslices(rotr90, d, dims=[1, 3])
                 d = clip_scale(d)
                 i[2] += size(d)[3]
                 X_traindata[:, 1, :, i[1]:i[2]] = d
@@ -67,7 +71,8 @@ function set_all_data()
         for file in readdir(classification[1])
             path = classification[1] * file
             if ignore_file(path) == false
-                d = mapslices(rotr90, get_data(path), dims=[1, 3])
+                d = mapslices(rotr90, get_data(path), dims=[1, 2])
+                d = mapslices(rotr90, d, dims=[2, 3])
                 d = clip_scale(d)
                 i[2] += size(d)[3]
                 X_testdata[:, 1, :, i[1]:i[2]] = d
@@ -83,9 +88,9 @@ function init_data()
     global num_samples_test = get_data_length(TEST_DATA)
 
     # Pre-initialise arrays to improve performance
-    global X_traindata = Array{Float32}(undef, MAX_FREQUENCY, 1, NUM_CHANNELS, num_samples_train)
+    global X_traindata = Array{Float32}(undef, NUM_CHANNELS, 1, MAX_FREQUENCY, num_samples_train)
     global Y_traindata = Array{Float32}(undef, num_outputs, num_samples_train)
-    global X_testdata = Array{Float32}(undef, MAX_FREQUENCY, 1, NUM_CHANNELS, num_samples_test)
+    global X_testdata = Array{Float32}(undef, NUM_CHANNELS, 1, MAX_FREQUENCY, num_samples_test)
     global Y_testdata = Array{Float32}(undef, num_outputs, num_samples_test)
 
     set_all_data()
@@ -119,7 +124,7 @@ function loss_accuracy(data_loader::Flux.Data.DataLoader, name::String)
     accurate = 0
     l = Float32(0)
     i = 0
-    # 
+
     @showprogress 2 "    Calculating $(name) performance..." for (x, y) in (data_loader)
         global x_i = x
         global y_i = y
@@ -272,7 +277,7 @@ function init_model()
         global test_loss_history = []
         global train_accuracy_history = []
         global test_accuracy_history = []
-        # advance_history()
+        advance_history()
     end
     global ps = Flux.params(model)
 end
@@ -290,7 +295,99 @@ function init_cuda()
     end
 end
 
+function device!(args...)
+    for arg in args
+        device(arg)
+    end
+end
+
+function cpu!(args...)
+    for arg in args
+        cpu(arg)
+    end
+end
+
+function add_dim(data)
+    s = size(data)
+    return reshape(data, (:, 1, :, :))
+end
+
+function determine_sizes(sample, model)
+    # TODO: generalize
+    s = size(sample)
+    if length(s) == 3
+        # Add dimension (60, 1, 16) -> ()
+        sample = add_dim(sample)
+    end
+    activation_sizes = []
+    activations = sample
+    # Move sample and model to gpu if activated
+    # activations = device(sample)
+    # model = device(model)
+    for layer in model
+        activations = layer(activations)
+        push!(activation_sizes, size(activations))
+    end
+    return activation_sizes
+end
+
+function get_activations2()
+    global model, train_data, test_data
+    testmode!(model)
+    # Move to cpu
+    # cpu!(train_data, test_data, model)
+    train_data, test_data, model = cpu.([train_data, test_data, model])
+    # TODO: generalize
+    sample = train_data.data[1][:, :, :, 1:1]
+    activation_sizes = determine_sizes(sample, model)
+
+    # Init arrays
+    train_activations = Array{Array{Float32}}(undef, length(activation_sizes))
+    test_activations = Array{Array{Float32}}(undef, length(activation_sizes))
+    for (i, layer_size) in enumerate(activation_sizes)
+        train_activations[i] = zeros(Float32, layer_size...)
+        test_activations[i] = zeros(Float32, layer_size...)
+        # train_activations[i] = Array{Float32, length(layer_size)}(undef, layer_size...)
+        # test_activations[i] = Array{Float32, length(layer_size)}(undef, layer_size...)
+    end
+
+    # Move to device
+    # device!(train_data, test_data, model)
+    model, train_activations, test_activations = device.([model, train_activations, test_activations])
+
+    # Add activations of train data samples
+    num_train = size(train_data.data[1])[end]
+    @showprogress "Train data..." for (activations, _) in train_data
+        activations = device(activations)
+        for (layer_i, layer) in enumerate(model.layers)
+            layer = device(layer)
+            activations = layer(activations)
+            # TODO: generalize
+            activations = sum(activations, dims=4)
+            train_activations[layer_i] .+= activations
+        end
+    end
+    train_activations ./= num_train
+
+    # Add activations of test data samples
+    num_test = size(test_data.data[1])[end]
+    @showprogress "Test data..." for (activations, _) in test_data
+        activations = device(activations)
+        for (layer_i, layer) in enumerate(model.layers)
+            layer = device(layer)
+            activations = layer(activations)
+            # TODO: generalize
+            activations = sum(activations, dims=4)
+            test_activations[layer_i] .+= activations
+        end
+    end
+    test_activations ./= num_test
+
+    return train_activations, test_activations
+end
+
 function get_activations()
+    testmode!(model)
     global test_activations = []
     global train_activations = []
 
@@ -350,14 +447,16 @@ function get_activations()
         push!(train_means, train_mean)
         # push!(train_stds, train_std)
     end
+    trainmode!(model)
 end
 
 function remove(layer::Flux.Conv, i, dim)
     c = i
+    weights = layer.weight
     if dim == 4
-        new_weights = cat(weights[:, :, :, 1:c-1],weights[:, :, :, c+1:end], dims=4)
+        new_weights = cat(weights[:, :, :, 1:c-1], weights[:, :, :, c+1:end], dims=4)
     else
-        new_weights = cat(weights[:, :, 1:c-1, :],weights[:, :, c+1:end, :], dims=3)
+        new_weights = cat(weights[:, :, 1:c-1, :], weights[:, :, c+1:end, :], dims=3)
     end
     h, w, d, n = size(new_weights)
     new_l = Conv((h, w), d => n, relu)
@@ -367,7 +466,6 @@ end
 
 function remove_next(layer::Flux.Dense, i)
     weights = layer.weight
-
     h, w = size(new_weights)
     new_l = Dense(w, h, tanh)
     new_l.weight .= new_weights
@@ -382,6 +480,7 @@ function remove(layer::Flux.Dense, i, dim)
         new_weights = cat(weights[:, 1:i-1], weights[:, i+1:end], dims=2)
     end
     h, w = size(new_weights)
+    println("Dense: new h $h, new w $w")
     new_l = Dense(w, h, tanh)
     new_l.weight .= new_weights
     return new_l
@@ -397,6 +496,7 @@ end
 
 function adjust_network!()
     global model
+    model = model |> cpu
     global layers
     diffs = train_means - test_means
     diffs = [abs.(i) for i in diffs]
@@ -406,19 +506,29 @@ function adjust_network!()
     for i in w_layers
         i2 = argmax(diffs[i])[1]
         l = layers[i]
-        if typeof(l) == Flux.Dense
+        if typeof(l) <: Flux.Dense
+            println("Reducing dense...")
             layers[i] = remove(l, i2, 1)
-            layers[i+1] = remove(layers[i+1], i2, 2)
-        elseif typeof(l) == Flux.Conv
-            layers[i] = remove(l, i2, 3)
-            layers[i+1] = remove(layers[i+1], i2, 4)
+            i3 = i + 1
+            while !(typeof(layers[i3]) <: Flux.Dense)
+                i3 += 1
+            end
+            layers[i3] = remove(layers[i3], i2, 4)
+        elseif typeof(l) <: Flux.Conv
+            println("Reducing Conv...")
+            layers[i] = remove(l, i2, 4)
+            i3 = i + 1
+            while !(typeof(layers[i3]) <: Flux.Conv)
+                i3 += 1
+            end
+            layers[i3] = remove(layers[i3], i2, 3)
         end
         i2_2 = i2
 
-        
+
     end
     #layers[end] = remove_next(layers[end], i2_2)
-    model = new_chain(layers)
+    model = new_chain(layers) |> device
 end
 
 # DATA
@@ -451,33 +561,57 @@ init_cuda()
 init_plot()
 init_model()
 
-#=
+
 sqnorm(x) = sum(abs2, x)
 loss(x, y) = LOSS(model(x), y) # + 0.1 * sum(sqnorm, Flux.params(model)) # L2 weight regularisation
-advance_history()
-try
-    for epoch = 1:EPOCHS
 
+activation_differences = device(Array{Array{Float32},1}(undef, 0))
+@info "Getting activations..."
+train_act, test_act = get_activations2()
+diff_act = [abs.(layer) for layer in (train_act - test_act)]
+push!(activation_differences, diff_act)
+@info "Got 'em!"
 
-        @showprogress "Epoch $(x_history[end]+1)..." for (x, y) in train_data
-            x, y = noise(x |> device), y |> device
-            gs = Flux.gradient(() -> loss(x, y), ps) # compute gradient
-            Flux.Optimise.update!(opt, ps, gs) # update parameters
-        end
-
-        #if train_loss_history[end] < test_loss_history[end]
-        #    @info "Adjusting Network"
-        #    get_activations()
-        #    adjust_network!()
-        #end
-        advance_history()
-    end
-finally
-    save_model()
+function change_rate!(learning_rate)
+    global opt
+    opt = OPTIMIZER(learning_rate)
 end
-# train_data = train_data |> device
-=#
 
+function reload!()
+    # TODO
+end
 
+# function main()
+#     try
+        # global model, opt, ps
+        model = device(model)
+        for epoch = 1:EPOCHS
+            # if (train_accuracy_history[end] !== nothing) && (train_accuracy_history[end] > test_accuracy_history[end] + 0.1)
+            #     println("$(train_accuracy_history[end])% train accuracy, $(test_accuracy_history[end])% test accuracy")
+            #     @info "Adjusting Network"
+            #     push!(activation_differences, get_activations())
+            #     # adjust_network!()
+            # end
+            trainmode!(model)
+            @showprogress "Epoch $(x_history[end]+1)..." for (x, y) in train_data
+                x, y = noise(x |> device), y |> device
+                gs = Flux.gradient(() -> loss(x, y), ps) # compute gradient
+                Flux.Optimise.update!(opt, ps, gs) # update parameters
+            end
+            advance_history()
+            if mod(epoch, 5) == 0
+                @info "Getting activations..."
+                train_act, test_act = get_activations2()
+                diff_act = [abs.(layer) for layer in (train_act - test_act)]
+                push!(activation_differences, diff_act)
+                @info "Got 'em!"
+            end
+        end
+#     finally
+#         save_model()
+#     end
+# end
+
+println("Everything set up!")
 
 end #module
