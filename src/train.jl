@@ -581,6 +581,13 @@ function reload!()
     # TODO
 end
 
+# function train!(model)
+    
+# end
+
+parameters = []
+gradients = []
+push!(parameters, deepcopy(ps))
 # function main()
 #     try
         # global model, opt, ps
@@ -595,9 +602,12 @@ end
             trainmode!(model)
             @showprogress "Epoch $(x_history[end]+1)..." for (x, y) in train_data
                 x, y = noise(x |> device), y |> device
-                gs = Flux.gradient(() -> loss(x, y), ps) # compute gradient
+                global gs = Flux.gradient(() -> loss(x, y), ps) # compute gradient
+                # Not working!!!
                 Flux.Optimise.update!(opt, ps, gs) # update parameters
             end
+            push!(parameters, deepcopy(ps))
+            push!(gradients, deepcopy(gs))
             advance_history()
             if mod(epoch, 5) == 0
                 @info "Getting activations..."
