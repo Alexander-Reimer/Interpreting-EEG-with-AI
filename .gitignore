@@ -1,4 +1,5 @@
 # config.jl
+src/model-logging/*
 documentation
 *.bson
 .vscode
