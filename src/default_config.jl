@@ -18,6 +18,7 @@ TEST_DATA = [
     (path_prefix * "directions/validation_data/right/", [0.0, 0.0, 1.0])
 ] # (folder with files, desired outputs for each case)
 
+SHUFFLE = true
 
 # |----------------------------------------|
 # | ARGUMENTS TRAINING                     |
@@ -46,7 +47,9 @@ MODEL() = Chain(
 )
 
 LOAD_PATH = ""
-SAVE_PATH = "saved_models/mymodel.bson"
+SAVE_PATH = ""
+MODEL_NAME = "*" # all stars get replaced by current date + time
+
 # |----------------------------------------|
 # | ARGUMENTS HISTORY                      |
 # |----------------------------------------|

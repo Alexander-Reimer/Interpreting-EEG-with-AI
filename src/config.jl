@@ -1,16 +1,21 @@
+module Config
+using Flux
+include("default_config.jl") # Load default configuration, to be overwritten
+
 # LOAD_PATH = "saved_models/amodel5.bson"
-SAVE_PATH = "saved_models/amodel5.bson"
-EPOCHS = 20
+SAVE_PATH = ""
+MODEL_NAME = "conv_sentdex_*"
+EPOCHS = 25
 LEARNING_RATE = 0.001
 # USE_CUDA = true
-PLOT = (true, 5)
-HISTORY_TRAIN = (true, 5)
-HISTORY_TEST = (true, 5)
+PLOT = (true, 1)
+HISTORY_TRAIN = (true, 1)
+HISTORY_TEST = (true, 1)
 # LOSS_ACCURACY_PORTION = 1.0
 # LEARNING_RATE = 0.001
 
 BATCH_SIZE = 512
-
+#= 
 MODEL() = Chain(
     Conv((3,1), 60 => 64, relu),
     Conv((2,1), 64 => 128, relu),
@@ -22,7 +27,7 @@ MODEL() = Chain(
     Dense(512, 256),
     Dense(256, 128),
     Dense(128, 3)
-    )
+    ) =#
 
 # MODEL() = Chain(
 #     Conv((5, 1), 16 => 64, relu),
@@ -95,12 +100,13 @@ w_layers = [] =#
 )
 w_layers = [1, 7] =#
 
-#= MODEL() = Chain(
-    Conv((5,1), 16 => 64, pad = SamePad(), relu),
+MODEL() = Chain(
+    Conv((5,1), 60 => 64, pad = SamePad(), relu),
     Conv((5,1), 64 => 128, pad = SamePad(), relu),
     Conv((5,1), 128 => 256, pad = SamePad(), relu),
     Conv((5,1), 256 => 512, pad = SamePad(), relu),
     Conv((16,1), 512 => 3),
-    Flux.flatten,
-    softmax
-) =#
+    Flux.flatten#,
+    # softmax
+)
+end

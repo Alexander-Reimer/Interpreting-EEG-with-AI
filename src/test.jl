@@ -1,10 +1,13 @@
-function myprint3(arg)
-    println(typeof(arg))
-    println(arg)    
-end
+include("BCI.jl")
+# using .BCI
 
-function myprint3(args...)
-    for arg in args
-        myprint3(arg)
-    end
-end
+include("config.jl")
+conf = Config
+
+data = BCI.get_data(conf)
+# model = BCI.load_model("model-logging/conv_sentdex_2022-10-08_11:43:28/")
+model = BCI.new_model(conf)
+
+BCI.train!(model, data)
+
+# BCI.train!(model2, data)
