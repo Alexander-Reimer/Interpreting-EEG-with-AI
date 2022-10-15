@@ -16,7 +16,7 @@ end
 """
 Create ModelParams instance using given configuration file.
 """
-function create_params(config::Module)::ModelParams
+function create_params(config)::ModelParams
     params = ModelParams(
         config,
         config.MODEL_NAME,
@@ -79,7 +79,7 @@ function get_device(params::ModelParams)::Function
 end
 
 function get_time_str()::String
-    return Dates.format(now(), "YYYY-mm-dd_HH:MM:SS")
+    return Dates.format(now(), "YYYY-mm-dd_HH-MM-SS")
 end
 
 function give_zero(model, x)
@@ -96,7 +96,7 @@ end
 """
 Create new, independent model using given configuration.
 """
-function new_model(config::Module)::EEGModel
+function new_model(config)::EEGModel
     loss = config.LOSS
     params = create_params(config)
     
@@ -129,8 +129,7 @@ function save_model(model::EEGModel, path::String="")
     bson(path, model=model)
     model.model = model.device(model.model)
 end
-
-function save_model(model::EEGModel, config::Module)
+function save_model(model::EEGModel, config)
     save_model(model, config.SAVE_PATH)
 end
 
@@ -164,8 +163,7 @@ function load_model(path::String)::EEGModel
     end
     return model
 end
-
-function load_model(config::Module)
+function load_model(config)
     return load_model(config.LOAD_PATH)
 end
 
@@ -332,6 +330,7 @@ function train_epoch!(model::EEGModel, data::Data, log=true, save=true)
     # ps = Params(ps)
     # "Epoch $(model.epochs_done + 1): " 5 
     @showprogress "Epoch $(model.epochs_done + 1): " for (x, y) in data.train_data
+        
         trainmode!(model.model)
         x = model.noise(model, model.device(x))
         y = model.device(y)
