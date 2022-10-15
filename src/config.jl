@@ -1,20 +1,40 @@
 module Config
 using Flux
 include("default_config.jl") # Load default configuration, to be overwritten
+init_config()
+#=
+mutable struct Config_struct
+    # LOAD_PATH = "saved_models/amodel5.bson"
+    SAVE_PATH :: String
+    MODEL_NAME :: String 
+    EPOCHS :: Int
+    LEARNING_RATE :: Float64
+    # USE_CUDA = true
+    PLOT :: Tuple
+    HISTORY_TRAIN :: Tuple
+    HISTORY_TEST :: Tuple
+    # LOSS_ACCURACY_PORTION = 1.0
+    # LEARNING_RATE = 0.001
 
-# LOAD_PATH = "saved_models/amodel5.bson"
-SAVE_PATH = ""
-MODEL_NAME = "conv_sentdex_*"
-EPOCHS = 25
-LEARNING_RATE = 0.001
-# USE_CUDA = true
-PLOT = (true, 1)
-HISTORY_TRAIN = (true, 1)
-HISTORY_TEST = (true, 1)
-# LOSS_ACCURACY_PORTION = 1.0
-# LEARNING_RATE = 0.001
+    BATCH_SIZE :: Int
 
-BATCH_SIZE = 512
+
+    MODEL :: Chain
+end
+=#
+#=
+function init_config()
+    return Config_struct("", "conv_sentdex_*", 25, 0.001, (true, 1), (true, 1), (true, 1), 512, Chain(
+        Conv((5,1), 60 => 64, pad = SamePad(), relu),
+        Conv((5,1), 64 => 128, pad = SamePad(), relu),
+        Conv((5,1), 128 => 256, pad = SamePad(), relu),
+        Conv((5,1), 256 => 512, pad = SamePad(), relu),
+        Conv((16,1), 512 => 3),
+        Flux.flatten#,
+        # softmax
+    ))
+end
+=#
 #= 
 MODEL() = Chain(
     Conv((3,1), 60 => 64, relu),
@@ -99,14 +119,4 @@ w_layers = [] =#
     Dense(16, 3)
 )
 w_layers = [1, 7] =#
-
-MODEL() = Chain(
-    Conv((5,1), 60 => 64, pad = SamePad(), relu),
-    Conv((5,1), 64 => 128, pad = SamePad(), relu),
-    Conv((5,1), 128 => 256, pad = SamePad(), relu),
-    Conv((5,1), 256 => 512, pad = SamePad(), relu),
-    Conv((16,1), 512 => 3),
-    Flux.flatten#,
-    # softmax
-)
 end

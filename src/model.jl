@@ -2,8 +2,8 @@ using Flux, CUDA, ProgressMeter, TensorBoardLogger, Dates, BSON
 using Flux.Zygote
 
 mutable struct ModelParams
-    config_module::Module
-    network_builder::Function
+    config_module
+    network_builder::Chain
     η::Float32
     opt_type::DataType
     epochs::Int
@@ -15,7 +15,7 @@ end
 """
 Create ModelParams instance using given configuration file.
 """
-function create_params(config::Module)::ModelParams
+function create_params(config)::ModelParams
     params = ModelParams(
         config,
         config.MODEL,
@@ -74,15 +74,15 @@ function get_device(params::ModelParams)::Function
 end
 
 function get_time_str()::String
-    return Dates.format(now(), "YYYY-mm-dd_HH:MM:SS")
+    return Dates.format(now(), "YYYY-mm-dd_HH-MM-SS")
 end
 
 """
 Create new, independent model using given configuration.
 """
-function new_model(config::Module)
+function new_model(config)
     params = create_params(config)
-    net = params.network_builder()
+    net = params.network_builder
     epochs_done = 0
     dev = get_device(params)
     loss = config.LOSS
@@ -91,7 +91,7 @@ function new_model(config::Module)
     time_string = get_time_str()
     name = replace(name, "*" => time_string)
     logger = TBLogger("model-logging/$name", tb_append, prefix=time_string)
-    return EEGModel(params.network_builder(), params, loss, opt, dev, 0, params.epochs, logger, name, [], [], [], [])
+    return EEGModel(params.network_builder, params, loss, opt, dev, 0, params.epochs, logger, name, [], [], [], [])
 end
 
 """
@@ -103,7 +103,7 @@ function save_model(model::EEGModel, path::String="")
     bson(path, model=model)
     model.model = model.device(model.model)
 end
-function save_model(model::EEGModel, config::Module)
+function save_model(model::EEGModel, config)
     save_model(model, config.SAVE_PATH)
 end
 
@@ -137,7 +137,7 @@ function load_model(path::String)::EEGModel
     end
     return model
 end
-function load_model(config::Module)
+function load_model(config)
     return load_model(config.LOAD_PATH)
 end
 
