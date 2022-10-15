@@ -70,8 +70,9 @@ function get_voltage(board::MCP3208, channel::Int)
         tx_buf = [0x01, 0x80, 0x00]
         rx_buf = zeros(UInt8, 3)
         ret = spi_transfer!(1, tx_buf, rx_buf)
+        return (ret * 5) / flo
     else
-        return randn() * 10
+        return (randn() - 0.5) * 10
     end
 end
 

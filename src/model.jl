@@ -3,6 +3,7 @@ using Flux.Zygote
 
 mutable struct ModelParams
     config_module::Module
+    name::String
     network_builder::Function
     η::Float32
     opt_type::DataType
@@ -18,6 +19,7 @@ Create ModelParams instance using given configuration file.
 function create_params(config::Module)::ModelParams
     params = ModelParams(
         config,
+        config.MODEL_NAME,
         config.MODEL,
         config.LEARNING_RATE,
         config.OPTIMIZER,
@@ -37,13 +39,13 @@ mutable struct EEGModel
     params::ModelParams
     loss::Function
     noise::Function
- #   l2::Function
+    #   l2::Function
     opt
     device::Function
     epochs_done::Int
     epochs_goal::Int
     logger
-    name::String
+    logger_name::String
     train_loss_history::Array{Float32,1}
     test_loss_history::Array{Float32,1}
     train_acc_history::Array{Float32,1}
@@ -81,25 +83,31 @@ function get_time_str()::String
 end
 
 function give_zero(model, x)
-    return 0.0
+    return x
 end
+
+function new_logger(params::ModelParams)
+    time_string = get_time_str()
+    logger_name = replace(params.name, "*" => time_string)
+    logger = TBLogger("model-logging/$name", tb_overwrite, prefix=time_string)
+    return logger_name, logger
+end
+
 """
 Create new, independent model using given configuration.
 """
-function new_model(config::Module)
-    params = create_params(config)
-    net = params.network_builder()
-    epochs_done = 0
-    dev = get_device(params)
+function new_model(config::Module)::EEGModel
     loss = config.LOSS
+    params = create_params(config)
+    
     opt = params.opt_type(config.LEARNING_RATE)
-    name = config.MODEL_NAME
-    time_string = get_time_str()
-    name = replace(name, "*" => time_string)
-    logger = TBLogger("model-logging/$name", tb_overwrite, prefix=time_string)
+    net = params.network_builder()
+    logger_name, logger = new_logger(params)
+    dev = get_device(params)
+
     if config.NOISE
         noise_function = config.NOISE_FUNCTION
-    else config.NOISE
+    else
         noise_function = give_zero
     end
     # if config.L2
@@ -108,7 +116,8 @@ function new_model(config::Module)
     #     l2 = (model) -> return 0.0
     # end
 
-    return EEGModel(params.network_builder(), params, loss, noise_function, opt, dev, 0, params.epochs, logger, name, [], [], [], [])
+    return EEGModel(net, params, loss, noise_function, opt,
+        dev, 0, params.epochs, logger, logger_name, [], [], [], [])
 end
 
 """
@@ -120,13 +129,14 @@ function save_model(model::EEGModel, path::String="")
     bson(path, model=model)
     model.model = model.device(model.model)
 end
+
 function save_model(model::EEGModel, config::Module)
     save_model(model, config.SAVE_PATH)
 end
 
 function get_most_recent(dir_path)
     files = []
-    for file in readdir(dir_path) 
+    for file in readdir(dir_path)
         if file[end-4:end] == ".bson"
             push!(files, file)
         end
@@ -161,8 +171,8 @@ end
 
 function fill_param_dict!(dict, m, prefix::String)
     fields2ignore = [:dilation, :groups, :pad, :stride, # Conv layers
-    :k, # MaxPool
-    :p, # Dropout
+        :k, # MaxPool
+        :p, # Dropout
     ]
     if m isa Chain
         for (i, layer) in enumerate(m.layers)
@@ -215,6 +225,65 @@ function loss_accuracy(model::EEGModel, data_loader::Flux.Data.DataLoader, name:
     return (loss=l / total, accuracy=accurate / total)
 end
 
+function act_dims(model::EEGModel, data::Data)
+    # TODO: generalize
+    activations = data.test_data.data[1][:, :, :, 1:1]
+    dims = size(activations)
+    activation_sizes = []
+    # Move sample and model to gpu if activated
+    activations = device(sample)
+    model = device(model)
+    # Move activations through each layer,
+    # logging dimensions after each layer
+    for layer in model.model
+        activations = layer(activations)
+        push!(activation_sizes, size(activations))
+    end
+
+    return act_dims
+end
+
+# Add activations of all data samples
+function set_activations!(model::EEGModel, activations::Array, data::Flux.Data.DataLoader)
+    num_samples = size(data.data[1])[end]
+    for (activations, _) in data
+        activations = model.device(activations)
+        for (layer_i, layer) in enumerate(model.model.layers)
+            layer = device(layer)
+            activations = layer(activations)
+            batch_dim = ndims(activations) # determine last dimension (batch)
+            activations = sum(activations, dims=batch_dim) # calculate sum over all batches
+            activations[layer_i] .+= activations # add this sum
+        end
+    end
+    activations ./= num_samples # calculate average
+end
+
+"""
+Return the average activations of each layer of the model.
+
+Divided into activations with train and with test data.
+"""
+function get_avg_activations(model::EEGModel, data::Data)::(Array, Array)
+    testmode!(model.model)
+    act_dims = act_dims(model, data)
+
+    # Init arrays
+    train_activations = Array{Array{Float32}}(undef, length(act_dims))
+    test_activations = Array{Array{Float32}}(undef, length(act_dims))
+    for (i, layer_size) in enumerate(act_dims)
+        train_activations[i] = zeros(Float32, layer_size...)
+        test_activations[i] = zeros(Float32, layer_size...)
+    end
+
+    # model, train_activations, test_activations = device.([model, train_activations, test_activations])
+
+    set_activations!(model, train_activations, data.train_data)
+    set_activations!(model, test_activations, data.test_data)
+
+    return train_activations, test_activations
+end
+
 """
 Callback function to be executed for logging purposes
 """
@@ -229,9 +298,9 @@ function logging_cb(model::EEGModel, data::Data)
     push!(model.test_acc_history, test_acc)
 
     Base.with_logger(model.logger) do
-        @info "model" params=param_dict log_step_increment=0
-        @info "train" loss=train_loss acc=train_acc log_step_increment=0
-        @info "test" loss=test_loss acc=test_acc
+        @info "model" params = param_dict log_step_increment = 0
+        @info "train" loss = train_loss acc = train_acc log_step_increment = 0
+        @info "test" loss = test_loss acc = test_acc
     end
 
     if test_acc > 0.6
@@ -253,11 +322,11 @@ throttled_save_cb = Flux.throttle(saving_cb, 20)
 """
 TODO
 """
-function train_epoch!(model::EEGModel, data::Data, log = true, save = true)
+function train_epoch!(model::EEGModel, data::Data, log=true, save=true)
     local train_loss::Float32
     local batch_losses::Array{Float32} = []
     local early_stop = Bool
-    
+
     ps = Flux.params(model.model)
     model.model = model.device(model.model)
     # ps = Params(ps)
@@ -305,7 +374,7 @@ function train!(model::EEGModel, data::Data)
     catch e
         if typeof(e) == InterruptException
             @info "Noooo I was interrupted!"
-            saving_cb(model);
+            saving_cb(model)
             # Additional handling... ?
         else
             throw(e)
