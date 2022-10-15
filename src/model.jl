@@ -36,6 +36,8 @@ mutable struct EEGModel
     model::Flux.Chain
     params::ModelParams
     loss::Function
+    noise::Function
+ #   l2::Function
     opt
     device::Function
     epochs_done::Int
@@ -48,13 +50,14 @@ mutable struct EEGModel
     test_acc_history::Array{Float32,1}
 end
 
+sqnorm(x) = sum(abs2, x)
 """
 Calculate loss.
 
 This function is for training, for logging purposes loss_accuracy is recommended as it barely takes more performance.
 """
 function loss(model::EEGModel, x, y)
-    return model.loss(model.model(x), y)
+    return (model.loss(model.model(x), y)) # + model.l2(model))
 end
 
 """
@@ -77,6 +80,9 @@ function get_time_str()::String
     return Dates.format(now(), "YYYY-mm-dd_HH-MM-SS")
 end
 
+function give_zero(model, x)
+    return x
+end
 """
 Create new, independent model using given configuration.
 """
@@ -90,8 +96,19 @@ function new_model(config)
     name = config.MODEL_NAME
     time_string = get_time_str()
     name = replace(name, "*" => time_string)
-    logger = TBLogger("model-logging/$name", tb_append, prefix=time_string)
-    return EEGModel(params.network_builder, params, loss, opt, dev, 0, params.epochs, logger, name, [], [], [], [])
+    logger = TBLogger("model-logging/$name", tb_overwrite, prefix=time_string)
+    if config.NOISE
+        noise_function = config.NOISE_FUNCTION
+    else config.NOISE
+        noise_function = give_zero
+    end
+    # if config.L2
+    #     l2 = (model) -> return 0.0001 * sum(sqnorm, Flux.params(model.model))
+    # else
+    #     l2 = (model) -> return 0.0
+    # end
+
+    return EEGModel(params.network_builder, params, loss, noise_function, opt, dev, 0, params.epochs, logger, name, [], [], [], [])
 end
 
 """
@@ -245,8 +262,10 @@ function train_epoch!(model::EEGModel, data::Data, log = true, save = true)
     # ps = Params(ps)
     # "Epoch $(model.epochs_done + 1): " 5 
     @showprogress "Epoch $(model.epochs_done + 1): " for (x, y) in data.train_data
+        
         trainmode!(model.model)
-        x, y = model.device(x), model.device(y)
+        x = model.noise(model, model.device(x))
+        y = model.device(y)
         # back is a method that computes the product of the gradient so far with its argument.
         train_loss, back = Zygote.pullback(() -> loss(model, x, y), ps)
         push!(batch_losses, train_loss)

@@ -7,4 +7,7 @@ include("load_data.jl")
 # creating & managing model
 include("model.jl")
 
+# # 
+# include("model.jl")
+
 end

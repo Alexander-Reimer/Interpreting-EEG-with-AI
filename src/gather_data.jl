@@ -12,7 +12,7 @@ Plt.pygui(true)
 ONLINE = false
 
 VIEW_WINDOW = 2000 # Show last 2000 ms in plot
-PLOT_RES = 50
+PLOT_RES = 1
 PLOT_FREQ = 1
 
 if ONLINE
@@ -205,12 +205,12 @@ reset_data!(device)
 
 function main()
     for i = 1:10^9
-        # for i = 1:PLOT_FREQ
+        for i = 1:PLOT_FREQ
             update_data!(device)
-        # end
-        # update_plot!(plot)
-        # sleep(0.001)
-        # sleep(0)
+        end
+        update_plot!(plot)
+        sleep(0.001)
+        sleep(0)
     end
 end
 
