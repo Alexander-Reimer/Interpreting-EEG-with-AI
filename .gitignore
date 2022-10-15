@@ -1,4 +1,5 @@
 # config.jl
+my-*
 src/model-logging/*
 documentation
 *.bson

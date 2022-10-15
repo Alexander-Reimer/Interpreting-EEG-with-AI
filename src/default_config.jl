@@ -61,10 +61,11 @@ LOSS_ACCURACY_PORTION = 1.0 # 0.1: 10% of batches gets randomly selected to test
 HISTORY_TRAIN = (true, 5)
 HISTORY_TEST = (true, 5)
 
-function gaussian(x)
+function gaussian(model, x)
     # Function for gaussian random noise, from https://fluxml.ai/tutorials/2021/02/07/convnet.html
-    return x .+ device(0.25f0 * randn(eltype(x), size(x)))
+    return x .+ model.device(0.25f0 * randn(eltype(x), size(x)))
 end
 
 NOISE = false
 NOISE_FUNCTION = gaussian
+L2 = false
