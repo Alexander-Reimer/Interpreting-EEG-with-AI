@@ -2,14 +2,13 @@ using Flux, CUDA, ProgressMeter, TensorBoardLogger, Dates, BSON
 using Flux.Zygote
 
 mutable struct ModelParams
-    config_module::Module
+    config
     name::String
-    network_builder::Function
+    # network_builder::Function
     η::Float32
     opt_type::DataType
     epochs::Int
     cuda::Bool
-    save_path::String
     loss_accuracy_portion::Float32
 end
 
@@ -20,12 +19,11 @@ function create_params(config)::ModelParams
     params = ModelParams(
         config,
         config.MODEL_NAME,
-        config.MODEL,
+        # config.MODEL,
         config.LEARNING_RATE,
         config.OPTIMIZER,
         config.EPOCHS,
         config.USE_CUDA,
-        config.SAVE_PATH,
         config.LOSS_ACCURACY_PORTION
     )
     return params
@@ -89,7 +87,7 @@ end
 function new_logger(params::ModelParams)
     time_string = get_time_str()
     logger_name = replace(params.name, "*" => time_string)
-    logger = TBLogger("model-logging/$name", tb_overwrite, prefix=time_string)
+    logger = TBLogger("model-logging/$(logger_name)", tb_overwrite, prefix=time_string)
     return logger_name, logger
 end
 
@@ -101,7 +99,7 @@ function new_model(config)::EEGModel
     params = create_params(config)
     
     opt = params.opt_type(config.LEARNING_RATE)
-    net = params.network_builder()
+    net = config.MODEL #params.network_builder()
     logger_name, logger = new_logger(params)
     dev = get_device(params)
 
@@ -125,12 +123,9 @@ Save given model at given path. If path is empty, generate automatically.
 """
 function save_model(model::EEGModel, path::String="")
     model.model = cpu(model.model)
-    path = isempty(path) ? "model-logging/$(model.name)/model.bson" : path
+    path = isempty(path) ? "model-logging/$(model.logger_name)/model.bson" : path
     bson(path, model=model)
     model.model = model.device(model.model)
-end
-function save_model(model::EEGModel, config)
-    save_model(model, config.SAVE_PATH)
 end
 
 function get_most_recent(dir_path)
@@ -309,7 +304,7 @@ function logging_cb(model::EEGModel, data::Data)
 end
 
 function saving_cb(model::EEGModel)
-    save_model(model, "model-logging/$(model.name)/model_$(get_time_str()).bson")
+    save_model(model, "model-logging/$(model.logger_name)/model_$(get_time_str()).bson")
 end
 
 "Only execute callback once every second."

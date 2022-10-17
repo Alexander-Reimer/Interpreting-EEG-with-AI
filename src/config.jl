@@ -1,7 +1,9 @@
-module Config
 using Flux
 include("default_config.jl") # Load default configuration, to be overwritten
-init_config()
+config = init_config()
+config.EPOCHS = 5
+config.MODEL_NAME = "test_*"
+
 #=
 mutable struct Config_struct
     # LOAD_PATH = "saved_models/amodel5.bson"
@@ -119,4 +121,3 @@ w_layers = [] =#
     Dense(16, 3)
 )
 w_layers = [1, 7] =#
-end

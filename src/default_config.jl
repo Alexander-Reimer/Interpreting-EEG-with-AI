@@ -1,23 +1,18 @@
-mutable struct Config_struct
+mutable struct ConfigStruct
     # |--------------------------------------------------------------------------|
     # | ARGUMENTS DATA                                                           |
     # |--------------------------------------------------------------------------|
-
     BATCH_SIZE :: Int # Size of mini-batches
     NUM_CHANNELS :: Int # Number of EEG channels
     MAX_FREQUENCY :: Int # Range of frequency produced by FFT (eg. here 1-60 Hz)
-
     path_prefix :: String
     TRAIN_DATA :: Array # (folder with files, desired outputs for each case)
     TEST_DATA :: Array # (folder with files, desired outputs for each case)
-
     SHUFFLE :: Bool
     CLIP :: Int
-
     # |----------------------------------------|
     # | ARGUMENTS TRAINING                     |
     # |----------------------------------------|
-
     EPOCHS :: Int
     USE_CUDA :: Bool
     OPTIMIZER :: DataType
@@ -25,24 +20,16 @@ mutable struct Config_struct
     LOSS :: Function
     # Define model structure
     MODEL :: Chain 
-
     LOAD_PATH :: String
-    SAVE_PATH :: String
     MODEL_NAME :: String # all stars get replaced by current date + time
-
     # |----------------------------------------|
     # | ARGUMENTS HISTORY                      |
     # |----------------------------------------|
-
     PLOT :: Tuple
-
     LOSS_ACCURACY_PORTION :: Float64  # 0.1: 10% of batches gets randomly selected to test loss and accuracy; 1.0: using all data
-
     HISTORY_TRAIN :: Tuple
     HISTORY_TEST :: Tuple
-
     NOISE_FUNCTION :: Function
-
     NOISE :: Bool
     #NOISE_FUNCTION :: Function 
 end
@@ -53,7 +40,7 @@ end
 
 function init_config()
     path_prefix = "../model_data/"
-    return Config_struct(256, 
+    return ConfigStruct(256, 
     16,
     60,
     "../model_data/", [
@@ -88,7 +75,6 @@ function init_config()
         Dense(16, 3),
         # softmax
     ), 
-    "", 
     "", 
     "*", 
     (true, 5), 
