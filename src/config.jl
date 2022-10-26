@@ -1,8 +1,18 @@
 using Flux
 include("default_config.jl") # Load default configuration, to be overwritten
 config = init_config()
-config.EPOCHS = 5
+config.EPOCHS = 0
 config.MODEL_NAME = "test_*"
+config.BATCH_SIZE = 128
+config.MODEL = Chain(
+        Conv((5,1), 60 => 64, pad = SamePad(), relu),
+        Conv((5,1), 64 => 128, pad = SamePad(), relu),
+        Conv((5,1), 128 => 256, pad = SamePad(), relu),
+        Conv((5,1), 256 => 512, pad = SamePad(), relu),
+        Conv((16,1), 512 => 3),
+        Flux.flatten,
+    )
+config.LEARNING_RATE = 0.0001
 
 #=
 mutable struct Config_struct
@@ -37,8 +47,8 @@ function init_config()
     ))
 end
 =#
-#= 
-MODEL() = Chain(
+
+#= config.MODEL = Chain(
     Conv((3,1), 60 => 64, relu),
     Conv((2,1), 64 => 128, relu),
     Conv((2,1), 128 => 128, relu),

@@ -31,7 +31,7 @@ mutable struct ConfigStruct
     HISTORY_TEST :: Tuple
     NOISE_FUNCTION :: Function
     NOISE :: Bool
-    #NOISE_FUNCTION :: Function 
+    PRUNE_GUARD :: Array
 end
 
 function gaussian(x)
@@ -82,5 +82,6 @@ function init_config()
     (true, 5), 
     (true, 5), 
     gaussian, 
-    false)
+    false,
+    [])
 end
