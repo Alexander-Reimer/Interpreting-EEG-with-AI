@@ -1,4 +1,6 @@
-config.jl
+# config.jl
+my-*
+src/model-logging/*
 documentation
 *.bson
 .vscode
