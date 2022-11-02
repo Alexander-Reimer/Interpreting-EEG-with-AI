@@ -1,66 +1,12 @@
-mutable struct ConfigStruct
-    # |--------------------------------------------------------------------------|
-    # | ARGUMENTS DATA                                                           |
-    # |--------------------------------------------------------------------------|
-    BATCH_SIZE :: Int # Size of mini-batches
-    NUM_CHANNELS :: Int # Number of EEG channels
-    MAX_FREQUENCY :: Int # Range of frequency produced by FFT (eg. here 1-60 Hz)
-    path_prefix :: String
-    TRAIN_DATA :: Array # (folder with files, desired outputs for each case)
-    TEST_DATA :: Array # (folder with files, desired outputs for each case)
-    SHUFFLE :: Bool
-    CLIP :: Int
-    # |----------------------------------------|
-    # | ARGUMENTS TRAINING                     |
-    # |----------------------------------------|
-    EPOCHS :: Int
-    USE_CUDA :: Bool
-    OPTIMIZER :: DataType
-    LEARNING_RATE :: Float64
-    LOSS :: Function
-    # Define model structure
-    MODEL :: Chain 
-    LOAD_PATH :: String
-    MODEL_NAME :: String # all stars get replaced by current date + time
-    # |----------------------------------------|
-    # | ARGUMENTS HISTORY                      |
-    # |----------------------------------------|
-    PLOT :: Tuple
-    LOSS_ACCURACY_PORTION :: Float64  # 0.1: 10% of batches gets randomly selected to test loss and accuracy; 1.0: using all data
-    HISTORY_TRAIN :: Tuple
-    HISTORY_TEST :: Tuple
-    NOISE_FUNCTION :: Function
-    NOISE :: Bool
-    PRUNE_GUARD :: Array
-end
-
-function gaussian(x)
-    return x .+ device(0.25f0 * randn(eltype(x), size(x)))
-end
-
-function init_config()
-    path_prefix = "../model_data/"
-    return ConfigStruct(256, 
-    16,
-    60,
-    "../model_data/", [
+function init_config(; BATCH_SIZE = 256, NUM_CHANNELS = 16, MAX_FREQUENCY = 60, path_prefix = "../model_data/", TRAIN_DATA = [
     (path_prefix * "directions/data/left/", [1.0, 0.0, 0.0]),
     (path_prefix * "directions/data/none/", [0.0, 1.0, 0.0]),
     (path_prefix * "directions/data/right/", [0.0, 0.0, 1.0])
-    ], 
-    [
+    ], TEST_DATA = [
         (path_prefix * "directions/validation_data/left/", [1.0, 0.0, 0.0]),
         (path_prefix * "directions/validation_data/none/", [0.0, 1.0, 0.0]),
         (path_prefix * "directions/validation_data/right/", [0.0, 0.0, 1.0])
-    ], 
-    true, 
-    20, 
-    1, 
-    true, 
-    ADAM, 
-    0.00001, 
-    Flux.logitcrossentropy, 
-    Chain(
+    ], SHUFFLE = true, CLIP = 20, EPOCHS = 1, USE_CUDA = true, OPTIMIZER = true, LEARNING_RATE = 0.00001, LOSS = Flux.logitcrossentropy, MODEL = Chain(
         Conv((3, 1), 60 => 64, relu),
         Dropout(0.2),
         MaxPool((2, 1)),
@@ -74,14 +20,29 @@ function init_config()
         Dense(64, 16, tanh),
         Dense(16, 3),
         # softmax
-    ), 
-    "", 
-    "*", 
-    (true, 5), 
-    1.0, 
-    (true, 5), 
-    (true, 5), 
-    gaussian, 
-    false,
-    [])
+    ), LOAD_PATH = "", SAVE_PATH = "", MODEL_NAME = "*", PLOT = (true, 5), LOSS_ACCURACY_PORTION = 1.0, HISTORY_TRAIN = (true, 5), HISTORY_TEST = (true, 5), NOISE_FUNCTION = gaussian, NOISE = false)
+
+    return Config_struct(BATCH_SIZE, 
+    NUM_CHANNELS,
+    MAX_FREQUENCY,
+    path_prefix, 
+    TRAIN_DATA, 
+    TEST_DATA, 
+    SHUFFLE, 
+    CLIP, 
+    EPOCHS, 
+    USE_CUDA, 
+    OPTIMIZER, 
+    LEARNING_RATE, 
+    LOSS, 
+    MODEL,
+    LOAD_PATH,
+    SAVE_PATH,
+    MODEL_NAME,
+    PLOT,
+    LOSS_ACCURACY_PORTION,
+    HISTORY_TRAIN,
+    HISTORY_TEST,
+    NOISE_FUNCTION,
+    NOISE)
 end
