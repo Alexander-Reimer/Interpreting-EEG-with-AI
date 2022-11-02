@@ -1,7 +1,7 @@
 using Flux
 include("default_config.jl") # Load default configuration, to be overwritten
 config = init_config()
-config.EPOCHS = 0
+#config.EPOCHS = 0
 config.MODEL_NAME = "test_*"
 config.BATCH_SIZE = 128
 config.MODEL = Chain(

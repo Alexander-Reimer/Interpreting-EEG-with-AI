@@ -60,7 +60,7 @@ function init_config(; BATCH_SIZE = 256, NUM_CHANNELS = 16, MAX_FREQUENCY = 60, 
         Dense(64, 16, tanh),
         Dense(16, 3),
         # softmax
-    ), LOAD_PATH = "", SAVE_PATH = "", MODEL_NAME = "*", PLOT = (true, 5), LOSS_ACCURACY_PORTION = 1.0, HISTORY_TRAIN = (true, 5), HISTORY_TEST = (true, 5), NOISE_FUNCTION = gaussian, NOISE = false)
+    ), LOAD_PATH = "", SAVE_PATH = "", MODEL_NAME = "*", PLOT = (true, 5), LOSS_ACCURACY_PORTION = 1.0, HISTORY_TRAIN = (true, 5), HISTORY_TEST = (true, 5), NOISE_FUNCTION = gaussian, NOISE = false, PRUNE_GUARD = [])
 
     return ConfigStruct(BATCH_SIZE, 
     NUM_CHANNELS,
@@ -83,5 +83,6 @@ function init_config(; BATCH_SIZE = 256, NUM_CHANNELS = 16, MAX_FREQUENCY = 60, 
     HISTORY_TRAIN,
     HISTORY_TEST,
     NOISE_FUNCTION,
-    NOISE)
+    NOISE,
+    PRUNE_GUARD)
 end
