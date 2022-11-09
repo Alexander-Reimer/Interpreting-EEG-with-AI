@@ -10,6 +10,7 @@ mutable struct ModelParams
     cuda::Bool
     loss_accuracy_portion::Float32
     prune_frq::Int
+    prune_amount::Int
 end
 
 """
@@ -25,7 +26,8 @@ function create_params(config)::ModelParams
         config.EPOCHS,
         config.USE_CUDA,
         config.LOSS_ACCURACY_PORTION,
-        config.PRUNE_FREQUENCY
+        config.PRUNE_FREQUENCY,
+        config.PRUNE_AMOUNT
     )
     return params
 end
@@ -279,7 +281,7 @@ function prune_cb!(model::EEGModel, data::Data)
 end
 
 "Only execute callback once every second."
-throttled_log_cb = Flux.throttle(logging_cb, 5)
+throttled_log_cb = Flux.throttle(logging_cb, 10)
 "Only execute callback once every second."
 throttled_save_cb = Flux.throttle(saving_cb, 20)
 

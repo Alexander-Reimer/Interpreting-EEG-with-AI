@@ -33,6 +33,7 @@ mutable struct ConfigStruct
     NOISE :: Bool
     PRUNE_GUARD :: Array
     PRUNE_FREQUENCY :: Int
+    PRUNE_AMOUNT :: Int
 end
 
 function gaussian(x)
@@ -62,7 +63,8 @@ function init_config(; BATCH_SIZE = 256, NUM_CHANNELS = 16, MAX_FREQUENCY = 60, 
         Dense(16, 3),
         # softmax
     ), LOAD_PATH = "", SAVE_PATH = "", MODEL_NAME = "*", PLOT = (true, 5), LOSS_ACCURACY_PORTION = 1.0, HISTORY_TRAIN = (true, 5), 
-    HISTORY_TEST = (true, 5), NOISE_FUNCTION = gaussian, NOISE = false, PRUNE_GUARD = [], PRUNE_FREQUENCY = 5)
+    HISTORY_TEST = (true, 5), NOISE_FUNCTION = gaussian, NOISE = false, PRUNE_GUARD = [], PRUNE_FREQUENCY = 5,
+    PRUNE_AMOUNT = 1)
 
     return ConfigStruct(BATCH_SIZE, 
     NUM_CHANNELS,
@@ -87,5 +89,6 @@ function init_config(; BATCH_SIZE = 256, NUM_CHANNELS = 16, MAX_FREQUENCY = 60, 
     NOISE_FUNCTION,
     NOISE,
     PRUNE_GUARD,
-    PRUNE_FREQUENCY)
+    PRUNE_FREQUENCY,
+    PRUNE_AMOUNT)
 end
