@@ -8,10 +8,10 @@ pygui(true)
 fig = figure("Test")
 clf()
 
-include("BCI.jl")
+include("../BCI.jl")
 # using .BCI
 
-include("config.jl") # defines variable "config"
+include("../config.jl") # defines variable "config"
 
 data = BCI.get_data(config)
 # model = BCI.load_model("model-logging/conv_sentdex_2022-10-08_11:43:28/")

@@ -9,6 +9,7 @@ mutable struct ModelParams
     epochs::Int
     cuda::Bool
     loss_accuracy_portion::Float32
+    prune_frq::Int
 end
 
 """
@@ -23,7 +24,8 @@ function create_params(config)::ModelParams
         config.OPTIMIZER,
         config.EPOCHS,
         config.USE_CUDA,
-        config.LOSS_ACCURACY_PORTION
+        config.LOSS_ACCURACY_PORTION,
+        config.PRUNE_FREQUENCY
     )
     return params
 end
@@ -258,13 +260,8 @@ function logging_cb(model::EEGModel, data::Data)
     if test_acc > 0.6
         return true
     else
-        if train_acc > (test_acc + 0.3)
-            throttled_prune_cb!(model, data)
-        end
         return false
     end
-
-
 end
 
 function saving_cb(model::EEGModel)
@@ -272,8 +269,12 @@ function saving_cb(model::EEGModel)
 end
 
 function prune_cb!(model::EEGModel, data::Data)
-    @debug "Pruning!"
-    model.model = model.device(prune(model, data))
+    if (model.epochs_done % model.params.prune_frq) == 0
+        if model.train_acc_history[end] > (model.test_acc_history[end] + 0.3)
+            @info "Pruning!"
+            model.model = model.device(prune(model, data))
+        end
+    end
     # CUDA.unsafe_free!(model.model)
 end
 
@@ -281,7 +282,6 @@ end
 throttled_log_cb = Flux.throttle(logging_cb, 5)
 "Only execute callback once every second."
 throttled_save_cb = Flux.throttle(saving_cb, 20)
-throttled_prune_cb! = Flux.throttle(prune_cb!, 45)
 
 """
 TODO
@@ -315,7 +315,6 @@ function train_epoch!(model::EEGModel, data::Data, log=true, save=true)
             throttled_save_cb(model)
         end
         if log
-            # TODO: no pruning if log == false
             early_stop = throttled_log_cb(model, data)
             if early_stop
                 println("Stop early!")
@@ -325,8 +324,8 @@ function train_epoch!(model::EEGModel, data::Data, log=true, save=true)
     end
     avg_train_loss = sum(batch_losses) / length(batch_losses)
     push!(model.train_loss_history, avg_train_loss)
-
     model.epochs_done += 1
+    prune_cb!(model, data)
 end
 
 """

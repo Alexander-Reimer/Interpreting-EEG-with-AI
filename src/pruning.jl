@@ -216,7 +216,6 @@ function determine_overfit(model::EEGModel, data::Data, f)
 end
 
 function prune(model::EEGModel, data::Data)
-    global overfits
     model.model = model.device(model.model)
     new_chain = []
     overfits, indexes = determine_overfit(model, data, average)

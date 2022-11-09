@@ -12,7 +12,7 @@ config.MODEL = Chain(
         Conv((16,1), 512 => 3),
         Flux.flatten,
     )
-config.LEARNING_RATE = 0.0001
+config.LEARNING_RATE = 0.00005
 
 #=
 mutable struct Config_struct
