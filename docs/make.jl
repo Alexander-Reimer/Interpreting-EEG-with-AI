@@ -21,5 +21,5 @@ makedocs(;
 
 deploydocs(;
     repo="github.com/AR102/Interpreting-EEG-with-AI",
-    devbranch="main"
+    devbranch="refactor"
 )
