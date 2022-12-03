@@ -12,3 +12,4 @@ Documentation for [BCIInterface](https://github.com/AR102/BCIInterface.jl).
 ```@autodocs
 Modules = [BCIInterface]
 ```
+- link to [`func(x)`](@ref)
