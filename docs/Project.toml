@@ -1,3 +1,4 @@
 [deps]
 BCIInterface = "111ec522-a4e5-483b-b057-b2b7db35a873"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+LiveServer = "16fef848-5104-11e9-1b77-fb7a48bbb589"
