@@ -1,0 +1,13 @@
+name = "BCIInterface"
+uuid = "111ec522-a4e5-483b-b057-b2b7db35a873"
+authors = ["Alexander Reimer <alexander.reimer2357@gmail.com>", "Matteo Friedrich <matteo.r.friedrich@gmail.com>"]
+version = "0.1.0"
+
+[compat]
+julia = "1.8.3"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

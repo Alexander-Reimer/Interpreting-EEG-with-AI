@@ -1,3 +1,9 @@
+# PkgTemplates
+*.jl.*.cov
+*.jl.cov
+*.jl.mem
+/docs/build/
+
 # config.jl
 my-*
 src/model-logging/*

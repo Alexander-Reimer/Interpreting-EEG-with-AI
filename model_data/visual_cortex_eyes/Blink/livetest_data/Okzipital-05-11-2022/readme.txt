@@ -1,1 +1,0 @@
-Küche Alex, 11.05.2022, Alex, Okzipital
