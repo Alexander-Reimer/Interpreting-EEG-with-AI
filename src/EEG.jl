@@ -82,15 +82,18 @@ end
         num_channels::Int
         online::Bool
     end
-    function MCP3208(path::String, num_channels::Int; max_speed_hz::Int=1000, online=false)
+    function MCP3208(path::String, num_channels::Int; max_speed_hz::Int=1000, online=true)
         if online
             id = init_spi(path, max_speed_hz=max_speed_hz)
         else
             id = 1
         end
-        return MCP3208(id, num_channels)
+        return MCP3208(id, num_channels, online)
     end
     function get_voltage(board::MCP3208, channel::Int)
+        if channel < 1 || channel > board.num_channels
+            throw(ArgumentError("Given channel smaller than 0 or bigger than num of available channels on given board."))
+        end
         if board.online
             # TODO: actually implement...
             tx_buf = [0x01, 0x80, 0x00]
