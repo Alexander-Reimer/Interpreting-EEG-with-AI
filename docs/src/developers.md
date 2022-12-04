@@ -9,7 +9,7 @@ Depth = 3
 using BCIInterface
 
 device = Device(MCP3208("/dev/spidev0.0", 8))
-data_handler = DataHandler(StandardFFT(), [:left, :middle, :right], Milliseconds(5), "data/test")
+data_handler = DataHandler(StandardFFT(), [:left, :middle, :right], "data/test", 200)
 while true
     for state in [:left, :middle, :right]
         # Make testperson think of the $state side

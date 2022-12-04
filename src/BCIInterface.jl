@@ -1,6 +1,7 @@
 module BCIInterface
-
-export func, sayhello
+include("EEG.jl")
+using .EEG
+export func, sayhello, MCP3208, Device
 
 """
     func(x)
