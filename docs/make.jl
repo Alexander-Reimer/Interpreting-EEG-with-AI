@@ -18,6 +18,8 @@ makedocs(;
         "Home" => "index.md",
         "EEG" => "eeg.md",
         "BCI" => "bci.md",
+        "Advanced Customisation" => "advanced_customisation.md",
+        "MCP3208" => "MCP3208.md",
         "Package Development" => "developers.md",
     ]
 )
