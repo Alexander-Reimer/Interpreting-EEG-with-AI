@@ -2,6 +2,7 @@
 my-*
 src/model-logging/*
 documentation
+docs/
 *.bson
 .vscode
 ## Core latex/pdflatex auxiliary files:
