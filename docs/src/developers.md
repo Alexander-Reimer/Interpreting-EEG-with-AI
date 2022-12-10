@@ -10,12 +10,11 @@ using BCIInterface
 
 device = Device(MCP3208("/dev/spidev0.0", 8))
 states = [:left, :middle, :right]
-data_io = DataIO("data/test", states)
 while true
     for state in states
         # Make testperson think of the $state side
         sleep(2)
-        gather_data(device, data_io, state, Seconds(10))
+        gather_data(device, "data/test", state, Seconds(10))
     end
 end
 ```
