@@ -40,7 +40,7 @@ version = "1.1.1"
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
 
 [[deps.BCIInterface]]
-deps = ["BaremetalPi", "Flux", "PyPlot"]
+deps = ["BaremetalPi", "BrainFlow", "Dates", "Flux", "PyPlot"]
 path = ".."
 uuid = "111ec522-a4e5-483b-b057-b2b7db35a873"
 version = "0.1.0"
@@ -75,6 +75,12 @@ version = "0.1.1"
 git-tree-sha1 = "43b1a4a8f797c1cddadf60499a8a077d4af2cd2d"
 uuid = "d1d4a3ce-64b1-5f1a-9ba4-7e7e69966f35"
 version = "0.1.7"
+
+[[deps.BrainFlow]]
+deps = ["JSON", "MacroTools", "Pkg", "SHA", "Tar"]
+git-tree-sha1 = "43f0fcff87b8eb4705213c4ef1a7ad45e751fcea"
+uuid = "abd5acf9-0fc9-4730-984d-e27a37823580"
+version = "5.5.0"
 
 [[deps.CEnum]]
 git-tree-sha1 = "eb4cb44a499229b3b8426dcfb5dd85333951ff90"

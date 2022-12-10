@@ -9,13 +9,21 @@ Depth = 3
 using BCIInterface
 
 device = Device(MCP3208("/dev/spidev0.0", 8))
-data_handler = DataHandler(StandardFFT(), [:left, :middle, :right], "data/test", 200)
+states = [:left, :middle, :right]
+data_io = DataIO("data/test", states)
 while true
-    for state in [:left, :middle, :right]
+    for state in states
         # Make testperson think of the $state side
-        gather_data(device, data_handler, :right, Seconds(10))
+        sleep(2)
+        gather_data(device, data_io, state, Seconds(10))
     end
 end
+```
+### Processing data
+```julia
+data_io = DataIO("data/test", states)
+data_handler = DataHandler(data_io, StandardFFT())
+process_all(data_io, data_handler)
 ```
 ### Training on data
 ```julia

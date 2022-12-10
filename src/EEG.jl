@@ -1,12 +1,12 @@
 module EEG
-export MCP3208, Device
+export MCP3208, Device, Ganglion, gather_data
 abstract type EEGBoard end
 """
 Abstract class containing data processors.
 `StandardProcessor`: The standard processors with preset arguments and functions.
 """
 abstract type DataProcessor end
-using BaremetalPi
+using BaremetalPi, BrainFlow, DataFrames
 import PyPlot
 Plt = PyPlot
 Plt.pygui(true)
@@ -88,19 +88,62 @@ function process(device::Device, processor::StandardProcessor)
     return result
 end
 
-struct DataHandler
-    data_processor::DataProcessor
-    cases::Array{Symbol,1}
+struct DataIO
     path::String
-    max_freq::Int
+    cases::Array{Symbol,1}
+end
+
+"""
+`path`: To top-level of data directory (e.g. "data/")
+`name`: Name for the data (e.g. "BlinkDetection")
+"""
+function DataIO(path::String, name::String)
+    
+end
+
+function append_raw_data(data_io::DataIO, data::Array{Number, 2})
+    
 end
 
 # TODO: create test
-function gather_data(device::Device, data_handler::DataHandler, case::Symbol, time::Float64)
+function gather_data(device::Device)#, data_io, case, time::Number; tags::Array{Symbol, 1}=[])
     start_time = time()
-    while time() - start_time < time
-        # TODO
+    column_names = Array{String, 1}(undef, 0)
+    num_channels = length(device.channels)
+    for channel = 1:num_channels
+        push!(column_names, string(channel))
     end
+    push!(column_names, "tags")
+    types = [Float64, Float64]
+    types = [types..., String[]]
+    raw_data = DataFrame(types, column_names)
+    return raw_data
+    # while time() - start_time < time
+
+    # end
+end
+
+struct DataHandler
+    data_processor::DataProcessor
+    data_io::DataIO
+    cases::Union{Array{Symbol,1},Nothing}
+    name::Union{String,Nothing}
+    max_freq::Union{Int,Nothing}
+end
+
+"""
+    DataHandler(data_processor::DataProcessor, data_io::DataIO; cases=nothing, name=nothing, max_freq=nothing)
+
+Create a DataHandler instance. `cases`, `name` and `max_freq` are automatically determined by
+data saved at path if they are `nothing`.
+
+Example:
+
+    data_io = DataIO("data/test", states)
+    data_handler = DataHandler(data_io, StandardFFT())
+"""
+function DataHandler(data_processor::DataProcessor, data_io::DataIO; cases=nothing, name=nothing, max_freq=nothing)
+
 end
 
 #===================#
