@@ -160,7 +160,7 @@ function get_most_recent(dir_path)
     times = []
     for file_path in files
         time_str = file_path[7:end-5]
-        push!(times, DateTime(time_str, "YYYY-mm-dd_HH:MM:SS"))
+        push!(times, DateTime(time_str, "YYYY-mm-dd_HH-MM-SS"))
     end
     file = files[argmax(times)]
     return dir_path * "/" * file
@@ -327,7 +327,7 @@ function train_epoch!(model::EEGModel, data::Data, log=true, save=true)
     avg_train_loss = sum(batch_losses) / length(batch_losses)
     push!(model.train_loss_history, avg_train_loss)
     model.epochs_done += 1
-    prune_cb!(model, data)
+    # prune_cb!(model, data) # Because error
 end
 
 """

@@ -4,6 +4,7 @@ mutable struct ConfigStruct
     # |--------------------------------------------------------------------------|
     BATCH_SIZE :: Int # Size of mini-batches
     NUM_CHANNELS :: Int # Number of EEG channels
+    CHANNELS_USED :: Array
     MAX_FREQUENCY :: Int # Range of frequency produced by FFT (eg. here 1-60 Hz)
     path_prefix :: String
     TRAIN_DATA :: Array # (folder with files, desired outputs for each case)
@@ -40,7 +41,7 @@ function gaussian(x)
     return x .+ device(0.25f0 * randn(eltype(x), size(x)))
 end
 
-function init_config(; BATCH_SIZE = 256, NUM_CHANNELS = 16, MAX_FREQUENCY = 60, path_prefix = "../model_data/", TRAIN_DATA = [
+function init_config(; BATCH_SIZE = 256, NUM_CHANNELS = 16, CHANNELS_USED = [1,2,3,4], MAX_FREQUENCY = 60, path_prefix = "../model_data/", TRAIN_DATA = [
     (path_prefix * "directions/data/left/", [1.0, 0.0, 0.0]),
     (path_prefix * "directions/data/none/", [0.0, 1.0, 0.0]),
     (path_prefix * "directions/data/right/", [0.0, 0.0, 1.0])
@@ -68,6 +69,7 @@ function init_config(; BATCH_SIZE = 256, NUM_CHANNELS = 16, MAX_FREQUENCY = 60, 
 
     return ConfigStruct(BATCH_SIZE, 
     NUM_CHANNELS,
+    CHANNELS_USED,
     MAX_FREQUENCY,
     path_prefix, 
     TRAIN_DATA, 

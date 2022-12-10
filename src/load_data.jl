@@ -41,7 +41,7 @@ function clip_scale(data)
     return data
 end
 
-function set_all_data!(X_data, Y_data, data_config)
+function set_all_data!(X_data, Y_data, data_config, channels)
     i = [1, 0]
     for classification in data_config
         for file in readdir(classification[1])
@@ -52,7 +52,9 @@ function set_all_data!(X_data, Y_data, data_config)
                 # d = mapslices(rotr90, d, dims=[1, 3])
                 d = clip_scale(d)
                 i[2] += size(d)[3]
-                X_data[:, 1, :, i[1]:i[2]] = d
+                for j = 1:length(channels)
+                    X_data[j, 1, :, i[1]:i[2]] = d[channels[j], :, :, :]
+                end
                 # println("i1: $(i[1]), i2: $(i[2])")
                 # println(size(Y_traindata[:, i[1]:i[2]]))
                 Y_data[:, i[1]:i[2]] .= classification[2]
@@ -74,10 +76,10 @@ function load_data(config, type::Symbol)
     num_outputs = length(data_config[1][2])
     
     # Pre-initialise arrays to improve performance
-    X_data = Array{Float32}(undef, config.NUM_CHANNELS, 1, config.MAX_FREQUENCY, num_samples)
+    X_data = Array{Float32}(undef, length(config.CHANNELS_USED), 1, config.MAX_FREQUENCY, num_samples)
     Y_data = Array{Float32}(undef, num_outputs, num_samples)
 
-    set_all_data!(X_data, Y_data, data_config)
+    set_all_data!(X_data, Y_data, data_config, config.CHANNELS_USED)
 
     return X_data, Y_data
 end

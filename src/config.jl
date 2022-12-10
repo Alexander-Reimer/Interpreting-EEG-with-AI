@@ -1,20 +1,36 @@
 using Flux
 include("default_config.jl") # Load default configuration, to be overwritten
 config = init_config()
-config.EPOCHS = 0
-config.MODEL_NAME = "allConv_addConv_*"
+config.EPOCHS = 10
+config.MODEL_NAME = "allConv_4c_1_*"
 config.BATCH_SIZE = 128
+config.CHANNELS_USED = [12, 10, 9, 11]
+# config.CHANNELS_USED = [12]
 config.MODEL = Chain(
+        # @autosize begin
         Conv((5,1), 60 => 64, pad = SamePad(), relu),
         Conv((5,1), 64 => 64, pad = SamePad(), relu),
         Conv((5,1), 64 => 128, pad = SamePad(), relu),
         Conv((5,1), 128 => 256, pad = SamePad(), relu),
         Conv((5,1), 256 => 512, pad = SamePad(), relu),
-        Conv((16,1), 512 => 3),
+        Conv((length(config.CHANNELS_USED),1), 512 => 3),
         Flux.flatten,
     )
 config.LEARNING_RATE = 0.00005
 config.PRUNE_FREQUENCY = 10
+path_prefix = "holy_"
+config.TEST_DATA = [
+    (path_prefix * "data/left/", [1.0, 0.0, 0.0]),
+    (path_prefix * "data/none/", [0.0, 1.0, 0.0]),
+    (path_prefix * "data/right/", [0.0, 0.0, 1.0])
+    ]
+config.USE_CUDA = true
+#= TEST_DATA = [
+        (path_prefix * "directions/validation_data/left/", [1.0, 0.0, 0.0]),
+        (path_prefix * "directions/validation_data/none/", [0.0, 1.0, 0.0]),
+        (path_prefix * "directions/validation_data/right/", [0.0, 0.0, 1.0])
+    ] =#
+
 
 #=
 mutable struct Config_struct
