@@ -9,14 +9,16 @@ Depth = 3
 using BCIInterface
 
 device = Device(MCP3208("/dev/spidev0.0", 8))
+experiment = Experiment(device, "Test", tags = ["test", "significant"], extra_info = Dict(:delay => 2), path = "mydata/")
 states = [:left, :middle, :right]
 while true
     for state in states
         # Make testperson think of the $state side
         sleep(2)
-        gather_data(device, "data/test", state, Seconds(10))
+        gather_data(device, "data/test", Seconds(10), tags = [state])
     end
 end
+save_data(experiment)
 ```
 ### Processing data
 ```julia
@@ -32,6 +34,24 @@ data = load_data("/data/test")
 ai = create_model(StandardOne(), data)
 ai.max_accuracy = 0.9
 train!(ai, 100)
+```
+### Filtering data
+```julia
+using BCIInterface
+
+function myfilter(extra_info::Dict)::Bool
+    if haskey(extra_info, :delay) && extra_info[:delay] < 3
+        return true
+    end
+    return false
+end
+data_filter = DataFilter(
+    include_tags = [["test"], ["significant"]], 
+    exclude_tags = ["insignificant"], 
+    extra_info_filter = myfilter
+)
+
+data = load_data("/data/test", filter = data_filter)
 ```
 #### Creating custom models
 ```julia
