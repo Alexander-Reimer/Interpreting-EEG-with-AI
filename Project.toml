@@ -5,12 +5,14 @@ version = "0.1.0"
 
 [deps]
 BaremetalPi = "3a90a9a9-52f9-452b-94bd-193d585bd84f"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 BrainFlow = "abd5acf9-0fc9-4730-984d-e27a37823580"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+Traceur = "37b6cedf-1f77-55f8-9503-c64b63398394"
 
 [compat]
 julia = "1.8.3"
