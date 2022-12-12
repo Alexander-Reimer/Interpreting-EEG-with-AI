@@ -1,12 +1,15 @@
 module EEG
-export MCP3208, Device, Ganglion, gather_data
-abstract type EEGBoard end
+export Device
+export Experiment, gather_data!
+include("EEG_Devices.jl")
 """
 Abstract class containing data processors.
-`StandardProcessor`: The standard processors with preset arguments and functions.
+
+Defined data processors:
+`StandardProcessor`: The standard processors with preset arguments and functions, for details see [`StandardProcessor`](@ref).
 """
 abstract type DataProcessor end
-using BaremetalPi, BrainFlow, DataFrames
+using BrainFlow, DataFrames, Dates
 import PyPlot
 Plt = PyPlot
 Plt.pygui(true)
@@ -46,11 +49,12 @@ function update_data!(device::Device)
         push!(channel.voltages, get_voltage(device.board, channel_num))
         push!(channel.times, (time() - device.session_start) * 1000) # convert from s to ms
     end
+    return 
 end
 
 """
-    Standard()::StandardProcessor
-For more details, see
+Standard configuration for processing EEG data. It uses a preset of functions and options and may not work for you.
+Created using [`Standard`](@ref).
 
     Standard()
 """
@@ -61,7 +65,7 @@ end
 """
     Standard()::StandardProcessor
 
-Create standard configuration for processing EEG data. It uses a preset of functions and options and may not work for you.
+Create standard configuration for processing EEG data. See [`StandardProcessor`](@ref) for more details.
 """
 function Standard()
     output_type = Dict()
@@ -88,44 +92,94 @@ function process(device::Device, processor::StandardProcessor)
     return result
 end
 
-struct DataIO
+struct Experiment
+    device::Device
+    raw_data::DataFrame
+    tags::Array{String,1}
+    extra_info::Dict{Symbol,Any}
     path::String
-    cases::Array{Symbol,1}
+    # cases::Array{Symbol,1}
+end
+
+function datetime(seconds_since_epoch)::DateTime
+    return Dates.unix2datetime(seconds_since_epoch)
 end
 
 """
-`path`: To top-level of data directory (e.g. "data/")
-`name`: Name for the data (e.g. "BlinkDetection")
+`name`: Name of the experiment (e.g. "BlinkDetection").
+
+`tags`: Tags which will be applied to all data gathered with this Experiment.
+
+`path`: To top-level of data directory (e.g. "data/"). If empty, files can't be saved.
+
+TODO: `load_previous` not implemented yet (maybe in another function?)
 """
-function DataIO(path::String, name::String)
-    
-end
-
-function append_raw_data(data_io::DataIO, data::Array{Number, 2})
-    
-end
-
-# TODO: create test
-function gather_data(device::Device)#, data_io, case, time::Number; tags::Array{Symbol, 1}=[])
-    start_time = time()
-    column_names = Array{String, 1}(undef, 0)
+function Experiment(device::Device, name::String; tags::Array=[], extra_info::Dict=Dict(), path::String="data/", load_previous::Bool=false)
+    column_names = ["time", "tags", "extraInfo"]
     num_channels = length(device.channels)
     for channel = 1:num_channels
         push!(column_names, string(channel))
     end
-    push!(column_names, "tags")
-    types = [Float64, Float64]
-    types = [types..., String[]]
+    types = fill(Float64[], num_channels)
+    #        Time       tags      extra_info    voltages  
+    types = [Float64[], Array{Array{String}, 1}(), Dict[],       types...]
     raw_data = DataFrame(types, column_names)
-    return raw_data
-    # while time() - start_time < time
+    file_path = joinpath(path, name, "raw_data.csv")
+    experiment = Experiment(device, raw_data, string.(tags), extra_info, file_path)
+    return experiment
+end
 
-    # end
+function append_raw_data(data_io, data::Array{Number,2})
+
+end
+
+function get_voltages(board::EEGBoard)
+    voltages = Array{Float64, 1}(undef, board.num_channels)
+    for channel in eachindex(voltages)
+        voltages[channel] = get_voltage(board, channel)
+    end
+    return time(), voltages
+end
+
+"""
+    gather_data(experiment::Experiment, time::Number; tags::Array{String, 1} = [])
+
+Gather raw EEG data. `time` is in seconds.
+
+TODO: create test
+"""
+function gather_data!(experiment::Experiment, runtime::Number; tags::Array=[], extra_info::Dict=Dict())
+    all_tags = vcat(experiment.tags, string.(tags))
+    new_row = Array{Any,1}(undef, 3 + experiment.device.board.num_channels)
+    new_row[2] = all_tags
+    new_row[3] = merge(experiment.extra_info, extra_info)
+    start_time = time()
+    while (time() - start_time) < runtime
+        new_row[1] = time()
+        for channel = 1:experiment.device.board.num_channels
+            new_row[3+channel] = get_voltage(experiment.device.board, channel)
+        end
+        push!(experiment.raw_data, new_row)
+    end
+end
+
+function save_data(experiment)
+    
+end
+
+function get_sample()
+
+end
+
+struct DataFilter
+    include_tags::Array{String,1}
+    exclude_tags::Array{String,1}
+    extra_info_filter::Function
 end
 
 struct DataHandler
     data_processor::DataProcessor
-    data_io::DataIO
+    data_io#::DataIO
     cases::Union{Array{Symbol,1},Nothing}
     name::Union{String,Nothing}
     max_freq::Union{Int,Nothing}
@@ -142,50 +196,7 @@ Example:
     data_io = DataIO("data/test", states)
     data_handler = DataHandler(data_io, StandardFFT())
 """
-function DataHandler(data_processor::DataProcessor, data_io::DataIO; cases=nothing, name=nothing, max_freq=nothing)
+function DataHandler(data_processor::DataProcessor, data_io; cases=nothing, name=nothing, max_freq=nothing)
 
-end
-
-#===================#
-#       DEVICES     #
-#===================#
-#------MCP3208------#
-mutable struct MCP3208 <: EEGBoard
-    spi_id::Int
-    num_channels::Int
-    online::Bool
-end
-"""
-    MCP3208(path::String, num_channels::Int; max_speed_hz::Int=1000, online=true)
-
-Initialise a MCP3208-based self-built EEG. `path` refers to the SPI path of the device 
-and `num_channels` to the number of connected electrodes.
-
-With `online` set to `true`, the EEG will be "simulated": `get_voltage(...)` will return 
-random values.
-
-TODO: max_speed_hz
-"""
-function MCP3208(path::String, num_channels::Int; max_speed_hz::Int=1000, online=true)
-    if online
-        id = init_spi(path, max_speed_hz=max_speed_hz)
-    else
-        id = 1
-    end
-    return MCP3208(id, num_channels, online)
-end
-function get_voltage(board::MCP3208, channel::Int)
-    if channel < 1 || channel > board.num_channels
-        throw(ArgumentError("Given channel smaller than 0 or bigger than num of available channels on given board."))
-    end
-    if board.online
-        # TODO: actually implement...
-        tx_buf = [0x01, 0x80, 0x00]
-        rx_buf = zeros(UInt8, 3)
-        ret = spi_transfer!(board.spi_id, tx_buf, rx_buf)
-        return (ret * 5) / flo
-    else
-        return (randn() - 0.5) * 10
-    end
 end
 end
