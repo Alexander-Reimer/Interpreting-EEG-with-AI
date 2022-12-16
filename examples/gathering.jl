@@ -8,7 +8,7 @@ states = [:left, :middle, :right]
 # while true
     for state in states
         # Make testperson think of the $state side
-        gather_data!(experiment, 1, tags = [state])
+        gather_data!(experiment, 1, tags = [state], delay = 0.00)
     end
 # end
-save_data(experiment)
+# save_data(experiment)

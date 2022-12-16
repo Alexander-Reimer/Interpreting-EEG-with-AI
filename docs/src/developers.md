@@ -22,9 +22,10 @@ save_data(experiment)
 ```
 ### Processing data
 ```julia
-data_io = DataIO("data/test", states)
-data_handler = DataHandler(data_io, StandardFFT())
-process_all(data_io, data_handler)
+data = load_data("Test", :raw, path = "mydata/")
+data_handler = DataHandler("Standard", StandardFFT())
+processed_data = process_all(data, data_handler)
+save_data(processed_data)
 ```
 ### Training on data
 ```julia
