@@ -69,8 +69,6 @@ end
         @test experiment.num_samples > 1000 # Test if it added some elements
         @test size(experiment.raw_data.df)[2] == 3 + 8
         save_data(experiment)
-        # Known problem: compat check fails, because CSV.read of metadata
-        # results in df.colmn_names = "[\"time\", \"tags\", \"extraInfo\", \"1\", \"2\", \"3\", \"4\", \"5\", \"6\", \"7\", \"8\"]"
         gather_data!(experiment, 0.1, tags=[:left])
     end
     # @testset "Data Saving & Loading"

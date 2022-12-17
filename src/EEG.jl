@@ -11,7 +11,7 @@ Defined data processors:
 see [`StandardProcessor`](@ref).
 """
 abstract type DataProcessor end
-using BrainFlow, DataFrames, Dates, CSV
+using BrainFlow, DataFrames, Dates, CSV, BSON
 import PyPlot
 Plt = PyPlot
 Plt.pygui(true)
@@ -101,25 +101,46 @@ function process(device::Device, processor::StandardProcessor)
 end
 
 struct Metadata
-    df::DataFrame
+    md::Dict
 end
 
+function Base.copy(metadata::Metadata)
+    new_md = copy(metadata.md)
+    return Metadata(new_md)
+end
 # For `meta.name` syntax (e.g. meta.num_channels)
 function Base.getproperty(meta::Metadata, name::Symbol)
-    if name == :df
+    if name == :md
         return getfield(meta, name)
     else
-        meta.df[1, name]
+        meta.md[name]
     end
 end
 
 # For `meta.name = value` syntax
 function Base.setproperty!(meta::Metadata, name::Symbol, value)
-    if name == :df
+    if name == :md
         setfield!(meta, name, value)
     else
-        meta.df[1, name] = value
+        meta.md[name] = value
     end
+end
+
+"""
+Internal method used for writing to file; in function to make later 
+switch of file format easier.
+"""
+function _write_metadata(filepath, metadata::Metadata)
+    bson(filepath, metadata.md)
+end
+
+"""
+Internal method used for reading from file; in function to make later 
+switch of file format easier.
+"""
+function _read_metadata(filepath)
+    md = BSON.load(filepath)
+    return Metadata(md)
 end
 
 mutable struct Data
@@ -143,9 +164,10 @@ function Data(name, num_channels)
     df = DataFrame(types, column_names)
     # column_names =  ["version",     "num_samples",  "column_names"]
     # types =         [VersionNumber[], Integer[],     AbstractArray{String}[]]
-    metadata = Metadata(DataFrame(
-        [[v"0.0.0"], [0],[column_names]],
-        [:version, :num_samples, :column_names]
+    metadata = Metadata(Dict(
+        :version => v"0.0.0",
+        :num_samples => 0,
+        :column_names => column_names
     ))
     return Data(df, metadata, name, 0)
 end
@@ -256,8 +278,7 @@ get_metadatapath(folder_path, name) = joinpath(folder_path, name * "Metadata.csv
 
 function load_metadata(path::String)
     if isfile(path)
-        df = CSV.read(path, DataFrame)
-        return Metadata(df)
+        return _read_metadata(path)
     else
         return nothing
     end
@@ -295,7 +316,7 @@ function combine_metadata(data::Data, meta::Metadata; repeat=false)
     if !repeat
         add_length -= data.savedindex
     end
-    new_meta.metadata.num_samples += add_length
+    new_meta.num_samples += add_length
     return new_meta
 end
 
@@ -319,7 +340,7 @@ function save_data(data::Data, df::DataFrame, folderpath; checkmeta=true, update
     metapath = get_metadatapath(folderpath, data.name)
     metadata = nothing
     if checkmeta && isfile(metapath)
-        if !is_compat(data.df, get_metadata(metapath))
+        if !iscompatible(data.df, load_metadata(metapath))
             throw(ErrorException( # TODO: more specific error
                 "Data not compatible with DataFrame at $file_path 
                 (perhaps processed vs non-processed data or different 
@@ -336,7 +357,7 @@ function save_data(data::Data, df::DataFrame, folderpath; checkmeta=true, update
         else
             newmeta = combine_metadata(data, metadata)
         end
-        CSV.write(metapath, newmeta.df)
+        _write_metadata(metapath, newmeta)
     end
     # Make sure file exist
     overwrite = false
