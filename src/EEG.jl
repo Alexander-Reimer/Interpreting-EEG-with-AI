@@ -7,7 +7,8 @@ include("EEG_Devices.jl")
 Abstract class containing data processors.
 
 Defined data processors:
-`StandardProcessor`: The standard processors with preset arguments and functions, for details see [`StandardProcessor`](@ref).
+`StandardProcessor`: The standard processors with preset arguments and functions, for details 
+see [`StandardProcessor`](@ref).
 """
 abstract type DataProcessor end
 using BrainFlow, DataFrames, Dates, CSV
@@ -57,10 +58,10 @@ function update_data!(device::Device)
 end
 
 """
-Standard configuration for processing EEG data. It uses a preset of functions and options and may not work for you.
-Created using [`Standard`](@ref).
+Standard configuration for processing EEG data. It uses a preset of functions and options 
+and may not work for you.
 
-    Standard()
+Create with [`Standard`](@ref).
 """
 struct StandardProcessor <: DataProcessor
     output_type::Dict{Symbol,Any}
@@ -69,7 +70,8 @@ end
 """
     Standard()::StandardProcessor
 
-Create standard configuration for processing EEG data. See [`StandardProcessor`](@ref) for more details.
+Create standard configuration for processing EEG data. See [`StandardProcessor`](@ref)
+for more details.
 """
 function Standard()
     output_type = Dict()
@@ -84,7 +86,9 @@ TODO: Processing
     1. Artifacts Removal
     2. Data Filtering
     3. Feature Extraction (FFT)
-Also see [this](https://www.sciencedirect.com/science/article/pii/S1877705812022114/pdf?md5=3c7a2bdf5717d518cf46c4ef5d145d33&pid=1-s2.0-S1877705812022114-main.pdf), page 2529.
+Also see [this](https://www.sciencedirect.com/science/article/pii\
+/S1877705812022114/pdf?md5=3c7a2bdf5717d518cf46c4ef5d145d33&pid=1-s2\
+.0-S1877705812022114-main.pdf), page 2529.
 """
 function process(device::Device, processor::StandardProcessor)
     result = Array{Float64,2}(undef, device.board.num_channels, processor.fft_maxfreq)
@@ -96,18 +100,12 @@ function process(device::Device, processor::StandardProcessor)
     return result
 end
 
-mutable struct Data
-    df::DataFrame
-    metadata::DataFrame
-    name::String
-end
-
 struct Metadata
     df::DataFrame
 end
 
 # For `meta.name` syntax (e.g. meta.num_channels)
-function getproperty(meta::Metadata, name::Symbol)
+function Base.getproperty(meta::Metadata, name::Symbol)
     if name == :df
         return getfield(meta, name)
     else
@@ -116,12 +114,19 @@ function getproperty(meta::Metadata, name::Symbol)
 end
 
 # For `meta.name = value` syntax
-function setproperty!(meta::Metadata, name::Symbol, value)
+function Base.setproperty!(meta::Metadata, name::Symbol, value)
     if name == :df
         setfield!(meta, name, value)
     else
         meta.df[1, name] = value
     end
+end
+
+mutable struct Data
+    df::DataFrame
+    metadata::Metadata
+    name::String
+    savedindex::Integer
 end
 
 """
@@ -138,13 +143,14 @@ function Data(name, num_channels)
     df = DataFrame(types, column_names)
     # column_names =  ["version",     "num_samples",  "column_names"]
     # types =         [VersionNumber[], Integer[],     AbstractArray{String}[]]
-    metadata = DataFrame((
-        version=v"0.0.0",
-        num_samples=0,
-        column_names=column_names
+    metadata = Metadata(DataFrame(
+        [[v"0.0.0"], [0],[column_names]],
+        [:version, :num_samples, :column_names]
     ))
-    return Data(df, metadata, name)
+    return Data(df, metadata, name, 0)
 end
+
+Base.push!(data::Data, val) = push!(data.df, val)
 
 struct Experiment
     device::Device
@@ -155,6 +161,14 @@ struct Experiment
     # cases::Array{Symbol,1}
 end
 
+# For `experiment.num_samples`
+function Base.getproperty(experiment::Experiment, name::Symbol)
+    if name == :num_samples
+        return experiment.raw_data.metadata.num_samples
+    else
+        return getfield(experiment, name)
+    end
+end
 
 """
 `name`: Name of the experiment (e.g. "BlinkDetection").
@@ -172,6 +186,18 @@ function Experiment(device::Device, name::String; tags::Array=[], extra_info::Di
     return experiment
 end
 
+"""
+    clear!(experiment::Experiment)
+
+Delete all data from experiment.
+"""
+function clear!(experiment::Experiment)
+    d = experiment.raw_data
+    empty!(d.df)
+    d.metadata.num_samples = 0
+    d.savedindex = 0
+end
+
 function get_voltages(board::EEGBoard)
     voltages = Array{Float64,1}(undef, board.num_channels)
     for channel in eachindex(voltages)
@@ -183,21 +209,32 @@ end
 """
     gather_data!(experiment::Experiment, runtime::Number; tags::Array=[], extra_info::Dict=Dict())
 
-Gather raw EEG data. `runtime` is in seconds.
+Gather raw EEG data. 
+
+`runtime`: Runtime in seconds.
+
+Optional arguments:
+
+`tags`: Tags to add to every data point on top of tags given to [`Experiment`](@ref)
+
+`extra_info`: Extra info to add to every data point on top of extra info given to [`Experiment`](@ref)
+
+
 
 TODO: create test
 """
-function gather_data!(experiment::Experiment, runtime::Number; tags::Array=[], extra_info::Dict=Dict(), delay::Number=0, save::Bool=true)
+function gather_data!(experiment::Experiment, runtime::Number; tags::Array=[], extra_info::Dict=Dict(),
+    delay::Number=0, save::Bool=true)
+
+    start_time = time()
     all_tags = vcat(experiment.tags, string.(tags))
     new_row = Array{Any,1}(undef, 3 + experiment.device.board.num_channels)
     new_row[2] = all_tags
     new_row[3] = merge(experiment.extra_info, extra_info)
-    start_time = time()
     new_num = 0
-    if save == true
-        save_data(empty(experiment.data), experiment.folderpath, updatemeta = false)
+    if !iscompatible(experiment.raw_data, load_metadata(experiment))
+        throw(ErrorException("TODO")) # TODO
     end
-    save_data(empty(experiment.data), experiment.folderpath, checkmeta = false, updatemeta = false)
     while (time() - start_time) < runtime
         new_row[1] = time()
         for channel = 1:experiment.device.board.num_channels
@@ -205,8 +242,7 @@ function gather_data!(experiment::Experiment, runtime::Number; tags::Array=[], e
         end
         push!(experiment.raw_data, new_row)
         if save
-            sa
-            CSV.write(experiment.path, experiment.raw_data[end:end, :], append=true)
+            save_data(experiment, updatemeta=false, checkmeta=false)
         end
         if delay != 0
             sleep(delay)
@@ -216,93 +252,117 @@ function gather_data!(experiment::Experiment, runtime::Number; tags::Array=[], e
     experiment.raw_data.metadata.num_samples += new_num
 end
 
+get_metadatapath(folder_path, name) = joinpath(folder_path, name * "Metadata.csv")
+
+function load_metadata(path::String)
+    if isfile(path)
+        df = CSV.read(path, DataFrame)
+        return Metadata(df)
+    else
+        return nothing
+    end
+end
+
+load_metadata(folder_path, name) = load_metadata(get_metadatapath(folder_path, name))
+load_metadata(experiment::Experiment) = load_metadata(experiment.folderpath, "RawData")
+
 """
+    is_compat(df::DataFrame, metadata::Union{Metadata, Nothing})
+
 Check if `df` is "compatible" with `metadata`.
+
+If `metadata` is `nothing`, then return true (for easy use with `load_metadata`
+which returns nothing when no `metadata` is defined)
 """
-function is_compat(df::DataFrame, metadata::Metadata)
+function iscompatible(df::DataFrame, metadata::Union{Metadata,Nothing})
+    if metadata === nothing
+        return true
+    end
     if metadata.column_names == names(df)
         return true
     end
     return false
 end
 
-function combine_metadata(meta1::Metadata, meta2::Metadata)
-    
+iscompatible(data::Data, metadata::Union{Metadata,Nothing}) = iscompatible(
+    data.df,
+    metadata
+)
+
+function combine_metadata(data::Data, meta::Metadata; repeat=false)
+    new_meta = copy(meta)
+    add_length = data.metadata.num_samples
+    if !repeat
+        add_length -= data.savedindex
+    end
+    new_meta.metadata.num_samples += add_length
+    return new_meta
 end
 
-function save_data(data::Data, folderpath; checkmeta = true, updatemeta = true)
+"""
+    create_path(path::String)
+
+Create necessary folders and file if they don't exist yet, so that
+`isdir(path)` or `isfile(path)` returns true depending on whether
+`path` points to a folder or a file.
+"""
+function createpath(path::String)
+    mkpath(dirname(path)) # create directories containing file
+    if isfile(path)
+        io = open(path, create=true) # create file
+        close(io)
+    end
+end
+
+function save_data(data::Data, df::DataFrame, folderpath; checkmeta=true, updatemeta=true, repeat=false)
     datapath = joinpath(folderpath, data.name * ".csv")
-    metapath = joinpath(folderpath, data.name * "Metadata.csv")
+    metapath = get_metadatapath(folderpath, data.name)
+    metadata = nothing
     if checkmeta && isfile(metapath)
-        metadata = CSV.read(metapath)
-        if !is_compat(data.df, metadata)
-            @error "Data not compatible with DataFrame at $file_path 
-            (perhaps processed vs non-processed data or different 
-            number of channels). If you want to overwrite the old data,
-            delete both $file_path and $meta_file_path."
+        if !is_compat(data.df, get_metadata(metapath))
+            throw(ErrorException( # TODO: more specific error
+                "Data not compatible with DataFrame at $file_path 
+                (perhaps processed vs non-processed data or different 
+                number of channels). If you want to overwrite the old data,
+                delete both $file_path and $meta_file_path."))
         end
     end
     if updatemeta
-        CSV.write(metapath, data.metadata.df)
+        if metadata === nothing
+            metadata = load_metadata(metapath)
+        end
+        if metadata === nothing
+            newmeta = data.metadata
+        else
+            newmeta = combine_metadata(data, metadata)
+        end
+        CSV.write(metapath, newmeta.df)
     end
+    # Make sure file exist
+    overwrite = false
+    if !isfile(datapath)
+        createpath(datapath)
+        overwrite = true # overwrite to create headers
+    end
+    # deactivate append if overwrite --> file is overwritten
+    CSV.write(datapath, df, append=!overwrite)
+end
+
+function save_data(data::Data, folderpath; checkmeta=true, updatemeta=true, repeat=false)
     if !isempty(data.df)
-        CSV.write(datapath, data.df, append=true)
-    end
-end
-
-function save_data(experiment::Experiment)
-    save_data(experiment.data, experiment.folderpath)
-end
-
-"""
-Create `Data`-Object with a name, path, and a dataframe.
-"""
-function Data(df::DataFrame, metadata::Metadata, name, folder_path)
-    file_path = joinpath(folder_path, name * ".csv")
-    meta_file_path = joinpath(folder_path, name * "Metadata" * ".csv")
-    if isfile(meta_file_path)
-        metadata = CSV.read(meta_file_path, DataFrame)
-        if !is_compat(df, metadata)
-            @error "Given df differs structurally from already present 
-            data at $file_path (perhaps processed vs non-processed data
-            or different number of channels). If you want to overwrite,
-            delete both $file_path and $meta_file_path."
+        if repeat
+            df_new = data.df
+        else
+            df_new = data.df[(data.savedindex+1):end, :]
         end
+        save_data(data, df_new, folderpath, checkmeta=checkmeta, updatemeta=updatemeta, repeat=repeat)
+        data.savedindex = data.metadata.num_samples
     end
-    if !isfile(file_path)
-        mkpath(dirname(file_path)) # create directories containing file
-        io = open(basename(file_path), create=true) # create file
-        close(io)
-        CSV.write(file_path, df)
-    end
-    return Data(df, name, folder_path)
 end
 
-"""
-Create `Data`-Object with a name, path, and a dataframe.
-"""
-function Data(df::DataFrame, metadata::Metadata, name, folder_path)
-    file_path = joinpath(folder_path, name * ".csv")
-    meta_file_path = joinpath(folder_path, name * "Metadata" * ".csv")
-    if isfile(meta_file_path)
-        metadata = CSV.read(meta_file_path, DataFrame)
-        if !is_compat(df, metadata)
-            @error "Given df differs structurally from already present 
-            data at $file_path (perhaps processed vs non-processed data
-            or different number of channels). If you want to overwrite,
-            delete both $file_path and $meta_file_path."
-        end
-    end
-    if !isfile(file_path)
-        mkpath(dirname(file_path)) # create directories containing file
-        io = open(basename(file_path), create=true) # create file
-        close(io)
-        CSV.write(file_path, df)
-    end
-    return Data(df, name, folder_path)
-end
-function get_sample()
-
+function save_data(experiment::Experiment; checkmeta=true, updatemeta=true, repeat=false)
+    save_data(experiment.raw_data, experiment.folderpath, checkmeta=checkmeta,
+        updatemeta=updatemeta, repeat=repeat)
 end
 
 mutable struct DataFilter
