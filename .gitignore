@@ -1,3 +1,6 @@
+# EEG data
+*.csv
+
 # PkgTemplates
 *.jl.*.cov
 *.jl.cov
