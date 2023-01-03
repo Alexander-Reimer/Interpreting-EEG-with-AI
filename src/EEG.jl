@@ -1,6 +1,6 @@
 module EEG
 export Device
-export Experiment, gather_data!, save_data
+export Experiment, gather_data!, save_data, load_data, load_data!
 include("EEG_Devices.jl")
 
 """
@@ -11,7 +11,7 @@ Defined data processors:
 see [`StandardProcessor`](@ref).
 """
 abstract type DataProcessor end
-using BrainFlow, DataFrames, Dates, CSV, BSON
+using BrainFlow, DataFrames, Dates, CSV, BSON, LSL
 import PyPlot
 Plt = PyPlot
 Plt.pygui(true)
@@ -131,6 +131,9 @@ Internal method used for writing to file; in function to make later
 switch of file format easier.
 """
 function _write_metadata(filepath, metadata::Metadata)
+    if !isfile(filepath)
+        createpath(filepath)
+    end
     bson(filepath, metadata.md)
 end
 
@@ -173,6 +176,14 @@ function Data(name, num_channels)
 end
 
 Base.push!(data::Data, val) = push!(data.df, val)
+function Base.getproperty(data::Data, name::Symbol)
+    if name in fieldnames(Data)
+        return getfield(data, name)
+    end
+    return getproperty(data.metadata, name)
+end
+
+get_datapath(folderpath, name) = joinpath(folderpath, name * ".csv")
 
 struct Experiment
     device::Device
@@ -209,15 +220,23 @@ function Experiment(device::Device, name::String; tags::Array=[], extra_info::Di
 end
 
 """
+    clear!(data::Data)
+
+Delete all saved data.
+"""
+function clear!(data::Data)
+    empty!(data.df)
+    data.metadata.num_samples = 0
+    data.savedindex = 0
+end
+
+"""
     clear!(experiment::Experiment)
 
-Delete all data from experiment.
+Delete all saved raw data from experiment.
 """
 function clear!(experiment::Experiment)
-    d = experiment.raw_data
-    empty!(d.df)
-    d.metadata.num_samples = 0
-    d.savedindex = 0
+    clear!(experiment.raw_data)
 end
 
 function get_voltages(board::EEGBoard)
@@ -240,10 +259,6 @@ Optional arguments:
 `tags`: Tags to add to every data point on top of tags given to [`Experiment`](@ref)
 
 `extra_info`: Extra info to add to every data point on top of extra info given to [`Experiment`](@ref)
-
-
-
-TODO: create test
 """
 function gather_data!(experiment::Experiment, runtime::Number; tags::Array=[], extra_info::Dict=Dict(),
     delay::Number=0, save::Bool=true)
@@ -253,7 +268,6 @@ function gather_data!(experiment::Experiment, runtime::Number; tags::Array=[], e
     new_row = Array{Any,1}(undef, 3 + experiment.device.board.num_channels)
     new_row[2] = all_tags
     new_row[3] = merge(experiment.extra_info, extra_info)
-    new_num = 0
     if !iscompatible(experiment.raw_data, load_metadata(experiment))
         throw(ErrorException("TODO")) # TODO
     end
@@ -269,12 +283,11 @@ function gather_data!(experiment::Experiment, runtime::Number; tags::Array=[], e
         if delay != 0
             sleep(delay)
         end
-        new_num += 1
+        experiment.raw_data.metadata.num_samples += 1
     end
-    experiment.raw_data.metadata.num_samples += new_num
 end
 
-get_metadatapath(folder_path, name) = joinpath(folder_path, name * "Metadata.csv")
+get_metadatapath(folder_path, name) = joinpath(folder_path, name * "Metadata.bson")
 
 function load_metadata(path::String)
     if isfile(path)
@@ -311,6 +324,7 @@ iscompatible(data::Data, metadata::Union{Metadata,Nothing}) = iscompatible(
 )
 
 function combine_metadata(data::Data, meta::Metadata; repeat=false)
+    # TODO: weird?
     new_meta = copy(meta)
     add_length = data.metadata.num_samples
     if !repeat
@@ -329,7 +343,7 @@ Create necessary folders and file if they don't exist yet, so that
 """
 function createpath(path::String)
     mkpath(dirname(path)) # create directories containing file
-    if isfile(path)
+    if !isfile(path)
         io = open(path, create=true) # create file
         close(io)
     end
@@ -349,6 +363,7 @@ function save_data(data::Data, df::DataFrame, folderpath; checkmeta=true, update
         end
     end
     if updatemeta
+        # TODO: what?
         if metadata === nothing
             metadata = load_metadata(metapath)
         end
@@ -370,20 +385,55 @@ function save_data(data::Data, df::DataFrame, folderpath; checkmeta=true, update
 end
 
 function save_data(data::Data, folderpath; checkmeta=true, updatemeta=true, repeat=false)
-    if !isempty(data.df)
+    # if !isempty(data.df)
         if repeat
             df_new = data.df
         else
             df_new = data.df[(data.savedindex+1):end, :]
         end
         save_data(data, df_new, folderpath, checkmeta=checkmeta, updatemeta=updatemeta, repeat=repeat)
-        data.savedindex = data.metadata.num_samples
-    end
+        data.savedindex = lastindex(data.df, 1)
+    # end
 end
 
 function save_data(experiment::Experiment; checkmeta=true, updatemeta=true, repeat=false)
     save_data(experiment.raw_data, experiment.folderpath, checkmeta=checkmeta,
         updatemeta=updatemeta, repeat=repeat)
+end
+
+function load_data(folderpath, name; start_pos=1, num_samples=:all, exact_num=false, updatemeta = true)
+    datapath = get_datapath(folderpath, name)
+    metapath = get_metadatapath(folderpath, name)
+    if num_samples == :all
+        df = CSV.read(datapath, DataFrame; skipto=start_pos + 1) # +1 for headers
+    else
+        ntasks = exact_num ? 1 : Threads.nthreads()
+        df = CSV.read(datapath, DataFrame; skipto=start_pos + 1, limit=num_samples, ntasks=ntasks) # +1 for headers
+    end
+    metadata = load_metadata(metapath)
+    if metadata === nothing
+        throw(ErrorException("Metadata from $metapath couldn't be read! Maybe the file doesn't exist anymore?"))
+    end
+    metadata.num_samples = size(df, 1)
+    _write_metadata(metapath, metadata)
+    return Data(df, metadata, name, metadata.num_samples)
+end
+
+# TODO: test
+# TODO: use savedindex to avoid duplicates
+function combine!(data1::Data, data2::Data; append=true)
+    if append
+        append!(data1.df, data2.df, promote = true)
+    else
+        prepend!(data1.df, data2.df, promote = true)
+    end
+    data1.metadata = combine_metadata(data2, data1.metadata, repeat = true)
+end
+
+# TODO: test
+function load_data!(experiment::Experiment; start_pos=1, num_samples=:all, exact_num=false, append=true)
+    old_data = load_data(experiment.folderpath, experiment.raw_data.name, start_pos=start_pos, num_samples=num_samples, exact_num=exact_num)
+    combine!(experiment.raw_data, old_data, append = append)
 end
 
 mutable struct DataFilter
