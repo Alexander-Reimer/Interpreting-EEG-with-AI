@@ -1,5 +1,18 @@
 export MCP3208, Ganglion
 using BaremetalPi
+
+struct FFTDataDescriptor <: DataDescriptor
+    num_channels::Int
+    freqs::Array{Int,1}
+    sample_width::Int
+end
+
+struct RawDataDescriptor <: DataDescriptor
+    num_channels::Int
+    sample_width::Int
+end
+
+
 abstract type EEGBoard end
 #===================#
 #       DEVICES     #
@@ -9,7 +22,10 @@ mutable struct MCP3208 <: EEGBoard
     spi_id::Int
     num_channels::Int
     online::Bool
+    const data_descriptor::DataDescriptor
+    sample
 end
+
 """
     MCP3208(path::String, num_channels::Int; max_speed_hz::Int=1000, 
     online=true)
@@ -30,7 +46,8 @@ function MCP3208(path::String, num_channels::Int; max_speed_hz::Int=1000,
     else
         id = 1
     end
-    return MCP3208(id, num_channels, online)
+    return MCP3208(id, num_channels, online, RawDataDescriptor(num_channels,
+            num_channels), Array{Float64,1}(undef, num_channels))
 end
 
 function get_voltage(board::MCP3208, channel::Int)
@@ -52,24 +69,32 @@ end
 mutable struct GanglionGUI
     inlet#::StreamInlet{Float32}
     sample::Array{Float32,1}
-    channel_voltages::Array{Float32,2}
-    channel_counter::Int
-    num_channels::Int
+    const data_descriptor::DataDescriptor
 end
 
-function GanglionGUI(num_channels::Int)
+function GanglionGUI(num_channels::Int, max_freq::Int=125)
     streams = resolve_streams(timeout=2.0)
     inlet = StreamInlet(streams[1])
-    timestamp, sample = pull_sample(board.inlet)
-    channel_voltages = Array{Float32,1}(undef, 125, num_channels)
-    channel_voltages[1] = sample
-    return GanglionGUI(inlet, sample, channel_voltages, 1,
-        num_channels)
+    sample = Array{Float32,1}(undef, max_freq * num_channels)
+    # num_channel times to get one batch (all channels)
+    for i = 1:num_channels
+        # Index in sample where data of this channel starts
+        channel_start = max_freq * (i - 1) + 1
+        # ^^                                         ends
+        channel_end = max_freq * i
+        timestamp, sample[channel_start:channel_end] = pull_sample(board.inlet)
+    end
+    data_descriptor = FFTDataDescriptor(num_channels, max_freq,
+        num_channels * max_freq)
+    return GanglionGUI(inlet, sample, data_descriptor)
 end
 
-function get_voltage(board::GanglionGUI, channel::Int)
-    timestamp, _ = pull_sample!(board.sample, board.inlet)
-    board.channel_counter = (board.channel_counter + 1) % board.num_channels
-    board.channel_voltages[board.channel_counter] = board.sample
-
+function get_sample!(board::GanglionGUI)
+    for i = 1:board.data_descriptor.num_channels
+        # Index in sample where data of this channel starts
+        channel_start
+        # Index in sample where data of this channel ends
+        channel_end = max_freq * i
+        pull_sample!(board.sample[channel_start:channel_end], board.inlet)
+    end
 end

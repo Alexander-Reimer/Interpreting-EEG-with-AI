@@ -41,10 +41,6 @@ end
             # Test if channel limits are checked
             @test_throws "Given channel" BCIInterface.EEG.get_voltage(dev.board, 9)
             @test_throws "Given channel" BCIInterface.EEG.get_voltage(dev.board, 0)
-            # Test if update_data adds exactly one voltage to every channel
-            BCIInterface.EEG.update_data!(dev)
-            lengths = map(x -> [length(x.voltages), length(x.times)], dev.channels)
-            @test test_lengths(lengths, 1)
         end
     end
     @testset "Experiment" begin
@@ -67,11 +63,11 @@ end
         gather_data!(experiment, 0.1, tags = [:left, :foo])
 
         # Test if `getproperty` works
-        @test experiment.num_samples == size(experiment.raw_data.df)[1]
+        @test experiment.num_samples == size(experiment.data.df)[1]
         # Test if it added some elements
         @test experiment.num_samples > 10
         # Test if number of cols is correct
-        @test size(experiment.raw_data.df)[2] == NUM_CHANNELS + NUM_COLS_META
+        @test size(experiment.data.df)[2] == NUM_CHANNELS + NUM_COLS_META
 
         # save number of samples (in seperate var because of later clearing)
         total_num = experiment.num_samples
@@ -79,11 +75,11 @@ end
         # clear all data of experiment
         BCIInterface.EEG.clear!(experiment)
         @test experiment.num_samples == 0
-        @test size(experiment.raw_data.df)[1] == 0
+        @test size(experiment.data.df)[1] == 0
 
         # without saving in real-time
         gather_data!(experiment, 0.1, save = false)
-        @test experiment.num_samples == size(experiment.raw_data.df)[1]
+        @test experiment.num_samples == size(experiment.data.df)[1]
         @test experiment.num_samples > 1000 # Test if it added some elements
 
         total_num += experiment.num_samples
@@ -106,13 +102,13 @@ end
         # load saved data into it
         load_data!(experiment2, exact_num=true)
         # check if metadata is correct
-        @test experiment2.raw_data.num_samples == size(experiment2.raw_data.df, 1)
+        @test experiment2.data.num_samples == size(experiment2.data.df, 1)
 
         # compare data of `data` with data of `experiment2`
-        @test data.df == experiment2.raw_data.df
+        @test data.df == experiment2.data.df
         # check if number of collected samples equals number of loaded samples
         @test total_num == data.num_samples
-        @test total_num == experiment2.raw_data.num_samples
+        @test total_num == experiment2.data.num_samples
 
     end
     # @testset "Data Saving & Loading"
