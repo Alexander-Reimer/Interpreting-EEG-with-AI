@@ -69,6 +69,8 @@ function Standard()
 end
 
 """
+    process(device::Device, processor::StandardProcessor)
+
 TODO: Processing
 
     1. Artifacts Removal
@@ -115,6 +117,8 @@ function Base.setproperty!(meta::Metadata, name::Symbol, value)
 end
 
 """
+    _write_metadata(filepath, metadata::Metadata)
+
 Internal method used for writing to file; in function to make later 
 switch of file format easier.
 """
@@ -126,6 +130,8 @@ function _write_metadata(filepath, metadata::Metadata)
 end
 
 """
+    _read_metadata(filepath)
+
 Internal method used for reading from file; in function to make later 
 switch of file format easier.
 """
@@ -206,12 +212,16 @@ function Base.getproperty(experiment::Experiment, name::Symbol)
 end
 
 """
+    Experiment(device::Device, name::String; tags::Array=[], 
+    extra_info::Dict=Dict(), path::String="data/", load_previous::Bool=false)
+
 `name`: Name of the experiment (e.g. "BlinkDetection").
 
 `tags`: Tags which will be applied to all data gathered with this Experiment.
 
 `path`: To top-level of data directory (e.g. "data/"). If empty, files can't be saved.
 
+TODO: descs for keywords
 TODO: `load_previous` not implemented yet (maybe in another function?)
 """
 function Experiment(device::Device, name::String; tags::Array=[],
