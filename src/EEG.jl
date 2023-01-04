@@ -174,6 +174,33 @@ function create_data(name::String, data_desc::RawDataDescriptor)
 end
 
 """
+    create_data(name::String, data_desc::RawDataDescriptor)
+
+Create new `Data`-Object for FFT data. 
+"""
+function create_data(name::String, data_desc::FFTDataDescriptor)
+    column_names = ["time", "tags", "extraInfo"]
+    for channel = 1:data_desc.num_channels
+        for freq = 1:data_desc.max_freq
+            push!(column_names, string(channel) * "_" * string(freq))
+        end
+    end
+    types = fill(Float64[], data_desc.sample_width)
+    #        Time       tags                      extra_info    voltages  
+    types = [Float64[], Array{Array{String},1}(), Dict[], types...]
+    df = DataFrame(types, column_names)
+    # column_names =  ["version",       "num_samples", "column_names"]
+    # types =         [VersionNumber[], Integer[],     AbstractArray{String}[]]
+    metadata = Metadata(Dict(
+        :version => v"0.0.0",
+        :num_samples => 0,
+        :column_names => column_names,
+        :descriptor => data_desc
+    ))
+    return Data(df, metadata, name, 0, data_desc)
+end
+
+"""
     create_data(name::String, device::Device)
 
 Create `Data`-Object which fits given device (raw data, fft data, etc.).
