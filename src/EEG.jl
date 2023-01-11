@@ -1,5 +1,6 @@
 module EEG
 export Device
+export Data
 export Experiment, gather_data!, save_data, load_data, load_data!
 
 """
@@ -136,7 +137,8 @@ Internal method used for reading from file; in function to make later
 switch of file format easier.
 """
 function _read_metadata(filepath)
-    md = BSON.load(filepath)
+    @info "bruh"
+    md = BSON.load(filepath, @__MODULE__)
     return Metadata(md)
 end
 

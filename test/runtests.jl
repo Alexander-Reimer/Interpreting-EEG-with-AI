@@ -101,6 +101,7 @@ end
             
             test_experiment(board, "MCP3208", 0.005)
         end
+        # TODO: implement for CI
         @testset "GanglionGUI" begin
             board = GanglionGUI(NUM_CHANNELS)
             test_experiment(board, "GanglionGUI", 0.01)
@@ -115,6 +116,6 @@ end
         @test creation_tests()
 
         std_processor = BCIInterface.EEG.Standard()
-        # @test BCIInterface.EEG.process()
+        # @test BCIInterface.process()
     end
 end

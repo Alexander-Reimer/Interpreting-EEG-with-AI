@@ -12,6 +12,7 @@ struct RawDataDescriptor <: DataDescriptor
     sample_width::Int
 end
 
+RawDataDescriptor(num_channels::Int) = RawDataDescriptor(num_channels, num_channels)
 
 abstract type EEGBoard end
 #===================#
@@ -46,8 +47,7 @@ function MCP3208(path::String, num_channels::Int; max_speed_hz::Int=1000,
     else
         id = 1
     end
-    return MCP3208(id, num_channels, online, RawDataDescriptor(num_channels,
-            num_channels), Array{Float64,1}(undef, num_channels))
+    return MCP3208(id, num_channels, online, RawDataDescriptor(num_channels), Array{Float64,1}(undef, num_channels))
 end
 
 function get_voltage(board::MCP3208, channel::Int)
@@ -65,6 +65,7 @@ function get_voltage(board::MCP3208, channel::Int)
         return 0.0 #(randn() - 0.5) * 10
     end
 end
+
 #------Ganglion------#
 mutable struct GanglionGUI <: EEGBoard
     inlet#::StreamInlet{Float32}
@@ -74,6 +75,10 @@ end
 
 function GanglionGUI(num_channels::Int)
     streams = resolve_streams(timeout=2.0)
+    if length(streams) == 0
+        throw(ErrorException("No stream found! 
+        Make sure you have it enabled in the Ganglion GUI"))
+    end
     inlet = StreamInlet(streams[1])
     max_freq::Int = channel_count(inlet.info)
     sample = Array{Float32,1}(undef, max_freq * num_channels)
