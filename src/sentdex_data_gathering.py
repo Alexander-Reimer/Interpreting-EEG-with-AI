@@ -16,7 +16,7 @@ MODEL_NAME = ""  # your model path here.
 reshape = (-1, 16, 60)
 # model.predict(np.zeros((32, 16, 60)).reshape(reshape))
 
-ACTION = 'right'  # THIS IS THE ACTION YOU'RE THINKING
+ACTION = 'left'  # THIS IS THE ACTION YOU'RE THINKING
 
 FFT_MAX_HZ = 60
 
@@ -114,7 +114,7 @@ for i in range(TOTAL_ITERS):  # how many iterations. Eventually this would be a 
 #plt.plot(channel_datas[0][0])
 #plt.show()
 
-datadir = "data"
+datadir = "holy_data"
 if not os.path.exists(datadir):
     os.mkdir(datadir)
 
@@ -131,8 +131,8 @@ print("done.")
 
 for action in ['left', 'right', 'none']:
     #print(f"{action}:{len(os.listdir(f'data/{action}'))}")
-    print(action, sum(os.path.getsize(f'data/{action}/{f}')
-          for f in os.listdir(f'data/{action}'))/1_000_000, "MB")
+    print(action, sum(os.path.getsize(f'{datadir}/{action}/{f}')
+          for f in os.listdir(f'{datadir}/{action}'))/1_000_000, "MB")
 
 print(ACTION, correct/total)
 print(f"left: {left/total}, right: {right/total}, none: {none/total}")

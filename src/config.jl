@@ -5,7 +5,7 @@ config.EPOCHS = 10
 config.MODEL_NAME = "allConv_4c_1_*"
 config.BATCH_SIZE = 128
 config.CHANNELS_USED = [12, 10, 9, 11]
-# config.CHANNELS_USED = [12]
+config.CHANNELS_USED = [12]
 config.MODEL = Chain(
         # @autosize begin
         Conv((5,1), 60 => 64, pad = SamePad(), relu),
@@ -20,10 +20,15 @@ config.LEARNING_RATE = 0.00005
 config.PRUNE_FREQUENCY = 10
 path_prefix = "holy_"
 config.TEST_DATA = [
-    (path_prefix * "data/left/", [1.0, 0.0, 0.0]),
-    (path_prefix * "data/none/", [0.0, 1.0, 0.0]),
-    (path_prefix * "data/right/", [0.0, 0.0, 1.0])
+    (path_prefix * "data/left1/", [1.0, 0.0, 0.0]),
+    (path_prefix * "data/none1/", [0.0, 1.0, 0.0]),
+    (path_prefix * "data/right1/", [0.0, 0.0, 1.0])
     ]
+# config.TRAIN_DATA = [
+#     (path_prefix * "data/left/", [1.0, 0.0, 0.0]),
+#     (path_prefix * "data/none/", [0.0, 1.0, 0.0]),
+#     (path_prefix * "data/right/", [0.0, 0.0, 1.0])
+#     ]
 config.USE_CUDA = true
 #= TEST_DATA = [
         (path_prefix * "directions/validation_data/left/", [1.0, 0.0, 0.0]),
