@@ -1,4 +1,4 @@
-module EEG
+# module EEG
 export Device
 export Data
 export Experiment, gather_data!, save_data, load_data, load_data!
@@ -258,6 +258,7 @@ function Experiment(device::Device, name::String; tags::Array=[],
     folderpath = joinpath(path, name, "")
     data = create_data("RawData", device)
     experiment = Experiment(device, data, string.(tags), extra_info, folderpath)
+    save_data(experiment)
     return experiment
 end
 
@@ -460,21 +461,30 @@ function save_data(experiment::Experiment; checkmeta=true, updatemeta=true,
         updatemeta=updatemeta, repeat=repeat)
 end
 
+function CSV.tryparse(t::Type{Vector{String}}, str::String)
+    return chop.(split(chop(str, head=1, tail=1), ", "), head=1, tail=1)
+end
+
+# function CSV.tryparse(t::Type{Dict{Any, Any}}, str::String)
+#     return chop.(split(chop(str, head=1, tail=1), ", "), head=1, tail=1)
+# end
+
 function load_data(folderpath, name; start_pos=1, num_samples=:all, exact_num=false)
     metapath = get_metadatapath(folderpath, name)
-    metadata = load_metadata(metapath)
+    metadata = load_metadata(metapath) # TODO: loading RawData not working because of meta name
     if metadata === nothing
         throw(ErrorException("Metadata from $metapath couldn't be read! 
         Maybe the file doesn't exist anymore?"))
     end
 
     datapath = get_datapath(folderpath, name)
+    type_map = Dict(:tags => Array{String, 1})
     if num_samples == :all
-        df = CSV.read(datapath, DataFrame; skipto=start_pos + 1) # +1 for headers
+        df = CSV.read(datapath, DataFrame; skipto=start_pos + 1, types=type_map) # +1 for headers
     else
         ntasks = exact_num ? 1 : Threads.nthreads()
         df = CSV.read(datapath, DataFrame; skipto=start_pos + 1, limit=num_samples,
-            ntasks=ntasks) # +1 for headers
+            ntasks=ntasks, types=type_map) # +1 for headers
     end
 
     # Update metadata in case data was previously saved using updatemeta = false
@@ -538,4 +548,4 @@ function DataHandler(data_processor::DataProcessor, data_io; cases=nothing,
     name=nothing, max_freq=nothing)
 
 end
-end
+# end
