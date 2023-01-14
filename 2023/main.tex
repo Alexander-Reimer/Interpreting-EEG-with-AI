@@ -9,18 +9,26 @@
     \setmainlanguage{german} %| 
     \usepackage{microtype} % Für schöneren Blocksatz
     \usepackage{parskip} % Für "deutche" Absätze
-    \usepackage{abstract} % Für Zusammenfassung
     \usepackage[official]{eurosym} % Für Eurozeichen
     \usepackage[locale=DE, per-mode=symbol]{siunitx} % Für Einheiten
     \DeclareSIUnit{\eur}{\mbox{\euro}}
     \usepackage{fontspec}
     % https://tex.stackexchange.com/questions/25249/how-do-i-use-a-particular-font-for-a-small-section-of-text-in-my-document/37251#37251
     \newfontfamily\sansemph{Latin Modern Sans} % Für Titel
+    \usepackage{csquotes} % Für deutsche Anführungszeichen
+    \newcommand{\form}[1]{#1} % Formeln
+    \newcommand{\filepath}[1]{\texttt{#1}}
+    \newcommand{\cmd}[1]{\texttt{#1}}
+    \newcommand{\eng}[1]{\textit{#1}}
+    \newcommand{\feng}[1]{{#1}}
 
 %%%%%%%%%%%%%% MATHE
     \usepackage{amsmath} %| Standard ams packages
     \usepackage{amssymb} %|
     \usepackage{amstext} %|
+    \newcommand{\sig}{\textrm{sig}}
+    % \newcommand{\tanh}{\textrm{tanh}}
+    \newcommand{\netin}{\textrm{net}}
 
 %%%%%%%%%%%%%% TEXTLAYOUT
     \usepackage{geometry} % Für Anpassung der Seitenränder
@@ -31,16 +39,22 @@
     	bottom=2cm,
     	footskip=13.6pt
     }
-    \usepackage{fancyhdr}
+    \usepackage{fancyhdr} % Kopf- und Fußzeilen
+    \usepackage{multicol} % Text in mehreren Spalten
+    \newcommand{\threesub}[1]{
+        \vspace{1.5ex}
+        \noindent {\textbf{#1}}
+        \vspace{0.5ex}
+    }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%% ABBILDUNGEN %%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\usepackage{float} % Figure "H" Option zur Positionierung
-\usepackage{caption} % Für custom captions
-\captionsetup{textfont={footnotesize}, labelfont={footnotesize, bf}, position=below, format=plain}
-\usepackage{wrapfig} % Für wrapfigure (Text um Bilder herum)
-\usepackage{graphicx} % Für das Einfügen von Bildern
+    \usepackage{float} % Figure "H" Option zur Positionierung
+    \usepackage{caption} % Für custom captions
+    \captionsetup{textfont={footnotesize}, labelfont={footnotesize, bf}, position=below, format=plain}
+    \usepackage{wrapfig} % Für wrapfigure (Text um Bilder herum)
+    \usepackage{graphicx} % Für das Einfügen von Bildern
 
 %%%%%%%%%%%%%%% TIKZ
     \usepackage{tikz}
@@ -48,12 +62,15 @@
     decorations.pathreplacing, calligraphy % for curly braces
     }
     \usepackage{circuitikz} % Schaltplan,Schaltzeichen usw.
+    \tikzset{big elko/.style={elko=#1, capacitors/width=0.3}}
     \usepackage{pgfplots} % Plots
      \pgfplotsset{compat=1.18} % Neuste Version nutzen
 
 %%%%%%%%%%%%%%% PROGRAMMAUSSCHNITTE
-    \usepackage{xparse} % Für NewDocumentCommand und -Environment
     \usepackage[newfloat=true]{minted}
+    \usepackage{xparse} % Für NewDocumentCommand und -Environment
+    \usepackage{varwidth}
+    \definecolor{bg}{rgb}{0.95,0.95,0.95}
     \SetupFloatingEnvironment{listing}{name=Programmausschnitt, listname=Programmausschnitte}
     % https://stackoverflow.com/a/1390520
     %                             #1     #2       #3 #4 #5
@@ -70,105 +87,37 @@
             \label{#4}%
         \end{listing}%
     }
+    \newcommand{\coderef}[1]{Programmausschnitt \ref{#1}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%% QUELLEN %%%%%%%%%%%%%%%%
+%%%%%%%%%% QUELLEN & VERWEISE %%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     \usepackage[sorting=none, defernumbers=true]{biblatex} % Für Quellenangaben
     \DeclareFieldFormat[online,misc]{title}{\mkbibquote{#1}} % Titel in Anführungszeichen
     \DeclareFieldFormat{type}{} % Quellen-Typ nicht anzeigen
     \addbibresource{sources.bib} % Quellen laden
     
-\usepackage[bookmarks=true]{hyperref}
-\hypersetup{
-    pdftitle={Entwicklung eines Frameworks und eigener Hardware für Brain-Computer-Interfaces},
-    pdfauthor={Matteo Friedrich \& Alexander Reimer},
-    pdfsubject={},% TODO
-    pdfkeywords={KI, AI, neuronale Netzwerke, EEG, Elektroenzephalographie, Jugend Forscht, BCI, Brain-Computer-Interface}
-}
-
-\usepackage{varwidth}
-
-
-% https://tex.stackexchange.com/a/464022
-% \newcommand\mynumberformat{\def\FancyVerbFormatLine##1{{\theFancyVerbLine} ##1}}
-% Make all verbatim envs (used in minted) centered
-% https://tex.stackexchange.com/a/161128
-% \RecustomVerbatimEnvironment{Verbatim}{BVerbatim}{formatcom=\mynumberformat}
-
-
-% }
-% {%
-%   \end{minted}%
-%   \caption{\tempcaption}%
-%   \label{\templabel}%
-%   \end{varwidth}%
-%   \end{listing}%
-% }
-\usepackage{csquotes} % Für deutsche Anführungszeichen
-\usepackage{multicol}
-
-\newcommand{\coderef}[1]{Programmausschnitt \ref{#1}}
-
-\newcommand{\sig}{\textrm{sig}}
-\newcommand{\netin}{\textrm{net}}
-\newcommand{\threesub}[1]{
-    \vspace{1.5ex}
-    \noindent {\textbf{#1}}
-    \vspace{0.5ex}
-}
-\newcommand{\form}[1]{#1}
-\newcommand{\fig}[1]{\centering #1}
-\newcommand{\filepath}[1]{\texttt{#1}}
-\newcommand{\cmd}[1]{\texttt{#1}}
-\newcommand{\ownurl}[1]{\texttt{#1}}
-\newcommand{\eng}[1]{\textit{#1}}
-\newcommand{\feng}[1]{{#1}}
-% \newcommand{\leng}[1]{\eng{#1}}
-% \newcommand{\keng}[1]{#1}
-% Abstand zwischen Tabellenzeilen
-\renewcommand*{\arraystretch}{1.2}
-
-
-% TODO: convert PNGs to JPEGs or even tikz where possible
+    \usepackage[bookmarks=true]{hyperref}
+    \hypersetup{
+        pdftitle={Entwicklung eines Frameworks und eigener Hardware für Brain-Computer-Interfaces},
+        pdfauthor={Matteo Friedrich \& Alexander Reimer},
+        pdfsubject={},% TODO
+        pdfkeywords={KI, AI, neuronale Netzwerke, EEG, Elektroenzephalographie, Jugend Forscht, BCI, Brain-Computer-Interface}
+    }
 
 \begin{document}
-
-\definecolor{bg}{rgb}{0.95,0.95,0.95}
-% https://github.com/gpoore/minted/issues/108
-% \newenvironment{code}[1][julia]
-% {%
-%     \VerbatimEnvironment
-%     \begin{minted}[bgcolor=bg, linenos, breaklines]{#1}%
-% }
-% {%
-%     \end{minted}%
-% }
 
 \pagenumbering{gobble}
 \thispagestyle{empty}
 
 \vspace*{10mm}
-{
-	\begin{center}
-		{\Huge \textbf{\sansemph Entwicklung eines Frameworks und eigener Hardware für Brain-Computer-Interfaces}}
-		
-		\vspace*{2mm}
-		{\Large Sammlung, Verarbeitung und Analyse unserer Gehirnsignale}
-		\vspace*{4mm}
-	\end{center}
-
-	\begin{center}
-		\includegraphics[width=0.8\textwidth]{logo.png}
-		\vspace*{10mm}
-		
-		{\huge \textbf{Alexander Reimer, Matteo Friedrich und Mattes Brinkmann}}
-		
-		\vspace*{1em}
-		{\LARGE \textbf{Gymnasium Eversten Oldenburg}}
-		\vspace*{2em}
-	\end{center}
-}
+\begin{center}
+    {\Huge \textbf{\sansemph Entwicklung eines Frameworks und eigener Hardware für Brain-Computer-Interfaces}} \\[2mm]
+    {\Large Sammlung, Verarbeitung und Analyse unserer Gehirnsignale} \\[4mm]
+    \includegraphics[width=0.8\textwidth]{logo.png} \\[10mm]
+    {\huge \textbf{Alexander Reimer, Matteo Friedrich und Mattes Brinkmann}} \\[1em]
+    {\LARGE \textbf{Gymnasium Eversten Oldenburg}}
+\end{center}
 
 \newpage
 \pagenumbering{roman}
@@ -222,12 +171,15 @@ Das dritte Problem, den Preis des EEG, wollen wir \enquote{lösen} indem wir uns
 
 \newpage % damit Stichpunkte nicht über zwei Seiten aufgeteilt sind
 
-\section{Materialien}
+\section{Materialien} 
 
 \begin{itemize}
-    \item Gekauftes EEG aus dem letzten Jahr
-        \begin{multicols}{2}
-        \begin{itemize}
+    % \setlength{\itemsep}{-1cm}
+    
+    \item Gekauftes EEG aus dem letzten Jahr %
+        \vspace*{-2ex}
+        \begin{multicols}{2} %
+        \begin{itemize} %
             \item 4-Kanal Ganglion Board von OpenBCI $\star$
             \item 4x Spike-Elektroden $\star$
             \item Klettband für die Elektroden $\star$
@@ -236,7 +188,9 @@ Das dritte Problem, den Preis des EEG, wollen wir \enquote{lösen} indem wir uns
             \item Plastik-Hülle für das Ganglion Board
         \end{itemize}
         \end{multicols}
+        \vspace*{-2ex}
     \item Selbstbau-EEG
+        \vspace*{-2ex}
         \begin{multicols}{2}
         \begin{itemize}
             \item Raspberry Pi 3B
@@ -251,7 +205,9 @@ Das dritte Problem, den Preis des EEG, wollen wir \enquote{lösen} indem wir uns
             \item Oszilloskop
         \end{itemize}
         \end{multicols}
+        \vspace*{-2ex}
     \item Computer: Aorus 15P (Laptop)
+    \vspace*{-2ex}
     \begin{multicols}{3}
     \begin{itemize}
         \item CPU: i7-11800H
@@ -259,7 +215,9 @@ Das dritte Problem, den Preis des EEG, wollen wir \enquote{lösen} indem wir uns
         \item RAM: 64\,GB
     \end{itemize}
     \end{multicols}
+    \vspace*{-2ex}
     \item Julia als Programmiersprache für unser Projekt mit den Packages:
+    \vspace*{-2ex}
     \begin{multicols}{4}
     \begin{itemize}
         \item LSL.jl
@@ -272,6 +230,7 @@ Das dritte Problem, den Preis des EEG, wollen wir \enquote{lösen} indem wir uns
         \item CUDA.jl
     \end{itemize}
     \end{multicols}
+    \vspace*{-2ex}
     \item OpenBCI GUI
     
     % \begin{itemize}
@@ -355,14 +314,13 @@ Diese sind bestimmte Spannungsschwankungen (\enquote{Potentiale}), welche in Zus
 % \end{figure}
 
 % \begin{figure}[h!]
-%     \fig{
+%     \centering
 %     % TODO: Bild mit richtiger Elektrodenplatzierung (Vis. Cortex), Abb. fig:ElektrodenPlatzierung
 %     \includegraphics[width=0.46\textwidth]{pictures/EEG-Alex-annotated.png}
 %     \includegraphics[width=0.3\textwidth]{pictures/Ganglion-Board-annotated.png}
 %     \includegraphics[width=0.15\textwidth]{pictures/spike_flat_elektroden.png}
 %     \caption{Das EEG und Zubehör. Links sieht man die typische Anwendung des EEG im Versuchsaufbau. In der Mitte ist das Ganglion Board genauer dargestellt. Rechts sind eine flache Elektrode und eine Spike-Elektrode zu sehen.}
 %     \label{EEG-Zubehor}
-%     }
 % \end{figure}
 
 % Als EEG haben wir letztes Jahr das Ganglion Board von OpenBCI verwendet.
@@ -383,52 +341,131 @@ Diese sind bestimmte Spannungsschwankungen (\enquote{Potentiale}), welche in Zus
 
 \subsubsection{Bau unseres eigenen EEG}
  
- % Ein EEG stellt vereinfacht nur ein sehr präzises Spannungsmessgerät dar, welches Potentialdifferenzen (Spannungen) im $\mu V$-Bereich messen und anzeigen kann. 
- Die Spannungen, die von den Neuronen durch den Schädel dringen, sind zu gering (unterhalb von einigen hundert Mikrovolt), um direkt von einer Messeinheit verarbeitet werden zu können, es muss zunächst eine Verstärkung des aufzuzeichnenden Signals erfolgen. \cite{EEGHausarbeit}
- % Die für EEG-Messungen relevante Spannungen liegen meist im Bereich von einigen hundert Mikrovolt. 
- 
- Ebenfalls müssen die gewünschten Frequenzen vorab mittels aktiver Filter herausgefiltert werden, um später eine genaue Signalanalyse zu ermöglichen. 
- Je nachdem, was für Phänomene genau untersucht werden sollen, können entsprechend unterschiedliche Frequenzbereiche herausgefiltert werden. 
- Beispielsweise liegen Alpha-Wellen, die ein bestimmtes Signalschema darstellen und eine wichtige Rolle bei der Konzentration sowie visuellen Verarbeitung spielen, in einem Frequenzbereich von 8 bis 13 Hz. \cite{Praktikum, Birbaumer2010, wiki:Berger-Effekt}
+% Ein EEG stellt vereinfacht nur ein sehr präzises Spannungsmessgerät dar, welches Potentialdifferenzen (Spannungen) im $\mu V$-Bereich messen und anzeigen kann. 
+Die Spannungen, die von den Neuronen durch den Schädel dringen, sind zu gering (unterhalb von einigen hundert Mikrovolt), um direkt von einer Messeinheit verarbeitet werden zu können, es muss zunächst eine Verstärkung des aufzuzeichnenden Signals erfolgen. \cite{EEGHausarbeit}
+% Die für EEG-Messungen relevante Spannungen liegen meist im Bereich von einigen hundert Mikrovolt. 
+
+Ebenfalls müssen die gewünschten Frequenzen vorab mittels aktiver Filter herausgefiltert werden, um später eine genaue Signalanalyse zu ermöglichen. 
+Je nachdem, was für Phänomene genau untersucht werden sollen, können entsprechend unterschiedliche Frequenzbereiche herausgefiltert werden. 
+Beispielsweise liegen Alpha-Wellen, die ein bestimmtes Signalschema darstellen und eine wichtige Rolle bei der Konzentration sowie visuellen Verarbeitung spielen, in einem Frequenzbereich von 8 bis 13 Hz. \cite{Praktikum, Birbaumer2010, wiki:Berger-Effekt}
  
  Darüber hinaus wird eine Einheit benötigt, die das Ausgangssignal misst und aufzeichnet, damit es weiterverarbeitet und analysiert werden kann. 
  
- Sowohl für die Filterung als auch für die Verstärkung werden sogenannte Operationsverstärker (OPV) verwendet. 
- In Abb. \ref{fig:OPV} sieht man rechts das Schaltzeichen mit den jeweiligen Anschlüssen und links einen OPV in einem DIL-Gehäuse. 
+Sowohl für die Filterung als auch für die Verstärkung werden sogenannte Operationsverstärker (OPV) verwendet. 
+In Abb. \ref{fig:OPV} sieht man rechts das Schaltzeichen mit den jeweiligen Anschlüssen und links einen OPV in einem DIL-Gehäuse. 
  
  \begin{figure}[h!]
-   \centering
-    \includegraphics[width=0.7\linewidth]{pictures/OPV.png}
+    \centering
+    \includegraphics[width=0.5\linewidth]{pictures/OPV_cropped.png}
     \caption{Links: 2-fach OPV LM358 in einem DIL-Gehäuse, Rechts: OPV als Schaltbild }
     \label{fig:OPV}
 \end{figure}
 
- OPVs finden vor allem in der Mess- und Regeltechnik Anwendung und bestehen aus Transistoren, die zu integrierten Schaltkreisen zusammengefügt werden.
-  Dabei lässt sich die interne Schaltung eines OPVs allgemein in zwei Schaltungensteile untergliedern, den sog. Differenzverstärker, der später für die Potentialmessung wichtig wird, und die dahinter geschaltete Gegentaktendstufe, welche
-  für die Leistungsverstärkung zuständig ist.
- Ihr geringer Ausgangswiderstand sowie der hohe Eingangswiderstand als auch der hohe Spannungsverstärkungsfaktor, machen den OPV passend für die Anwendung als EEG-Verstärker.
+OPVs finden vor allem in der Mess- und Regeltechnik Anwendung und bestehen aus Transistoren, die zu integrierten Schaltkreisen zusammengefügt werden.
+Dabei lässt sich die interne Schaltung eines OPVs allgemein in zwei Schaltungensteile untergliedern, den sog. Differenzverstärker, der später für die Potentialmessung wichtig wird, und die dahinter geschaltete Gegentaktendstufe, welche
+für die Leistungsverstärkung zuständig ist.
+Ihr geringer Ausgangswiderstand sowie der hohe Eingangswiderstand als auch der hohe Spannungsverstärkungsfaktor, machen den OPV passend für die Anwendung als EEG-Verstärker.
 
- OPVs besitzen, neben den Anschlüssen für die Stromversorgung, drei für ihre Funktion wichtige Anschlüsse, einen invertierenden und einen nicht-invertierenden Eingang sowie einen Ausgang, über welche er angesteuert werden kann.
- 
- 
- Legt man nun über beiden Eingängen jeweils unterschiedliche Spannungen $U_{1}$ und $U_{2}$ an, so wird am Ausgang des OPVs die Differenz der beiden Spannungen ausgegeben. Also gilt: $U_{2}-U_{1} = U_{Diff}$. 
- Dies macht man sich nun zu Nutze, um die Spannungen bzw. Potentialdifferenzen zwischen zwei Elektroden zu messen. 
- % Wie oben bereits beschrieben wird dabei immer die Potentialdifferenz zwischen einer Elektrode, die sich auf der Kopfhaut und einer Referenzelektrode, die sich am Ohrläppchen befindent, gemessen. 
- 
- Zudem lassen sich mit einem OPV und wenigen weiteren Bauteilen einfach aktive Filter bauen.
- 
+OPVs besitzen, neben den Anschlüssen für die Stromversorgung, drei für ihre Funktion wichtige Anschlüsse, einen invertierenden und einen nicht-invertierenden Eingang sowie einen Ausgang, über welche er angesteuert werden kann.
+
+Legt man nun über beiden Eingängen jeweils unterschiedliche Spannungen $U_{1}$ und $U_{2}$ an, so wird am Ausgang des OPVs die Differenz der beiden Spannungen ausgegeben. Also gilt: $U_{2} - U_{1} = U_{\textrm{Diff}}$. 
+Dies macht man sich nun zu Nutze, um die Spannungen bzw. Potentialdifferenzen zwischen zwei Elektroden zu messen. 
+% Wie oben bereits beschrieben wird dabei immer die Potentialdifferenz zwischen einer Elektrode, die sich auf der Kopfhaut und einer Referenzelektrode, die sich am Ohrläppchen befindent, gemessen. 
+
+Zudem lassen sich mit einem OPV und wenigen weiteren Bauteilen einfach aktive Filter bauen.
+
 Die Grundschaltung für unsere EEG beruht auf einem englischsprachigem Internetartikel, in dem eine Verstärkerschaltung für ein EEG beschrieben war. Die von uns angepasste Schaltung ist in Abb. x zu sehen.
 Diese mussten wir aber etwas verändern, um den gewünschten Frequenzbereich herauszufiltern.
 Basis dieser Schaltung bildet der Instrumentenverstärker AD620AN, welcher extra für EEG- und EKG-Anwendungen entwickelt wurde.
 
 \begin{figure}
-    \centering
-    \begin{circuitikz}[european]
-      \draw (0,0) node[dipchip, num pins=8, no topmark, external pins width=0.0] (C) {AD620};
-      \draw (C.pin 1) -- ++(-0.5,0) to ++(0,1) to [R,R={\SI{560}{Ω}}] ++(2.7,0) 
-      to ++(0,-1) to (C.pin 8);
+    \centering  
+    \begin{circuitikz}[european, scale=0.4, transform shape]
+        \draw (0,0) node[dipchip, num pins=8, no topmark, external pins width=0.0] (C) {AD620};
+        % Verbinde Pins 1 und 8 über Widerstand
+        \draw 
+            (C.pin 1) -- ++ (-0.5,0) 
+            to ++(0,1) 
+            to [R,R={\SI{560}{Ω}}] ++(2.7,0) 
+            to ++(0,-1) 
+            to (C.pin 8);
+        % Inputs
+        \node[left=1.5 of C.pin 2, iecsocketR] (inputNeg) {};
+        \node[left=1.5 of C.pin 3, iecsocketR] (inputPos) {};
+        \node[above=0cm of inputNeg, xshift=2em, yshift=-1ex] {\small Input $+$};
+        \node[above=0cm of inputPos, xshift=2em, yshift=-1ex] {\small Input $-$};
+        \draw
+            (C.pin 2) to (inputNeg.east)
+            (C.pin 3) to (inputPos.east);
+        \draw
+            (C.pin 7) to  ++ (1.5,0) to ++ (0,0.75) node[vcc]{\SI{9}{\volt}}
+            (C.pin 4) to ++ (-1,0) node[vee]{\SI{-9}{\volt}};
+        \node[op amp, right=6 of C, yshift=0.21cm] (opamp1) {};
+
+        % \node at ($(C.pin 6) + (2,0)$) (foo) {};
+        % \draw (C.pin 6) to (foo);
+        % \draw (foo) to [R={\SI{318}{kΩ}}, -*] ++(2, 0);
+        \draw (C.pin 6) to ++(2,0);
+        \draw 
+            (opamp1.+) node[left] {}
+            (opamp1.-) node[left] {}
+            (opamp1.out) node[right] {}
+            (opamp1.up) -- ++(0,1.5) node[vcc]{\SI{9}{\volt}}
+            (opamp1.down) -- ++(0,-1.5) node[vee]{\SI{-9}{\volt}}
+            (opamp1.+) to [R={\SI{318}{kΩ}}, -*] 
+            ++(-2,0) to [R={\SI{318}{kΩ}}, -*] 
+            ++(-2,0) to ++(0,-1.5)
+            to [C,l_={\SI{10}{\nano\farad}}, -*] ++(1.25,0)
+            to [C,l_={\SI{10}{\nano\farad}}] ++(2.5,0)
+            to[short,-*] ++(0,1.5)
+            (4.84,-0.3) to (4.84,-4) 
+            to [C,l={\SI{20}{\nano\farad}}] ++(0,-2) node[rground]{}
+            % (C.pin 6) to ++(2,0)
+            (4.1,-1.8) to (4.1,-2.5) to [R,l_={\SI{158}{kΩ}}] ++(0,-2) to ++(0,-1.5) node[rground]{} 
+            (opamp1.-) to ++(-1,0) to ++(0,1) to ++(3.5,0) to[short,-*] ++(0,-1.5)
+            (opamp1.out) to [C={\SI{220}{\nano\farad}},-*] ++(2,0) to [C={\SI{220}{\nano\farad}}] ++(2,0)
+            (11.23,0.25) to [R={\SI{47}{kΩ}}] ++(0,-4) node[rground]{} 
+            (11.23,0.25) to [C, l={\SI{220}{\nano\farad}}] ++(0,3) to [short,-*] ++(2,0) to [R, l_={\SI{220}{kΩ}},-*] ++(0,-3.05);
+            
+        \node[op amp, right=4 of opamp1,yshift=-0.49cm] (opamp2) {};
+        \draw 
+            (opamp2.+) node[left] {}
+            (opamp2.-) node[left] {}
+            (opamp2.out) node[right] {}
+            (opamp2.up) -- ++(0,1.5) node[vcc]{\SI{9}{\volt}}
+            (opamp2.down) -- ++(0,-1.5) node[vee]{\SI{-9}{\volt}}
+            (opamp2.out) to[short,*-] ++(0,3.525) to ++(-2.4,0)
+            (opamp2.+) to ++(-0.5,0) to ++(0,-3) node[rground]{}
+            (15.6,-0.27) to [R, l={\SI{180}{kΩ}},-*] (17.6,-0.27)
+            (17.6,-0.27) to[C, l_={\SI{100}{\nano\farad}}] ++(0,-3.5) node[rground]{}
+            (17.6,-0.27) to [R, l={\SI{180}{kΩ}}] ++(0,3) to[short, -*] ++(1.9,0) to[C, l_={\SI{25}{\nano\farad}},-*] ++(0,-2.96);
+        \node[op amp, right=4 of opamp2,yshift=-0.45cm] (opamp3) {};
+        \draw 
+            (opamp3.+) node[left] {}
+            (opamp3.-) node[left] {}
+            (opamp3.out) node[right] {}
+            (opamp3.up) -- ++(0,1.5) node[vcc]{\SI{9}{\volt}}
+            (opamp3.down) -- ++(0,-1.5) node[vee]{\SI{-9}{\volt}}
+            (17.6,-0.27) to[R={\SI{100}{kΩ}}] (opamp3.-)
+            (opamp3.+) to ++(-0.5,0) to ++(0,-2.6) node[rground]{}
+            (opamp3.out) to [short,*-] ++(0,3.46) to ++(-2.5,0);
+        \node[op amp, right=4 of opamp3,yshift=0.48cm] (opamp4) {};
+        \draw 
+            (opamp4.+) node[left] {}
+            (opamp4.-) node[left] {}
+            (opamp4.out) node[right] {}
+            (opamp4.up) -- ++(0,1.5) node[vcc]{\SI{9}{\volt}}
+            (opamp4.down) -- ++(0,-1.5) node[vee]{\SI{-9}{\volt}}
+            (opamp3.out) to [big elko, l_={\SI{1}{\mu\farad}}] ++(4,0)
+            (opamp4.+) to[R,l_={\SI{1}{MΩ}},*-] ++(0,-3.25) node[rground]{}
+            (opamp4.-) to[short,-* ] ++(-1.4,0) to ++(-1,0) to [C, l={\SI{10}{\nano\farad}}] ++(0,3) to [short,-*] ++(1,0) to[R,l={\SI{100}{kΩ}}] ++(0,-3)
+            (opamp4.out) to ++(0,3.5) to ++(-3.7,0)
+            (24.6,0.5) to (24.6,-2.3) to [R,l_={\SI{220}{Ω}}] ++(0,-2)
+            (24.6,-4.3) to [vR, l=\SI{1}{\kohm}, *-] ++(0,-2) node[rground]{}
+            (24.6,-4.3) to ++(-0.5,0) to[short,-*] ++(0,-0.74) 
+            (opamp4.out) to[big elko, l_={\SI{100}{\mu\farad}},*-o] ++(2,0);
     \end{circuitikz}
-    \caption{Caption}
+    \caption{Schaltplan}
     \label{fig:my_label}
 \end{figure}
  
@@ -471,33 +508,78 @@ Jedes Neuron besitzt eine sog. Aktivierung, die meist als Zahl zwischen 0 und 1 
 Die Neuronen verschiedener Schichten sind durch sogenannte Gewichte (\eng{weights}) verbunden, die ebenfalls einen beliebigen Wert haben können.
 Die Ausgaben / Vorhersagen des neuronalen Netzwerkes werden von den Aktivierungen der Neuronen in der Ausgabeschicht abgelesen.
 
+Bei neuronalen Netzwerken gibt es zwei relevant Verfahren: Den Forward Pass und die Backpropagation.
+
+Ersteres beschreibt das propagieren von den Eingabewerten durch das Netzwerk.
+Zuerst werden die Aktivierungen der Neuronen in der Eingabeschicht gesetzt und danach die Aktivierungen der Neuronen der nächsten Schicht berechnet, welche dann wiederum für der nächsten Schicht verwendet werden und so weiter.
+Dadurch werden die Eingaben von Schicht zu Schicht bis zur Ausgabe weiterverarbeitet.
+Der Forward Pass ist zur Verwendung eines Netzwerks notwendig.
+
+Er bietet außerdem den ersten Schritt der Backpropagation, die für das Lernen des Netzwerks verantwortlich ist.
+Nachdem alle Aktivierungen gesetzt wurden, werden die Aktivierung der letzten Schicht, also die Ausgaben, bewertet.
+Wir verwenden Supervised Learning, heißt wir nutzen zur Bewertung Trainingsdaten, die wir vorher \eng{gelabelt}, ihnen also die korrekten Ausgabedaten zugewiesen haben.
+
+Dann wird jedes einzelne Ausgabeneuron \enquote{bewertet}, indem die Differenz zwischen der tatsächlichen Aktivierung nach dem Forward Pass und den zugewiesenen korrekten Ausgaben gebildet wird.
+
+Diese Differenz zwischen ist-Zustand und soll-Zustand wird nun in der Backpropagation verwendet, um die Gewichte zwischen Ausgabe- und vorletzter Schicht anzupassen, denn mit ihm kann der sogenannte delta-Wert eines Neurons bestimmt werden.
+Dieser entspricht der Änderung der Aktivierung eines Neurons, die notwendig wäre, damit ein Forward Pass von dort aus ein korrektes Ergebnis liefert.
+
+Auf die Berechnung des delta-Werts werden wir dieses Jahr nicht weiter eingehen, da es für uns nicht direkt relevant ist.
+Interessant ist womöglich nur noch, dass dafür die delta-Werte der nächsten Schicht (in Richtung Ausgabe) benötigt werden und daher der \eng{backward} (dt. rückwärts) Teil im Namen kommt.
+
+Mithilfe dieses delta-Werts kann dann auch bestimmt werden, wie die Gewichte angepasst werden müssten, um diese gewünschte Änderung umzusetzen:
+
+\form{\[
+	\Delta W_{i,j} = \eta * \delta_i * a_j
+\]}
+
+Und entsprechend angepasst werden mit:
+\form{\[
+    W_{i,j} = W_{i,j} + \Delta W_{i,j}
+\]}
+
+\noindent wobei $i$ das Neuron näher zur Ausgabe, $j$ das Neuron näher zur Eingabe und $W_{i,j}$ das Gewicht zwischen diesen beiden ist.
+
+Die Multiplikation mit $a_j$ findet statt, um zu ermöglichen, dass die Änderung der Gewichte entsprechend ihres tatsächlichen Einflusses geschieht, bedeutet, wenn ein Gewicht mit einem Neuron verbunden ist, welches kaum aktiv ist (eine niedrige Aktivierung hat), wird das Gewicht zu diesem auch kaum angepasst, und wenn es negativ ist, dann wird die Änderung umgekehrt, was auch notwendig ist, um das Ziel zu erreichen.
+
+$\eta$ ist die sogenannte Lernrate.
+Sie ist meist ein sehr niedriger Wert (0.01, 0.0001, etc.) und ist wichtig für das Kernkonzept des Lernen eines neuronalen Netzwerks:
+Sie sorgt dafür, dass bei jedem Trainingsdatensatz die Gewicht nur etwas an diesen angepasst werden, sodass das gesamte Training die Gewichtsanpassungen aller Trainingsdatensätze und somit hoffentlich auch eine Generalisierung dieser darstellt.
+
+Insgesamt lässt sich also sagen, dass ein neuronales Netzwerk versucht, diese Differenz $\textrm{ist} - \textrm{soll}$ zu minimieren.
+Diese Differenz ist also ähnlich einer Verlustfunktion und lässt sich tatsächlich auch in einer tatsächlichen Verlustfunktion für Supervised trainierte neuronale Netzwerke, dem Mean Squared Error, wiederfinden:
+
+\form{ \[
+	C_0 = (a_0 - y)^2
+\]}
+\noindent wobei $C_0$ der Verlust der Ausgabeschicht (Schicht $0$, da Indexierung der Schichten bei der Ausgabe beginnt), $a_0$ der Vektor aller Aktivierungen der Ausgabeschicht, und $y$ ein Vektor der richtigen Ausgaben für die Eingaben, mit denen die Aktivierungen berechnet wurden, ist.
+
 Es gibt verschiedene Arten von Schichten in neuronalen Netzwerken; wir verwenden hauptsächlich \feng{Fully Connected} und \feng{Convolutional} Schichten.
 
 \subsubsection{Fully Connected Schichten} 
-\threesub{{Forward pass}} \label{forward-prop}
 
 Bei Fully Connected Schichten sind alle Neuronen eines Layers mit allen Neuronen des nächsten Layers verbunden.
+Außerdem hat typischerweise jedes Neuron einen sogenannten Bias, der hinzu addiert wird.
 
-Zur Berechnung der Aktivierung der Neuronen gibt es den sogenannten \feng{Forward Pass}. 
+% \threesub{{Forward pass}} \label{forward-prop}
+
+Zur Berechnung der Aktivierungen der Neuronen gibt es den sogenannten \feng{Forward Pass}. 
 Dabei beginnt man in der ersten verdeckten Schicht damit, für alle Neuronen die sogenannte Netzeingabe zu berechnen. 
 Um die Netzeingabe eines Neurons zu berechnen, werden alle Aktivierungen der vorherigen Schicht mit den von dem Neuron dorthin führenden Gewichten multipliziert und aufsummiert.
+
 Der Bias ist eigentlich auch ein Gewicht, jedoch ist er mit einem Neuron verbunden, das immer die Aktivierung 1 hat. \cite{brotcrunsher:forwardpass}
 
-\begin{wrapfigure}{r}{0.4\textwidth}
-	\centering
-	\vspace*{-5mm}
-	\includegraphics[width=0.4\textwidth]{pictures/sig_func.png}
-	\caption{Graph der Sigmoidfunktion. Wir nutzen die Sigmoidfunktion um die Aktivierung, $sig(x)$, aus der Netzeingabe, $x$, zu berechnen.}
-	\label{sig_func}
-\end{wrapfigure}
+Die Formel für die Berechnung der Netzeingabe eines Neurons in einer Fully Connected Schicht lautet also:
 
-\def\layersep{3cm}
-\newcommand\nn[1]{
+\form{\[
+	\netin_j = \sum_{L} (a_{L} * W_{Lj}) + b_{j}
+	\]}
+\noindent wobei $\netin_j$ die Netzeingabe des Neurons $j$, $L$ die vorherige Schicht, $a_L$ der Vektor aller Aktivierungen der Schicht $L$, $W_{Lj}$ der Vektor aller Gewichte zwischen dem Neuron $j$ und den Neuronen der Schicht $L$, und $b_j$ der Bias des Neurons $j$ ist. 
 
-}
 % \begin{figure}
+%     \def\layersep{3cm}
 %     \centering
-%     \begin{minipage}[t]{0.6\linewidth}\vspace{0pt}%
+%     % \begin{minipage}[t]{0.6\linewidth}\vspace{0pt}%
 %     \begin{tikzpicture}[
 %         scale=1.2,
 %         shorten >=1pt,->,draw=black!70, node distance=\layersep,
@@ -513,122 +595,88 @@ Der Bias ist eigentlich auch ein Gewicht, jedoch ist er mit einem Neuron verbund
 %     % Input layer
 %     \foreach \y in {1,...,2}
 %         \node[neuron, fill=green!40] (i\y) at (0,\y+1) {$i_\y$};
-    
+%     \node[neuron, fill=orange!40] (b1) at (0, 4.5) {$b_1$};
 %     % Hidden layer
 %     \foreach \y in {1,...,4}
 %         \path node[neuron, fill=blue!40] (h\y) at (\layersep,\y) {$h_\y$};
-    
+%     \node[neuron, fill=orange!40] (b2) at (\layersep, 5.5) {$b_2$};
 %     % Output node
-%     \node[neuron, fill=red!40] (o) at (2*\layersep,2.5) {$o$};
+%     \node[neuron, fill=red!40] (o) at (2*\layersep,2.5) {$O$};
     
 %     % Connect every node in the input layer with every node in the hidden layer.
 %     \foreach \source in {1,...,2}
 %         \foreach \dest in {1,...,4}
 %             \path (i\source) edge (h\dest);
-    
+%     % Connect bias in the input layer with every node in the hidden layer.
+%     \foreach \dest in {1,...,4}
+%         \path[red!20] (b1) edge (h\dest);
 %     % Connect every node in the hidden layer with the output layer
 %     \foreach \source in {1,...,4}
 %         \path (h\source) edge (o);
-
+%     % Connect bias in the hidden layer with the output layer
+%     \path[red!20] (b2) edge (o);
+        
 %     % Draw weights for all regular edges.
 %     \foreach \i in {1,...,2}
 %     \foreach \j in {1,...,4}
 %     \path (i\i) -- (h\j) node[weight={\i}{\j}];
 %     \foreach \i in {1,...,4}
 %     \path (h\i) -- (o) node[weight={\i}{1}];
+%     % Draw weights for bias edges.
+%     \foreach \j in {1,...,4}
+%     \path (b1) -- (h\j) node[weight={3}{\j}];
+%     \path (b2) -- (o) node[weight={5}{1}];
 %     \end{tikzpicture}
-%     \end{minipage}
-%     \begin{minipage}[t]{0.3\linewidth}\vspace{0pt}%
-%     \begin{alignat*}{2}
-%         & i_1 = 0.8 \\
-%         & i_2 = 0.3 \\
-%         & h_4 = -0.25 * i_1 + 0.1 * i_2  \\
-%         \Rightarrow &h_4 = -0.17 \\
-%         ... \\
-%     \end{alignat*}
-%     \end{minipage}
+%     % \end{minipage}
+
+    
+%     % \begin{minipage}[t]{0.5\linewidth}\vspace{0pt}%
+%     % \begin{alignat*}{2}
+%     %     &h_4 = i_2 * 0.1 + i_1 * (-0.25) \\
+%     %     &h_3 = i_2 * 0.25 + i_1 * (-0.1) \\
+%     %     & ... \\
+%     %     & O = h_4 * 1.25 + h_3 * 0.9 + h_2 * 0.55 + h_1 * 0.2 \\
+%     % \end{alignat*}
+%     % \end{minipage}
 %     \caption{Caption}
 %     \label{fig:dense_nn}
 % \end{figure}
 
-Um aus dieser Netzeingabe nun die Aktivierung zu berechnen, benötigt man eine Aktivierungsfunktion, die dafür sorgt, dass die Aktivierung begrenzt und somit ein unendliches Wachstum der Aktivierungen und entsprechend Gewichte verhindert wird.
+Um aus dieser Netzeingabe nun die Aktivierung zu berechnen, benötigt man eine Aktivierungsfunktion, die zum einen dafür sorgt, dass die Aktivierung begrenzt und somit ein unendliches Wachstum der Aktivierungen und entsprechend Gewichte verhindert wird, und zum anderen sicherstellt, dass es keine Linearität zwischen Eingaben und Ausgaben gibt. 
+Dadurch kann das Netzwerk vor allem Klassifizierungsaufgaben besser erlernen. % TODO: Quelle
 
-Letzte Jahr haben wir die Sogmoid-Funktion genutzt, welche sicherstellt, dass der Eingabewert immer zwischen 0 und 1 liegt.
-Doch dieses Jahr setzen wir auf tanh, denn...
-Wir haben dafür eine Sigmoidfunktion benutzt, die eine Zahl nimmt und einen Wert zwischen 0 und 1 ausgibt (siehe Abbildung \ref{sig_func}). 
-Dies wird dann für jedes Neuron in jeder Schicht wiederholt. Da man aber immer die Aktivierungen der vorherigen Schicht benötigt, muss man das Ganze von der Eingabeschicht zur Ausgabeschicht durchführen. Daher auch der Name \feng{forward pass}. Die Interpretation der Ausgaben hängt von den Trainingsdaten ab.
-	
-Die allgemeine Formel für die Aktivierung eines Neurons lautet also:
+\begin{figure}[h!]
+    \centering
+    \begin{minipage}[t]{0.5\linewidth}\vspace{0pt}%
+        \begin{tikzpicture}
+        \begin{axis}[
+            xlabel={Netzeingabe}, ylabel={Aktivierung}, domain={-10:10}, samples=100,
+            no markers, legend pos=south east
+        ]
+            \addplot {1 / (1 + 2.71828^(-x))};
+            \addplot{tanh(x)};
+            \legend{$\sig(x)$, $\tanh(x)$};
+        \end{axis}
+        \end{tikzpicture}
+        \caption{Aktivierungsfunktionen im Vergleich}
+        \label{fig:act_funcs}
+    \end{minipage}
+\end{figure}
 
+Letztes Jahr haben wir die Sigmoid-Funktion genutzt, welche sicherstellt, dass der Eingabewert immer zwischen 0 und 1 liegt (s. Abb. \ref{fig:act_funcs}.
 
-\form{
 \[
-	\sig(x)=\frac{1}{1+e^{-x}}
-	\]
-\[
-	a_{j} = \sig\left(\sum_{L} (a_{L} * W_{Lj}) + b_{j}\right)
-	\]}
-	
-\noindent wobei $a_j$ die Aktivierung des Neurons $j$, $L$ die vorherige Schicht, $a_L$ der Vektor aller Aktivierungen der Schicht $L$, $W_{Lj}$ der Vektor aller Gewichte zwischen dem Neuron $j$ und den Neuronen der Schicht $L$, und $b_j$ der Bias des Neurons $j$ ist. \cite{brotcrunsher:forwardpass}	
-	
-\threesub{Loss} 
+    \sig(x) = \frac{1}{1+e^{-x}}
+\]
 
-Um zu bestimmen, wie gut ein neuronales Netz ist, gibt es die sogenannte Verlustfunktion (engl. \eng{loss function}), die die Datensätze verwendet, um die Abweichung des Netzwerks vom Ideal zu bestimmen. Diese Abweichung wird auch \eng{loss} genannt.
+Doch dieses Jahr setzen wir auf die $\tanh$-Aktivierungsfunktion, bei der die Werte immer zwischen -1 und 1 liegen (s. Abb. \ref{fig:act_funcs}.
+Mit der Sigmoid-Aktivierungsfunktion war aufgrund der Beschränkung auf positive Zahlen das Abziehen von der Aktivierung eines Neurons durch ein vorhergehendes nicht möglich und somit die Komplexität und Möglichkeiten eines neuronalen Netzwerkes eingeschränkt.
 
-Trainingsdaten bestehen aus einer Liste aus Trainingsdatensätzen. Jeder dieser Datensätze beinhaltet Eingaben für das Netzwerk und die richtigen Ausgaben dafür. Machine Learning, das mit solchen Trainingsdaten arbeitet, wird Supervised Learning genannt.
+Dieses Verfahren zur Berechnung der Aktivierung wird dann für jedes Neuron in jeder Schicht wiederholt.
+Da aber immer die Aktivierungen der vorherigen Schicht ($a_{L}$) benötigt, muss dieser Prozess von der Eingabeschicht aus zur Ausgabeschicht hin durchgeführt werden, daher auch der Name \feng{Forward Pass}.
 
-Die Funktion für den \eng{loss} der Ausgabeschicht und somit des gesamten Netzwerkes (für einen Datensatz) lautet wie folgt:
-
-\form{ \[
-	C_0 = (a_L - y)^2
-\]}
-
-%C0 = (aL − y)2 
-
-\noindent wobei $C_0$ der \eng{loss} der Ausgabeschicht, $L$ die letzte Schicht (Ausgabeschicht), $a_L$ der Vektor aller Aktivierungen der Schicht $L$, und $y$ ein Vektor der richtigen Ausgaben für die Eingaben, mit denen die Aktivierungen berechnet wurden, ist. 
-	
-Um den \eng{loss} zu berechnen, muss man also für alle Neuronen der Ausgabeschicht die Differenz der durchs Netzwerk gegebenen und der in den Datensätzen vorgegebenen Aktivierungen bilden. Danach muss man diese Differenzen quadrieren und am Ende alle Ergebnisse aufsummieren. Dies kann man für alle Testdatensätze wiederholen und von allen \eng{losses} den Durchschnitt nehmen, um die allgemeine Performance eines Netzwerkes zu überprüfen. Diese Art der Verlustfunktion wird mittlere quadratische Abweichung (engl. \eng{mean squared error}, kurz MSE) genannt.
-	
-Zusammenfassend kann man also sagen, dass der \eng{loss} die Abweichung von den aktuellen Ausgaben des Netzwerkes zu den idealen Ausgaben des Netzwerkes darstellt -- ein perfektes neuronales Netz hätte einen \eng{loss} von 0. Aufgrund der Trainingsdatensätze und der Verlustfunktion weiß man nun, wie stark die Ausgabeschicht abweicht und entsprechend verändert werden muss.
-
-\threesub{Backpropagation}
-
-Mithilfer der sogenanten Backpropagation werden die Gewichte des Netzwerkes mithilfe der Datensätze angepasst, um den \eng{loss} zu senken.
-
-Die von uns verwendete Form der Backpropagation ist das simple sogenannte Gradientenverfahren.
-
-Um die Aktivierungen der Ausgabeschicht anzupassen, müssen alle Gewichte und Biases davor angepasst werden. Um nun zu wissen, wie ein Gewicht verändert werden muss, gibt es beim Gradientenverfahren folgende Funktion:
-
-\form{\[
-	\Delta W_{ij} = \epsilon * \delta_i * a_j
-\]}
-%
-Hier ist  $\Delta W_{ij}$ der Wert, um den das Gewicht $W$ zwischen den Neuronen $j$ und $i$ verändert werden muss, $\epsilon$ die Lernrate (meist ein kleiner Wert wie 0.001), $\delta_i$ eine Annäherung der Ableitung des \eng{loss} des Neurons $i$ im Verhältnis zum Gewicht $W_{ij}$, und $a_j$ die Aktivierung des Neurons $j$. Dabei ist oft verwirrend, dass die Schicht des Neurons $i$ aus der Sicht des \feng{forward pass} weiter hinten liegt als die Schicht des Neurons $j$.
-	
-% bezeichnet das Neuron, das sich in der vorderen Schicht befindet, und $i$ das Neuron, das sich in der hinteren  (Reihenfolge im \feng{forward pass}), obwohl es bei $W_{ij}$ andersherum steht.
-
-Für den Bias wird die gleiche Formel benutzt, mit der Ausnahme, dass $a_j$ immer 1 ist und so wegfällt. Der Grund dafür liegt darin, dass der Bias, wie im Abschnitt \hyperref[forward-prop]{\feng{forward pass}} beschrieben, eigentlich nur ein Gewicht ist, das mit einem Neuron verbunden ist, welches immer eine Aktivierung von eins hat.
-
-Um nun $\delta_i$ für die Ausgabeschicht zu berechnen, gibt es folgende Gleichung: 
-
-\form{\[
-	%\delta_i = \sig '\left({\netin}_i\right) * (a_i (\textrm{soll}) - a_i (\textrm{ist})) 
-	\delta_i = \sig '\left(x_i\right) * (a_i (\textrm{soll}) - a_i (\textrm{ist})) 
-\]}
-%
-wobei $\sig '(x)$ die Ableitung von $\sig(x)$ ist, also $\sig'(x) = \sig(x) * (1 - \sig(x))$, $x_i$ der Netzeingabe des Neurons $i$, $a_i(\textrm{soll})$ die Aktivierung, die das Neuron haben sollte (also das gleiche wie $y$), und $a_i(\textrm{ist})$ die Aktivierung, die das Neuron hat.
-%
-Mit dieser Formel wird berechnet, welche Aktivierung das Neuron haben sollte, was an $a_i(\textrm{soll}) - a_i(\textrm{ist})$ erkennbar ist. Die Aktivierungsfunktion mit der Netzeingabe wird als Faktor mit einberechnet, da möglichst nur die Gewichte stark verändert werden sollen, die bei dem Trainingsdatensatz eine hohe Aktivierung haben, also durch diese Eingaben besonders angesprochen werden. So werden zum Beispiel beim Sortieren nur die Neuronen stark miteinander verknüpft, die für ein bestimmtes Muster verantwortlich sind.
-
-Für die Neuronen der verdeckten Schichten muss man alle $\delta$'s der nächsten Schicht mit den von dem Neuron dorthin führenden Gewichten multiplizieren und dann summieren. Dadurch werden die Änderungen, die die Aktivierungen dieser Neuronen brauchen ($\delta$), zusammengerechnet, da natürlich die Aktivierungen in der nächsten Schicht unterschiedliche Änderungen in dem gleichen Neuron benötigen.
-	
-Durch die Multiplikation mit den dahin führenden Gewichten werden diese Änderungen gewichtet, da sie auf einige Neuronen größere Auswirkungen haben als auf andere. Wie bei der Ausgabeschicht auch wird diese Summe noch mit $\sig'(x)$ multipliziert, um die Aktivierung durch bestimmte Muster angesprochener Neuronen noch weiter zu erhöhen und weniger/kaum angesprochener Neuronen zu senken, sodass die Ergebnisse besser und eindeutiger werden. Die Formel hierfür lautet:
-
-\form{\[\delta_i = \sig'(x_i) * \sum_{L}{\left(\delta_L\ast W_{Li}\right)}\]}
-%
-\noindent wobei $L$ die nächste Schicht, $\delta_L$ der Vektor aller $\delta$'s der Schicht $L$, und $W_{Li}$ der Vektor aller Gewichte, die ein Neuron der nächsten Schicht und Neuron $i$ verbinden, ist.
-%
-Da immer die (in Reihenfolge des \feng{forward pass} gesehene) nächste Schicht benötigt wird, ergibt es Sinn, diese Optimierung bei der Ausgabeschicht zu starten und dann rückwärts die \mbox{$\delta$-Werte} für jede Schicht zu berechnen und für die nächsten Berechnungen zu speichern -- daher auch der Name Backpropagation.
+Fully Connected Schichten sind die \enquote{Standard}-Schicht bei neuronalen Netzwerken. 
+Sie können und werden vielseitig eingesetzt, doch haben den Nachteil, dass sie \enquote{global} sind, d.h. sie 
 
 \subsubsection{Convolutional Layer}
 
@@ -742,10 +790,10 @@ Deswegen werden Convolutional Schichten sehr gerne bei Bild- und Videoverarbeitu
 \end{figure}
 
 % \begin{figure}[h!]
-%     \fig{
+%     \centering
 %     \includegraphics[width=\textwidth]{pictures/1DConv.png}
 %     \caption{Darstellung eines Convolutional Layers.}
-%     \label{Conv Layer 1}}
+%     \label{Conv Layer 1}
 % \end{figure}
 
 \begin{figure}[h!]
@@ -855,11 +903,67 @@ Da diese Schicht dann mehrere
 %Da alle Filter mit allen Channels verbunden sind, sind diese auch 2-Dimensional.
 
 % \begin{figure}[h!]
-%     \fig{
+%     \centering
 %     \includegraphics[width=\textwidth]{pictures/Conv2d.png}
 %     \caption{Darstellung eines Convolutional Layers mit mehreren Channels.}
-%     \label{Conv Layer 2}}
+%     \label{Conv Layer 2}
 % \end{figure}
+
+\threesub{Loss} 
+
+Um zu bestimmen, wie gut ein neuronales Netz ist, gibt es die sogenannte Verlustfunktion (engl. \eng{loss function}), die die Datensätze verwendet, um die Abweichung des Netzwerks vom Ideal zu bestimmen. Diese Abweichung wird auch \eng{loss} genannt.
+
+Trainingsdaten bestehen aus einer Liste aus Trainingsdatensätzen. Jeder dieser Datensätze beinhaltet Eingaben für das Netzwerk und die richtigen Ausgaben dafür. Machine Learning, das mit solchen Trainingsdaten arbeitet, wird Supervised Learning genannt.
+
+Die Funktion für den \eng{loss} der Ausgabeschicht und somit des gesamten Netzwerkes (für einen Datensatz) lautet wie folgt:
+
+\form{ \[
+	C_0 = (a_L - y)^2
+\]}
+
+%C0 = (aL − y)2 
+
+\noindent wobei $C_0$ der \eng{loss} der Ausgabeschicht, $L$ die letzte Schicht (Ausgabeschicht), $a_L$ der Vektor aller Aktivierungen der Schicht $L$, und $y$ ein Vektor der richtigen Ausgaben für die Eingaben, mit denen die Aktivierungen berechnet wurden, ist. 
+	
+Um den \eng{loss} zu berechnen, muss man also für alle Neuronen der Ausgabeschicht die Differenz der durchs Netzwerk gegebenen und der in den Datensätzen vorgegebenen Aktivierungen bilden. Danach muss man diese Differenzen quadrieren und am Ende alle Ergebnisse aufsummieren. Dies kann man für alle Testdatensätze wiederholen und von allen \eng{losses} den Durchschnitt nehmen, um die allgemeine Performance eines Netzwerkes zu überprüfen. Diese Art der Verlustfunktion wird mittlere quadratische Abweichung (engl. \eng{mean squared error}, kurz MSE) genannt.
+	
+Zusammenfassend kann man also sagen, dass der \eng{loss} die Abweichung von den aktuellen Ausgaben des Netzwerkes zu den idealen Ausgaben des Netzwerkes darstellt -- ein perfektes neuronales Netz hätte einen \eng{loss} von 0. Aufgrund der Trainingsdatensätze und der Verlustfunktion weiß man nun, wie stark die Ausgabeschicht abweicht und entsprechend verändert werden muss.
+
+\threesub{Backpropagation}
+
+% Mithilfer der sogenanten Backpropagation werden die Gewichte des Netzwerkes mithilfe der Datensätze angepasst, um den \eng{loss} zu senken.
+
+% Die von uns verwendete Form der Backpropagation ist das simple sogenannte Gradientenverfahren.
+
+% Um die Aktivierungen der Ausgabeschicht anzupassen, müssen alle Gewichte und Biases davor angepasst werden. Um nun zu wissen, wie ein Gewicht verändert werden muss, gibt es beim Gradientenverfahren folgende Funktion:
+
+% \form{\[
+% 	\Delta W_{ij} = \epsilon * \delta_i * a_j
+% \]}
+
+% Hier ist  $\Delta W_{ij}$ der Wert, um den das Gewicht $W$ zwischen den Neuronen $j$ und $i$ verändert werden muss, $\epsilon$ die Lernrate (meist ein kleiner Wert wie 0.001), $\delta_i$ eine Annäherung der Ableitung des \eng{loss} des Neurons $i$ im Verhältnis zum Gewicht $W_{ij}$, und $a_j$ die Aktivierung des Neurons $j$. Dabei ist oft verwirrend, dass die Schicht des Neurons $i$ aus der Sicht des \feng{forward pass} weiter hinten liegt als die Schicht des Neurons $j$.
+	
+% % bezeichnet das Neuron, das sich in der vorderen Schicht befindet, und $i$ das Neuron, das sich in der hinteren  (Reihenfolge im \feng{forward pass}), obwohl es bei $W_{ij}$ andersherum steht.
+
+% Für den Bias wird die gleiche Formel benutzt, mit der Ausnahme, dass $a_j$ immer 1 ist und so wegfällt. Der Grund dafür liegt darin, dass der Bias, wie im Abschnitt \hyperref[forward-prop]{\feng{forward pass}} beschrieben, eigentlich nur ein Gewicht ist, das mit einem Neuron verbunden ist, welches immer eine Aktivierung von eins hat.
+
+% Um nun $\delta_i$ für die Ausgabeschicht zu berechnen, gibt es folgende Gleichung: 
+
+% \form{\[
+% 	%\delta_i = \sig '\left({\netin}_i\right) * (a_i (\textrm{soll}) - a_i (\textrm{ist})) 
+% 	\delta_i = \sig '\left(x_i\right) * (a_i (\textrm{soll}) - a_i (\textrm{ist})) 
+% \]}
+% wobei $\sig '(x)$ die Ableitung von $\sig(x)$ ist, also $\sig'(x) = \sig(x) * (1 - \sig(x))$, $x_i$ der Netzeingabe des Neurons $i$, $a_i(\textrm{soll})$ die Aktivierung, die das Neuron haben sollte (also das gleiche wie $y$), und $a_i(\textrm{ist})$ die Aktivierung, die das Neuron hat.
+
+% Mit dieser Formel wird berechnet, welche Aktivierung das Neuron haben sollte, was an $a_i(\textrm{soll}) - a_i(\textrm{ist})$ erkennbar ist. Die Aktivierungsfunktion mit der Netzeingabe wird als Faktor mit einberechnet, da möglichst nur die Gewichte stark verändert werden sollen, die bei dem Trainingsdatensatz eine hohe Aktivierung haben, also durch diese Eingaben besonders angesprochen werden. So werden zum Beispiel beim Sortieren nur die Neuronen stark miteinander verknüpft, die für ein bestimmtes Muster verantwortlich sind.
+
+% Für die Neuronen der verdeckten Schichten muss man alle $\delta$'s der nächsten Schicht mit den von dem Neuron dorthin führenden Gewichten multiplizieren und dann summieren. Dadurch werden die Änderungen, die die Aktivierungen dieser Neuronen brauchen ($\delta$), zusammengerechnet, da natürlich die Aktivierungen in der nächsten Schicht unterschiedliche Änderungen in dem gleichen Neuron benötigen.
+	
+% Durch die Multiplikation mit den dahin führenden Gewichten werden diese Änderungen gewichtet, da sie auf einige Neuronen größere Auswirkungen haben als auf andere. Wie bei der Ausgabeschicht auch wird diese Summe noch mit $\sig'(x)$ multipliziert, um die Aktivierung durch bestimmte Muster angesprochener Neuronen noch weiter zu erhöhen und weniger/kaum angesprochener Neuronen zu senken, sodass die Ergebnisse besser und eindeutiger werden. Die Formel hierfür lautet:
+
+% \form{\[\delta_i = \sig'(x_i) * \sum_{L}{\left(\delta_L\ast W_{Li}\right)}\]}
+% \noindent wobei $L$ die nächste Schicht, $\delta_L$ der Vektor aller $\delta$'s der Schicht $L$, und $W_{Li}$ der Vektor aller Gewichte, die ein Neuron der nächsten Schicht und Neuron $i$ verbinden, ist.
+% Da immer die (in Reihenfolge des \feng{forward pass} gesehene) nächste Schicht benötigt wird, ergibt es Sinn, diese Optimierung bei der Ausgabeschicht zu starten und dann rückwärts die \mbox{$\delta$-Werte} für jede Schicht zu berechnen und für die nächsten Berechnungen zu speichern -- daher auch der Name Backpropagation.
 
 \subsubsection{Overfitting}
 
@@ -885,10 +989,6 @@ Im Gegensatz zu \feng{Dropout} wird bei der L2-Regularisierung eine Penalties-Fu
 
 Die Verwendung von Rauschen (\eng{noise}) auf dem Input für ein Neuronales Netzwerk kann dazu beitragen, das Overfitting zu vermeiden und die allgemeine Robustheit des Modells zu erhöhen.
 Die Idee hinter der Verwendung von Rauschen auf dem Input ist, dass das Netzwerk gezwungen wird, sich an zusätzliche Unschärfen in den Eingaben zu gewöhnen und somit besser auf neue, noch nicht gesehene Daten generalisieren kann. Durch die Erhöhung der Robustheit des Modells gegenüber kleinen Änderungen der Eingaben kann es auch weniger empfindlich auf kleine Störungen oder Verzerrungen in den Daten reagieren.
-
-\subsubsection{Flux}
-
-Wir haben in unserem letzten Projekt bereits ein neuronales Netzwerk mit dieser Funktionsweise selbst programmiert, um es besser verstehen zu können. Für dieses Projekt haben wir allerdings das Package Flux benutzt, welches die gleichen oder besseren Ergebnisse liefern sollte, mit deutlich besserer Performance, da es stark optimiert und sehr viel weiter entwickelt wurde.
 
 \section{Ergebnisse}
 
@@ -1004,17 +1104,27 @@ Dieses starke Overfitting lässt sich wahrscheinlich auf das schlechte Signal-Ra
 
 Ziel unseres Projektes war es, ein Framework zu entwickeln, welches sich leicht auf die eigenen Zwecke anpassen lässt und das entwickeln von BCIs vereinfacht. Dies haben wir mit unserm eigenen Package erreicht, da es Entwicklung in einer stark abstrahierten Form ermöglicht und aufgrund unserer ausführlichen Dokumentation auch für Anfänger geeignet ist.
 
+TODO:
+\begin{itemize}
+    \item Hyper Parameter Optimization
+    \item Mehr Standard Parameter-Sätze
+    \item Integration \& Testen des Selbstbau-EEG
+    \item Vergleich Sentdex, unser Ganglion und Selbst-Bau
+\end{itemize}
+
 \section{Quellen}
 \subsection{Abbildungen}
 \begin{table}[h!]
+    % Abstand zwischen Tabellenzeilen
+    \renewcommand*{\arraystretch}{1.2}
     \centering
     {
     \setlength{\tabcolsep}{0pt}
     \begin{tabular}{p{0.08\linewidth}p{0.9\linewidth}}
         Abb. \ref{fig:conv_layers} %
         & Kopiert und abgeändert von \href{https://tikz.net/conv2d/}{https://tikz.net/conv2d/}, ursprünglicher Author ist Janosh Riebesell  \\
-        Abb. \ref{fig:dense_nn} %
-        & Kopiert und abgeändert von \href{https://tikz.net/regular-vs-bayes-nn/}{https://tikz.net/regular-vs-bayes-nn/}, ursprünglicher Author ist Janosh Riebesell \\
+        % Abb. \ref{fig:dense_nn} %
+        % & Kopiert und abgeändert von \href{https://tikz.net/regular-vs-bayes-nn/}{https://tikz.net/regular-vs-bayes-nn/}, ursprünglicher Author ist Janosh Riebesell \\
         Abb. \ref{fig:OPV} %
         & Linker Teil: \href{https://www.conrad.de/de/ratgeber/handwerk-industrie-wiki/elektronik-bauteile/lm393.html}{https://www.conrad.de/de/ratgeber/handwerk-industrie-wiki/elektronik-bauteile/lm393.html}, Rechter Teil: \href{https://www.reichelt.de/operationsverstaerker-2-fach-dip-8-lm-358-dip-p10483.html?CCOUNTRY=445\&LANGUAGE=de}{https://www.reichelt.de/operationsverstaerker-2-fach-dip-8-lm-358-dip-p10483.html?CCOUNTRY=445\&LANGUAGE=de}\\
     \end{tabular}
