@@ -1,13 +1,13 @@
 using Flux
 include("default_config.jl") # Load default configuration, to be overwritten
 config = init_config()
-config.EPOCHS = 10
-config.MODEL_NAME = "allConv_4c_1_*"
+config.EPOCHS = 50
 config.BATCH_SIZE = 128
 config.CHANNELS_USED = [12, 10, 9, 11]
-config.CHANNELS_USED = [12]
-config.MODEL = Chain(
-        # @autosize begin
+# config.CHANNELS_USED = [12]
+# Model A bzw. allConv(_4c)_1)
+#= config.MODEL = Chain(
+    # @autosize begin
         Conv((5,1), 60 => 64, pad = SamePad(), relu),
         Conv((5,1), 64 => 64, pad = SamePad(), relu),
         Conv((5,1), 64 => 128, pad = SamePad(), relu),
@@ -15,14 +15,56 @@ config.MODEL = Chain(
         Conv((5,1), 256 => 512, pad = SamePad(), relu),
         Conv((length(config.CHANNELS_USED),1), 512 => 3),
         Flux.flatten,
-    )
-config.LEARNING_RATE = 0.00005
+        ) =#
+
+# Model B
+config.MODEL = Chain(
+    Conv((3,1), 60 => 64, pad = SamePad(), relu),
+    Conv((2,1), 64 => 128, pad = SamePad(), relu),
+    Conv((2,1), 128 => 128, pad = SamePad(), relu),
+    Conv((2,1), 128 => 64, pad = SamePad(), relu),
+    MaxPool((2,1)),
+    Flux.flatten,
+    Dense(128, 512),
+    Dense(512, 256),
+    Dense(256, 128),
+    Dense(128, 3)
+)
+
+# Model C
+config.MODEL = Chain(
+    Conv((1,5), 60 => 64, pad = SamePad(), relu),
+    Flux.flatten,
+    Dense(256, 512),
+    Dense(512, 128),
+    Dense(128, 3)
+)
+
+# Model D
+config.MODEL = Chain(
+    Flux.flatten,
+    Dense(256, 512),
+    Dense(512, 128),
+    Dense(128, 3)
+)
+
+# Model E
+config.MODEL = Chain(
+    Flux.flatten,
+    Dense(240, 240),
+    Dense(240, 120),
+    Dense(120, 50),
+    Dense(50, 3)
+)
+
+config.LEARNING_RATE = 0.001
+config.MODEL_NAME = "E_4c_moreTest_e" * string(config.LEARNING_RATE) * "_*"
 config.PRUNE_FREQUENCY = 10
 path_prefix = "holy_"
 config.TEST_DATA = [
-    (path_prefix * "data/left1/", [1.0, 0.0, 0.0]),
-    (path_prefix * "data/none1/", [0.0, 1.0, 0.0]),
-    (path_prefix * "data/right1/", [0.0, 0.0, 1.0])
+    (path_prefix * "data/left/", [1.0, 0.0, 0.0]),
+    (path_prefix * "data/none/", [0.0, 1.0, 0.0]),
+    (path_prefix * "data/right/", [0.0, 0.0, 1.0])
     ]
 # config.TRAIN_DATA = [
 #     (path_prefix * "data/left/", [1.0, 0.0, 0.0]),

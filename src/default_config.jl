@@ -49,7 +49,8 @@ function init_config(; BATCH_SIZE = 256, NUM_CHANNELS = 16, CHANNELS_USED = [1,2
         (path_prefix * "directions/validation_data/left/", [1.0, 0.0, 0.0]),
         (path_prefix * "directions/validation_data/none/", [0.0, 1.0, 0.0]),
         (path_prefix * "directions/validation_data/right/", [0.0, 0.0, 1.0])
-    ], SHUFFLE = true, CLIP = 20, EPOCHS = 1, USE_CUDA = true, OPTIMIZER = Flux.Optimise.ADAM, LEARNING_RATE = 0.00001, LOSS = Flux.logitcrossentropy, MODEL = Chain(
+    ], SHUFFLE = true, CLIP = 20, EPOCHS = 1, USE_CUDA = true, OPTIMIZER = Flux.Optimise.ADAM, LEARNING_RATE = 0.00001, LOSS = Flux.logitcrossentropy, 
+    MODEL = Chain( # Model Omega
         Conv((3, 1), 60 => 64, relu),
         Dropout(0.2),
         MaxPool((2, 1)),

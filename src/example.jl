@@ -1,7 +1,7 @@
 include("BCI.jl")
 # using .BCI
 
-include("config.jl") # defines variable "config"
+include("config_sentdex.jl") # defines variable "config"
 
 data = BCI.get_data(config)
 model = BCI.new_model(config)
