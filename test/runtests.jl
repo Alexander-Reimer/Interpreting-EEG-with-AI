@@ -118,4 +118,7 @@ end
         std_processor = BCIInterface.EEG.Standard()
         # @test BCIInterface.process()
     end
+    @testset "AI Models" begin
+        
+    end
 end
