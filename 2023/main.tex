@@ -374,13 +374,13 @@ Dies macht man sich nun zu Nutze, um die Spannungen bzw. Potentialdifferenzen zw
 
 Zudem lassen sich mit einem OPV und wenigen weiteren Bauteilen einfach aktive Filter bauen.
 
-Die Grundschaltung für unsere EEG beruht auf einem englischsprachigem Internetartikel, in dem eine Verstärkerschaltung für ein EEG beschrieben war. Die von uns angepasste Schaltung ist in Abb. x zu sehen.
+Die Grundschaltung für unsere EEG beruht auf einem englischsprachigem Internetartikel, in dem eine Verstärkerschaltung für ein EEG beschrieben war. Die von uns angepasste Schaltung ist in Abb. \ref{fig:schaltplan} zu sehen.
 Diese mussten wir aber etwas verändern, um den gewünschten Frequenzbereich herauszufiltern.
 Basis dieser Schaltung bildet der Instrumentenverstärker AD620AN, welcher extra für EEG- und EKG-Anwendungen entwickelt wurde.
 
 \begin{figure}
     \centering  
-    \begin{circuitikz}[european, scale=0.4, transform shape]
+    \begin{circuitikz}[european, scale=0.5, transform shape]
         \draw (0,0) node[dipchip, num pins=8, no topmark, external pins width=0.0] (C) {AD620};
         % Verbinde Pins 1 und 8 über Widerstand
         \draw 
@@ -402,9 +402,6 @@ Basis dieser Schaltung bildet der Instrumentenverstärker AD620AN, welcher extra
             (C.pin 4) to ++ (-1,0) node[vee]{\SI{-9}{\volt}};
         \node[op amp, right=6 of C, yshift=0.21cm] (opamp1) {};
 
-        % \node at ($(C.pin 6) + (2,0)$) (foo) {};
-        % \draw (C.pin 6) to (foo);
-        % \draw (foo) to [R={\SI{318}{kΩ}}, -*] ++(2, 0);
         \draw (C.pin 6) to ++(2,0);
         \draw 
             (opamp1.+) node[left] {}
@@ -420,7 +417,6 @@ Basis dieser Schaltung bildet der Instrumentenverstärker AD620AN, welcher extra
             to[short,-*] ++(0,1.5)
             (4.84,-0.3) to (4.84,-4) 
             to [C,l={\SI{20}{\nano\farad}}] ++(0,-2) node[rground]{}
-            % (C.pin 6) to ++(2,0)
             (4.1,-1.8) to (4.1,-2.5) to [R,l_={\SI{158}{kΩ}}] ++(0,-2) to ++(0,-1.5) node[rground]{} 
             (opamp1.-) to ++(-1,0) to ++(0,1) to ++(3.5,0) to[short,-*] ++(0,-1.5)
             (opamp1.out) to [C={\SI{220}{\nano\farad}},-*] ++(2,0) to [C={\SI{220}{\nano\farad}}] ++(2,0)
@@ -466,7 +462,7 @@ Basis dieser Schaltung bildet der Instrumentenverstärker AD620AN, welcher extra
             (opamp4.out) to[big elko, l_={\SI{100}{\mu\farad}},*-o] ++(2,0);
     \end{circuitikz}
     \caption{Schaltplan}
-    \label{fig:my_label}
+    \label{fig:schaltplan}
 \end{figure}
  
 \subsection{Fourier-Analyse}
@@ -510,32 +506,95 @@ Die Ausgaben / Vorhersagen des neuronalen Netzwerkes werden von den Aktivierunge
 
 Bei neuronalen Netzwerken gibt es zwei relevant Verfahren: Den Forward Pass und die Backpropagation.
 
-Ersteres beschreibt das propagieren von den Eingabewerten durch das Netzwerk.
-Zuerst werden die Aktivierungen der Neuronen in der Eingabeschicht gesetzt und danach die Aktivierungen der Neuronen der nächsten Schicht berechnet, welche dann wiederum für der nächsten Schicht verwendet werden und so weiter.
+\subsubsection{Forward Pass}
+
+Ersteres beschreibt das Weiterreichen % TODO: Formulierung?
+von Eingabewerten durch das Netzwerk.
+Zuerst werden die Aktivierungen der Neuronen in der Eingabeschicht gesetzt und danach mithilfe der verbindenden Gewichte zuerst die Netzeingaben und dann die Aktivierungen der Neuronen der nächsten Schicht berechnet, welche dann wiederum für die nächsten Schicht verwendet werden und so weiter.
 Dadurch werden die Eingaben von Schicht zu Schicht bis zur Ausgabe weiterverarbeitet.
-Der Forward Pass ist zur Verwendung eines Netzwerks notwendig.
 
-Er bietet außerdem den ersten Schritt der Backpropagation, die für das Lernen des Netzwerks verantwortlich ist.
-Nachdem alle Aktivierungen gesetzt wurden, werden die Aktivierung der letzten Schicht, also die Ausgaben, bewertet.
-Wir verwenden Supervised Learning, heißt wir nutzen zur Bewertung Trainingsdaten, die wir vorher \eng{gelabelt}, ihnen also die korrekten Ausgabedaten zugewiesen haben.
+Die Netzeingabe, die aus den Aktivierungen der vorherigen Schicht berechnet wird, kann direkt als Aktivierung eines Neurons verwendet werden.
 
-Dann wird jedes einzelne Ausgabeneuron \enquote{bewertet}, indem die Differenz zwischen der tatsächlichen Aktivierung nach dem Forward Pass und den zugewiesenen korrekten Ausgaben gebildet wird.
+Doch meistens wendet man auf diese Netzeingabe vorher eine Aktivierungsfunktion an, die zum einen dafür sorgt, dass die Aktivierung begrenzt und somit ein unendliches Wachstum der Aktivierungen und entsprechend Gewichte verhindert wird, und zum anderen sicherstellt, dass es keine Linearität zwischen Eingaben und Ausgaben gibt. 
+Dadurch kann das Netzwerk vor allem Klassifizierungsaufgaben besser erlernen. % TODO: Quelle
 
-Diese Differenz zwischen ist-Zustand und soll-Zustand wird nun in der Backpropagation verwendet, um die Gewichte zwischen Ausgabe- und vorletzter Schicht anzupassen, denn mit ihm kann der sogenannte delta-Wert eines Neurons bestimmt werden.
+\begin{figure}[h!]
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        xlabel={Netzeingabe}, ylabel={Aktivierung}, domain={-10:10}, samples=100,
+        no markers, legend pos=south east
+    ]
+        \addplot {1 / (1 + 2.71828^(-x))};
+        \addplot{tanh(x)};
+        \legend{$\sig(x)$, $\tanh(x)$};
+    \end{axis}
+    \end{tikzpicture}
+    \caption{Aktivierungsfunktionen im Vergleich}
+    \label{fig:act_funcs}
+\end{figure}
+
+Letztes Jahr haben wir dafür Sigmoid-Funktion genutzt, welche die Aktivierung auf Werte zwischen 0 und 1 beschränkt (s. Abb. \ref{fig:act_funcs}).
+
+\[
+    \sig(x) = \frac{1}{1+e^{-x}}
+\]
+
+Doch dieses Jahr setzen wir auf die $\tanh$-Aktivierungsfunktion, bei der die Ausgabe immer zwischen -1 und 1 liegt (s. Abb. \ref{fig:act_funcs}), da sie zum einen eine bessere Lernleistung für neuronale Netze bietet \cite{blog:activationFunctions, blog:tanhVsSigmoid} und zum anderen das Arbeiten mit rohen EEG-Daten, die aus negativen und positiven Spannungen bestehen, verbessert.
+Wir verwenden momentan zwar nur die FFT-Daten, doch so ist es für Nutzer immer noch eine Option, sollten sie mit Rohdaten arbeiten wollen.
+
+\subsubsection{Backpropagation}
+
+Der Forward Pass bildet außerdem den ersten Schritt der Backpropagation, die für das Lernen des Netzwerks verantwortlich ist.
+Dabei werden, nachdem alle Aktivierungen gesetzt wurden, die Aktivierung der letzten Schicht, also die Ausgaben, bewertet.
+
+Da wir Supervised Learning verwenden, benötigen wir dafür Trainingsdaten, die wir vorher \eng{gelabelt}, ihnen also die korrekten Ausgabedaten zugewiesen haben.
+Mit diesen wird dann jedes einzelne Ausgabeneuron \enquote{bewertet}, indem die Differenz zwischen der tatsächlichen Aktivierung nach dem Forward Pass und den zugewiesenen korrekten Ausgaben gebildet wird.
+
+% \begin{figure}
+%     \centering
+%     \begin{tikzpicture}
+%         \node (forward1) {Forward Pass};
+%         \node[left=1cm of forward1] (train_inputs) {Trainingsdaten: Eingaben};
+        
+%         \node[below=1cm of forward1] (backprop) {Backpropagation};
+%         \node[below=1cm of train_inputs] (train_outputs) {Trainingsdaten: Ausgaben};
+
+%         \draw
+%             (train_inputs) edge[->] (forward1)
+%             (forward1) edge[->] (backprop)
+%             (train_outputs) edge[->] (backprop);
+        
+%         \node[below=1cm of backprop] (forward2) {Forward Pass};
+%         \node[below=1cm of train_outputs] (test_inputs) {Testdaten: Eingaben};
+%         \draw
+%             (backprop) edge[->] (forward2) node[midway, left] {verbessert}
+%             (test_inputs) edge[->] (forward2);
+        
+%         \node[below=1cm of forward2] (round) {Ausgaben runden};
+%         \node[below=1cm of test_inputs] (test_outputs) {Testdaten: Ausgaben};
+%         \draw[->] (forward2) -- (round);
+%         \draw (test_outputs) -- (round) node[midway] (mid) {};
+%         \node[below=1cm of mid] (test_acc) {Testdatengenauigkeit};
+%         \draw[->] (mid) -- (test_acc) node[midway, left] {vergleichen};
+%     \end{tikzpicture}
+%     \caption{Supervised Learning}
+%     \label{fig:supervised_learning}
+% \end{figure}
+
+Diese Differenz zwischen ist-Zustand und soll-Zustand wird nun in der Backpropagation verwendet, um die Gewichte anzupassen, denn mit ihr kann der sogenannte delta-Wert der Ausgabeschicht bestimmt werden.
 Dieser entspricht der Änderung der Aktivierung eines Neurons, die notwendig wäre, damit ein Forward Pass von dort aus ein korrektes Ergebnis liefert.
 
-Auf die Berechnung des delta-Werts werden wir dieses Jahr nicht weiter eingehen, da es für uns nicht direkt relevant ist.
-Interessant ist womöglich nur noch, dass dafür die delta-Werte der nächsten Schicht (in Richtung Ausgabe) benötigt werden und daher der \eng{backward} (dt. rückwärts) Teil im Namen kommt.
+Um diese delta-Werte für die Neuronen der verdeckten Schichten zu berechnen, werden natürlich die delta-Werte der Schicht näher zur Ausgabeschicht benötigt, da die benötigte Änderung nur von den Ausgaben aus bestimmt werden kann.
+Aufgrund dieses Zurückpropagierens der delta-Werte zur Eingabeschicht hin kommt auch der Name Backpropagation.
 
-Mithilfe dieses delta-Werts kann dann auch bestimmt werden, wie die Gewichte angepasst werden müssten, um diese gewünschte Änderung umzusetzen:
+Auf die Berechnung des delta-Werts werden wir dieses Jahr nicht weiter eingehen, da sie für uns nicht direkt relevant ist und wir für unsere neuronale Netzwerke das Julia-Package Flux einsetzen, welches diese Arbeit übernimmt.
+% Interessant ist womöglich nur noch, dass dafür die delta-Werte der nächsten Schicht (in Richtung Ausgabe) benötigt werden und daher der \eng{backward} (dt. rückwärts) Teil im Namen kommt.
+
+Mithilfe dieses delta-Werts wird dann bestimmt, wie die Gewichte des Netzwerks angepasst werden müssten, um diese gewünschte Änderung umzusetzen:
 
 \form{\[
 	\Delta W_{i,j} = \eta * \delta_i * a_j
-\]}
-
-Und entsprechend angepasst werden mit:
-\form{\[
-    W_{i,j} = W_{i,j} + \Delta W_{i,j}
 \]}
 
 \noindent wobei $i$ das Neuron näher zur Ausgabe, $j$ das Neuron näher zur Eingabe und $W_{i,j}$ das Gewicht zwischen diesen beiden ist.
@@ -546,22 +605,98 @@ $\eta$ ist die sogenannte Lernrate.
 Sie ist meist ein sehr niedriger Wert (0.01, 0.0001, etc.) und ist wichtig für das Kernkonzept des Lernen eines neuronalen Netzwerks:
 Sie sorgt dafür, dass bei jedem Trainingsdatensatz die Gewicht nur etwas an diesen angepasst werden, sodass das gesamte Training die Gewichtsanpassungen aller Trainingsdatensätze und somit hoffentlich auch eine Generalisierung dieser darstellt.
 
-Insgesamt lässt sich also sagen, dass ein neuronales Netzwerk versucht, diese Differenz $\textrm{ist} - \textrm{soll}$ zu minimieren.
-Diese Differenz ist also ähnlich einer Verlustfunktion und lässt sich tatsächlich auch in einer tatsächlichen Verlustfunktion für Supervised trainierte neuronale Netzwerke, dem Mean Squared Error, wiederfinden:
+Umgesetzt wird diese Änderung einfach mit
+\form{\[
+    W_{i,j} = W_{i,j} + \Delta W_{i,j}
+\]}
+
+\subsubsection{Verlustfunktion}
+
+Insgesamt lässt sich sagen, dass ein neuronales Netzwerk versucht, diese Differenz $\textrm{Ausgabe}_\textrm{ist} - \textrm{Ausgabe}_\textrm{soll}$ zu minimieren.
+Diese Differenz ist also ähnlich einer Verlustfunktion, anhand derer optimiert wird, und lässt sich auch in einer tatsächlichen Verlustfunktion für Supervised trainierte neuronale Netzwerke, dem Mean Squared Error, wiederfinden:
 
 \form{ \[
 	C_0 = (a_0 - y)^2
 \]}
 \noindent wobei $C_0$ der Verlust der Ausgabeschicht (Schicht $0$, da Indexierung der Schichten bei der Ausgabe beginnt), $a_0$ der Vektor aller Aktivierungen der Ausgabeschicht, und $y$ ein Vektor der richtigen Ausgaben für die Eingaben, mit denen die Aktivierungen berechnet wurden, ist.
 
-Es gibt verschiedene Arten von Schichten in neuronalen Netzwerken; wir verwenden hauptsächlich \feng{Fully Connected} und \feng{Convolutional} Schichten.
+Der Wert dieser Verlustfunktion sinkt beim Trainieren idealerweise.
+
+Die konkrete Umsetzung von Forward Pass und Backpropagation ist abhängig von der Art der Schicht; es gibt verschiedene Möglichkeiten, Neuronen anzuordnen und Gewichte zu verwenden, und einige Schichten haben sogar keine Neuronen oder Gewichte.
+
+Wir verwenden hauptsächlich x %TODO
+Arten an Schichten in neuronalen Netzwerken: Fully Connected Schichten, Convolutional Schichten, Max Pool Schichten, ... % TODO
 
 \subsubsection{Fully Connected Schichten} 
 
-Bei Fully Connected Schichten sind alle Neuronen eines Layers mit allen Neuronen des nächsten Layers verbunden.
-Außerdem hat typischerweise jedes Neuron einen sogenannten Bias, der hinzu addiert wird.
+Bei Fully Connected Schichten sind alle Neuronen eines Layers mit allen Neuronen des nächsten Layers verbunden, außerdem hat typischerweise jedes Neuron einen sogenannten Bias, der hinzu addiert wird (s. Abb. \ref{fig:dense_nn}).
 
-% \threesub{{Forward pass}} \label{forward-prop}
+\begin{figure}
+    \def\layersep{3cm}
+    \centering
+    % \begin{minipage}[t]{0.6\linewidth}\vspace{0pt}%
+    \begin{tikzpicture}[
+        scale=1.2,
+        shorten >=1pt,->,draw=black!70, node distance=\layersep,
+        neuron/.style={circle,fill=black!25,minimum size=20,inner sep=0},
+        edge/.style 2 args={pos={(mod(#1+#2,2)+1)*0.33}, font=\tiny},
+        distro/.style 2 args={
+            edge={#1}{#2}, node contents={}, minimum size=0.6cm, path picture={\draw[double=orange,white,thick,double distance=1pt,shorten >=0pt] plot[variable=\t,domain=-1:1,samples=51] ({\t},{0.2*exp(-100*(\t-0.05*(#1-1))^2 - 3*\t*#2))});}
+          },
+        weight/.style 2 args={
+            edge={#1}{#2}, node contents={\pgfmathparse{0.35*#1-#2*0.15}\pgfmathprintnumber[fixed]{\pgfmathresult}}, fill=white, inner sep=2pt
+          }
+      ]
+    % Input layer
+    \foreach \y in {1,...,2}
+        \node[neuron, fill=green!40] (i\y) at (0,\y+1) {$i_\y$};
+    \node[neuron, fill=orange!40] (b1) at (0, 4.5) {$b_1$};
+    % Hidden layer
+    \foreach \y in {1,...,4}
+        \path node[neuron, fill=blue!40] (h\y) at (\layersep,\y) {$h_\y$};
+    \node[neuron, fill=orange!40] (b2) at (\layersep, 5.5) {$b_2$};
+    % Output node
+    \node[neuron, fill=red!40] (o) at (2*\layersep,2.5) {$O$};
+    
+    % Connect every node in the input layer with every node in the hidden layer.
+    \foreach \source in {1,...,2}
+        \foreach \dest in {1,...,4}
+            \path (i\source) edge (h\dest);
+    % Connect bias in the input layer with every node in the hidden layer.
+    \foreach \dest in {1,...,4}
+        \path[red!20] (b1) edge (h\dest);
+    % Connect every node in the hidden layer with the output layer
+    \foreach \source in {1,...,4}
+        \path (h\source) edge (o);
+    % Connect bias in the hidden layer with the output layer
+    \path[red!20] (b2) edge (o);
+        
+    % Draw weights for all regular edges.
+    \foreach \i in {1,...,2}
+    \foreach \j in {1,...,4}
+    \path (i\i) -- (h\j) node[weight={\i}{\j}];
+    \foreach \i in {1,...,4}
+    \path (h\i) -- (o) node[weight={\i}{1}];
+    % Draw weights for bias edges.
+    \foreach \j in {1,...,4}
+    \path (b1) -- (h\j) node[weight={3}{\j}];
+    \path (b2) -- (o) node[weight={5}{1}];
+    \end{tikzpicture}
+    % \end{minipage}
+
+    
+    % \begin{minipage}[t]{0.5\linewidth}\vspace{0pt}%
+    % \begin{alignat*}{2}
+    %     &h_4 = i_2 * 0.1 + i_1 * (-0.25) \\
+    %     &h_3 = i_2 * 0.25 + i_1 * (-0.1) \\
+    %     & ... \\
+    %     & O = h_4 * 1.25 + h_3 * 0.9 + h_2 * 0.55 + h_1 * 0.2 \\
+    % \end{alignat*}
+    % \end{minipage}
+    \caption{Ein Beispiel für ein neuronales Netzwerk bestehend aus einer Eingabeschicht($i_1$ und $i_2$) und zwei Fully Connected Schichten (Neuronen $h_1$ bis $h_4$ mit Bias $b_1$ und Neuron $O$ mit Bias $b_2$). 
+    Die Kreise stellen Neuronen dar; die Zahlen auf den Pfeilen die Gewichte zwischen den jeweiligen Neuronen.}
+    \label{fig:dense_nn}
+\end{figure}
 
 Zur Berechnung der Aktivierungen der Neuronen gibt es den sogenannten \feng{Forward Pass}. 
 Dabei beginnt man in der ersten verdeckten Schicht damit, für alle Neuronen die sogenannte Netzeingabe zu berechnen. 
@@ -576,126 +711,32 @@ Die Formel für die Berechnung der Netzeingabe eines Neurons in einer Fully Conn
 	\]}
 \noindent wobei $\netin_j$ die Netzeingabe des Neurons $j$, $L$ die vorherige Schicht, $a_L$ der Vektor aller Aktivierungen der Schicht $L$, $W_{Lj}$ der Vektor aller Gewichte zwischen dem Neuron $j$ und den Neuronen der Schicht $L$, und $b_j$ der Bias des Neurons $j$ ist. 
 
-% \begin{figure}
-%     \def\layersep{3cm}
-%     \centering
-%     % \begin{minipage}[t]{0.6\linewidth}\vspace{0pt}%
-%     \begin{tikzpicture}[
-%         scale=1.2,
-%         shorten >=1pt,->,draw=black!70, node distance=\layersep,
-%         neuron/.style={circle,fill=black!25,minimum size=20,inner sep=0},
-%         edge/.style 2 args={pos={(mod(#1+#2,2)+1)*0.33}, font=\tiny},
-%         distro/.style 2 args={
-%             edge={#1}{#2}, node contents={}, minimum size=0.6cm, path picture={\draw[double=orange,white,thick,double distance=1pt,shorten >=0pt] plot[variable=\t,domain=-1:1,samples=51] ({\t},{0.2*exp(-100*(\t-0.05*(#1-1))^2 - 3*\t*#2))});}
-%           },
-%         weight/.style 2 args={
-%             edge={#1}{#2}, node contents={\pgfmathparse{0.35*#1-#2*0.15}\pgfmathprintnumber[fixed]{\pgfmathresult}}, fill=white, inner sep=2pt
-%           }
-%       ]
-%     % Input layer
-%     \foreach \y in {1,...,2}
-%         \node[neuron, fill=green!40] (i\y) at (0,\y+1) {$i_\y$};
-%     \node[neuron, fill=orange!40] (b1) at (0, 4.5) {$b_1$};
-%     % Hidden layer
-%     \foreach \y in {1,...,4}
-%         \path node[neuron, fill=blue!40] (h\y) at (\layersep,\y) {$h_\y$};
-%     \node[neuron, fill=orange!40] (b2) at (\layersep, 5.5) {$b_2$};
-%     % Output node
-%     \node[neuron, fill=red!40] (o) at (2*\layersep,2.5) {$O$};
-    
-%     % Connect every node in the input layer with every node in the hidden layer.
-%     \foreach \source in {1,...,2}
-%         \foreach \dest in {1,...,4}
-%             \path (i\source) edge (h\dest);
-%     % Connect bias in the input layer with every node in the hidden layer.
-%     \foreach \dest in {1,...,4}
-%         \path[red!20] (b1) edge (h\dest);
-%     % Connect every node in the hidden layer with the output layer
-%     \foreach \source in {1,...,4}
-%         \path (h\source) edge (o);
-%     % Connect bias in the hidden layer with the output layer
-%     \path[red!20] (b2) edge (o);
-        
-%     % Draw weights for all regular edges.
-%     \foreach \i in {1,...,2}
-%     \foreach \j in {1,...,4}
-%     \path (i\i) -- (h\j) node[weight={\i}{\j}];
-%     \foreach \i in {1,...,4}
-%     \path (h\i) -- (o) node[weight={\i}{1}];
-%     % Draw weights for bias edges.
-%     \foreach \j in {1,...,4}
-%     \path (b1) -- (h\j) node[weight={3}{\j}];
-%     \path (b2) -- (o) node[weight={5}{1}];
-%     \end{tikzpicture}
-%     % \end{minipage}
-
-    
-%     % \begin{minipage}[t]{0.5\linewidth}\vspace{0pt}%
-%     % \begin{alignat*}{2}
-%     %     &h_4 = i_2 * 0.1 + i_1 * (-0.25) \\
-%     %     &h_3 = i_2 * 0.25 + i_1 * (-0.1) \\
-%     %     & ... \\
-%     %     & O = h_4 * 1.25 + h_3 * 0.9 + h_2 * 0.55 + h_1 * 0.2 \\
-%     % \end{alignat*}
-%     % \end{minipage}
-%     \caption{Caption}
-%     \label{fig:dense_nn}
-% \end{figure}
-
-Um aus dieser Netzeingabe nun die Aktivierung zu berechnen, benötigt man eine Aktivierungsfunktion, die zum einen dafür sorgt, dass die Aktivierung begrenzt und somit ein unendliches Wachstum der Aktivierungen und entsprechend Gewichte verhindert wird, und zum anderen sicherstellt, dass es keine Linearität zwischen Eingaben und Ausgaben gibt. 
-Dadurch kann das Netzwerk vor allem Klassifizierungsaufgaben besser erlernen. % TODO: Quelle
-
-\begin{figure}[h!]
-    \centering
-    \begin{minipage}[t]{0.5\linewidth}\vspace{0pt}%
-        \begin{tikzpicture}
-        \begin{axis}[
-            xlabel={Netzeingabe}, ylabel={Aktivierung}, domain={-10:10}, samples=100,
-            no markers, legend pos=south east
-        ]
-            \addplot {1 / (1 + 2.71828^(-x))};
-            \addplot{tanh(x)};
-            \legend{$\sig(x)$, $\tanh(x)$};
-        \end{axis}
-        \end{tikzpicture}
-        \caption{Aktivierungsfunktionen im Vergleich}
-        \label{fig:act_funcs}
-    \end{minipage}
-\end{figure}
-
-Letztes Jahr haben wir die Sigmoid-Funktion genutzt, welche sicherstellt, dass der Eingabewert immer zwischen 0 und 1 liegt (s. Abb. \ref{fig:act_funcs}.
-
-\[
-    \sig(x) = \frac{1}{1+e^{-x}}
-\]
-
-Doch dieses Jahr setzen wir auf die $\tanh$-Aktivierungsfunktion, bei der die Werte immer zwischen -1 und 1 liegen (s. Abb. \ref{fig:act_funcs}.
-Mit der Sigmoid-Aktivierungsfunktion war aufgrund der Beschränkung auf positive Zahlen das Abziehen von der Aktivierung eines Neurons durch ein vorhergehendes nicht möglich und somit die Komplexität und Möglichkeiten eines neuronalen Netzwerkes eingeschränkt.
 
 Dieses Verfahren zur Berechnung der Aktivierung wird dann für jedes Neuron in jeder Schicht wiederholt.
 Da aber immer die Aktivierungen der vorherigen Schicht ($a_{L}$) benötigt, muss dieser Prozess von der Eingabeschicht aus zur Ausgabeschicht hin durchgeführt werden, daher auch der Name \feng{Forward Pass}.
 
 Fully Connected Schichten sind die \enquote{Standard}-Schicht bei neuronalen Netzwerken. 
-Sie können und werden vielseitig eingesetzt, doch haben den Nachteil, dass sie \enquote{global} sind, d.h. sie 
+Sie können und werden vielseitig eingesetzt, doch haben zwei Nachteile: 
+Da jede Eingabe und jedes folgende Neuron ihr eigenes, selbst angepasstes Gewicht hat, ist bei der Erkennung von Mustern bei Klassifizierungen die \enquote{Position} der zu erkennenden Sache in der Eingabe relevant.
+
+Wenn also das Netzwerk zum Beispiel mit vielen Hundebildern trainiert wird, in der Trainingsdaten der Hund aber nie in der rechten oberen Ecke war, dann können die Gewichte, die mit den Eingabeneuronen in dieser Ecke verbunden sind, auch nicht trainiert worden sein und somit bei der tatsächlichen Anwendung Hunde dort nie erkannt werden.
+
+% Und der zweite Nachteil ist, dass sie nur eindimensionale Eingaben verarbeiten können.
+% Wenn diese 
 
 \subsubsection{Convolutional Layer}
 
-Im Gegensatz zu den den fully-connected Schichten, in denen jedes Neuron einer Schicht mit allen Neuronen der nächsten Schicht verbunden ist, sind die Neuronen der Convolutional Layer jeweils nur mit ein paar Neuronen der nächsten Schicht verbunden.
-Convolutional Layer nutzen einen sogenannten Filterkernel, um die Aktivierungen der Neuronen der nächsten Schicht zu bestimmen.
-Der Filterkernel ist eine Liste an Zahlen, hat immer genauso viele Dimensionen wie die Eingaben und ist generell kleiner als sie. 
+Im Gegensatz zu Fully Connected Schichten, in denen jedes Neuron einer Schicht mit allen Neuronen der nächsten Schicht verbunden ist, sind die Neuronen einer Convolutional Schicht jeweils nur mit ein paar Neuronen der nächsten Schicht verbunden.
+
+Convolutional Schichten nutzen einen sogenannten Filterkernel, um die Aktivierungen der Neuronen der nächsten Schicht zu bestimmen.
+Der Filterkernel ist eine Liste an Zahlen, hat immer genauso viele Dimensionen wie die Eingaben, und ist generell kleiner als sie.
+Die Werte eines Fiterkernels sind die Gewichte einer Convolutional Schicht.
 
 Um die Werte der nächsten Schicht zu bestimmen, \enquote{wandert} der Filterkernel über die Eingaben, sodass er jede mögliche Position einmal einnimmt.
 Bei jedem Schritt wird der Filterkernel \enquote{angwendet}, indem das Skalarprodukt des aktuellen Ausschnittes der Eingaben und des Filters berechnet wird. 
-Um das Skalarprodukt zu berechnen, muss das erste Element des Filterkernels mit dem ersten Element des Eingabenausschnitts, das zweite Element des Flterkernels mit dem zweiten Element des Eingabenausschnittes usw. multipliziert werden und anschließend die Summe von all diesen ausgerechnet werden.
-Diese Summen bilden dann die Werte für die nächste Schicht des neuronalen Netzwerkes.
+Um das Skalarprodukt zu berechnen, muss das erste Element des Filterkernels mit dem ersten Element des Eingabenausschnitts, das zweite Element des Filterkernels mit dem zweiten Element des Eingabenausschnittes usw. multipliziert werden und anschließend die Summe von all diesen ausgerechnet werden.
+Diese Summen bilden dann die Werte für die nächste Schicht des neuronalen Netzwerkes. (s. Abb. \ref{fig:conv_layers})
 % Die Ausgabe hat also ohne zusätzliches \feng{Padding} (dt. Polsterung) immer die gleiche Dimensionen wie die Eingabe, jedoch in jeder Dimension um zwei verkleinert, da der Kernel 
-
-Beim Trainieren des neuronalen Netzwerkes werden bei Convolutional Layern dann die einzelnen Werte der Kernel als anzupassende Gewichte behandelt.
-
-Der Vorteil von Convolutional Layern ist, dass sie lokal und nicht global arbeiten.
-Damit ist gemeint, dass eine normale Fully Connected Schicht ein erwartete Muster nur erkennt, wenn es an seiner Position so auch schon in den Trainingsdaten vorkam.
-Da der Kernel jedoch über die Eingaben wandert und alle möglichen Positionen annimmt, kann ein trainierter Kernel das antrainierte Muster überall erkennen, egal, wo es vorkommt.
-Deswegen werden Convolutional Schichten sehr gerne bei Bild- und Videoverarbeitung genutzt, wo z.B. zu erkennende Hunde nicht immer auf der gleichen Stelle im Bild sind.
 
 \begin{figure}[h!]
     \centering
@@ -789,12 +830,27 @@ Deswegen werden Convolutional Schichten sehr gerne bei Bild- und Videoverarbeitu
     \label{fig:conv_layers}
 \end{figure}
 
-% \begin{figure}[h!]
-%     \centering
-%     \includegraphics[width=\textwidth]{pictures/1DConv.png}
-%     \caption{Darstellung eines Convolutional Layers.}
-%     \label{Conv Layer 1}
-% \end{figure}
+Beim Trainieren des neuronalen Netzwerkes werden bei Convolutional Schichten die Gewichte, also die einzelnen Werte der Kernel, als anzupassende Gewichte behandelt.
+
+Bei Convolutional Schichten redet man meistens davon, dass ein Filterkernel eine Eigenschaft (engl. \eng{feature}) extrahiert.
+So könnte ein Filterkernel zum Beispiel alle vertikalen Kanten eines Bildes, alle scharfen Kanten einer Höhenkarte oder alle runden Objekte in einem LIDAR-Scan erkennen.
+
+Der Vorteil von Convolutional Schichten ist, dass sie das bereits beschriebene Problem von Fully Connected Schichten lösen.
+Denn dadurch, dass der Kernel über die Eingaben wandert und alle möglichen Positionen annimmt, kann ein trainierter Kernel das antrainierte Muster überall erkennen, egal, wo es vorkommt.
+Deswegen werden Convolutional Schichten sehr gerne bei Bild- und Videoverarbeitung genutzt, wo z.B. zu erkennende Hunde nicht immer auf der gleichen Stelle im Bild sind. % TODO: wieso nutzen wir sie denn?
+
+% TODO: Abbildung unserer Netzwerkstruktur
+
+Convolutional Schichten haben außerdem meistens mehrere Kanäle. 
+Bei mehreren Kanälen hat die Schicht mehrere verschiedene Filterkernel, die alle auf die gleichen Eingabewerte angewendet werden.
+Da jeder Kernel jeweils eine Ausgabe hat, hat die Schicht auch mehrere Ausgaben.
+
+% Die Operation ist äquivalent dazu, bei einer $n$-dimensionalen tatsächliche Eingabe einen $n+1$-dimensionalen Kernel auf eine $n+1$-dimensionale Eingabe anzuwenden.
+% Dabei muss die Eingabe entlang der $n+1$-ten Dimension kopiert werden. Die $n+1$-te Dimension des Kernels und der Ausgabe entspricht dem Kanal.
+
+% Es gibt also drei Möglichkeiten, die Ausgaben einer Convolutional Schicht weiterzuverarbeiten:
+% Zum einen, indem man jede Ausgabe als 
+Mehrere Kanäle können verwendet werden, um mehrere Features gleichzeitig zu extrahieren, z.B. alle Kreise, alle Rechtecke, alle Linien, alle roten Bereiche, etc., wobei für jedes Feature ein Kanal verwendet wird.
 
 \begin{figure}[h!]
     \centering
@@ -885,51 +941,27 @@ Deswegen werden Convolutional Schichten sehr gerne bei Bild- und Videoverarbeitu
     \label{fig:conv_layers_channels}
 \end{figure}
 
-Convolutional Schichten haben außerdem meistens mehrere Kanäle. 
-Bei mehreren Kanälen hat die Schicht mehrere verschiedene Filterkernel, die alle auf die gleichen Eingabewerte angewendet werden.
-Da jeder Kernel jeweils eine Ausgabe hat, hat die Schicht auch mehrere Ausgaben.
+% \threesub{Loss} 
 
-Die Operation ist äquivalent dazu, bei einer $n$-dimensionalen tatsächliche Eingabe einen $n+1$-dimensionalen Kernel auf eine $n+1$-dimensionale Eingabe anzuwenden.
-Dabei muss die Eingabe entlang der $n+1$-ten Dimension kopiert werden. Die $n+1$-te Dimension des Kernels und der Ausgabe entspricht dem Kanal.
+% Um zu bestimmen, wie gut ein neuronales Netz ist, gibt es die sogenannte Verlustfunktion (engl. \eng{loss function}), die die Datensätze verwendet, um die Abweichung des Netzwerks vom Ideal zu bestimmen. Diese Abweichung wird auch \eng{loss} genannt.
 
-% Es gibt also drei Möglichkeiten, die Ausgaben einer Convolutional Schicht weiterzuverarbeiten:
-% Zum einen, indem man jede Ausgabe als 
-Mehrere Kanäle können verwendet werden, um mehrere Features gleichzeitig zu extrahieren, z.B. alle Kreise, alle Rechteckt, alle Linien, alle roten Bereiche, etc., wobei für jedes Feature ein Kanal verwendet wird.
+% Trainingsdaten bestehen aus einer Liste aus Trainingsdatensätzen. Jeder dieser Datensätze beinhaltet Eingaben für das Netzwerk und die richtigen Ausgaben dafür. Machine Learning, das mit solchen Trainingsdaten arbeitet, wird Supervised Learning genannt.
 
-Da diese Schicht dann mehrere 
+% Die Funktion für den \eng{loss} der Ausgabeschicht und somit des gesamten Netzwerkes (für einen Datensatz) lautet wie folgt:
 
-%auch noch verschiedene Channel, die jeweils eine Liste von Neuronen sind. 
-%Das bedeutet, dass Convolutional Layer eine 2-Dimensionale Matrix von Neuronen besitzten.
-%Da alle Filter mit allen Channels verbunden sind, sind diese auch 2-Dimensional.
+% \form{ \[
+%     C_0 = (a_L - y)^2
+% \]}
 
-% \begin{figure}[h!]
-%     \centering
-%     \includegraphics[width=\textwidth]{pictures/Conv2d.png}
-%     \caption{Darstellung eines Convolutional Layers mit mehreren Channels.}
-%     \label{Conv Layer 2}
-% \end{figure}
+% %C0 = (aL − y)2 
 
-\threesub{Loss} 
+% \noindent wobei $C_0$ der \eng{loss} der Ausgabeschicht, $L$ die letzte Schicht (Ausgabeschicht), $a_L$ der Vektor aller Aktivierungen der Schicht $L$, und $y$ ein Vektor der richtigen Ausgaben für die Eingaben, mit denen die Aktivierungen berechnet wurden, ist. 
+    
+% Um den \eng{loss} zu berechnen, muss man also für alle Neuronen der Ausgabeschicht die Differenz der durchs Netzwerk gegebenen und der in den Datensätzen vorgegebenen Aktivierungen bilden. Danach muss man diese Differenzen quadrieren und am Ende alle Ergebnisse aufsummieren. Dies kann man für alle Testdatensätze wiederholen und von allen \eng{losses} den Durchschnitt nehmen, um die allgemeine Performance eines Netzwerkes zu überprüfen. Diese Art der Verlustfunktion wird mittlere quadratische Abweichung (engl. \eng{mean squared error}, kurz MSE) genannt.
+    
+% Zusammenfassend kann man also sagen, dass der \eng{loss} die Abweichung von den aktuellen Ausgaben des Netzwerkes zu den idealen Ausgaben des Netzwerkes darstellt -- ein perfektes neuronales Netz hätte einen \eng{loss} von 0. Aufgrund der Trainingsdatensätze und der Verlustfunktion weiß man nun, wie stark die Ausgabeschicht abweicht und entsprechend verändert werden muss.
 
-Um zu bestimmen, wie gut ein neuronales Netz ist, gibt es die sogenannte Verlustfunktion (engl. \eng{loss function}), die die Datensätze verwendet, um die Abweichung des Netzwerks vom Ideal zu bestimmen. Diese Abweichung wird auch \eng{loss} genannt.
-
-Trainingsdaten bestehen aus einer Liste aus Trainingsdatensätzen. Jeder dieser Datensätze beinhaltet Eingaben für das Netzwerk und die richtigen Ausgaben dafür. Machine Learning, das mit solchen Trainingsdaten arbeitet, wird Supervised Learning genannt.
-
-Die Funktion für den \eng{loss} der Ausgabeschicht und somit des gesamten Netzwerkes (für einen Datensatz) lautet wie folgt:
-
-\form{ \[
-	C_0 = (a_L - y)^2
-\]}
-
-%C0 = (aL − y)2 
-
-\noindent wobei $C_0$ der \eng{loss} der Ausgabeschicht, $L$ die letzte Schicht (Ausgabeschicht), $a_L$ der Vektor aller Aktivierungen der Schicht $L$, und $y$ ein Vektor der richtigen Ausgaben für die Eingaben, mit denen die Aktivierungen berechnet wurden, ist. 
-	
-Um den \eng{loss} zu berechnen, muss man also für alle Neuronen der Ausgabeschicht die Differenz der durchs Netzwerk gegebenen und der in den Datensätzen vorgegebenen Aktivierungen bilden. Danach muss man diese Differenzen quadrieren und am Ende alle Ergebnisse aufsummieren. Dies kann man für alle Testdatensätze wiederholen und von allen \eng{losses} den Durchschnitt nehmen, um die allgemeine Performance eines Netzwerkes zu überprüfen. Diese Art der Verlustfunktion wird mittlere quadratische Abweichung (engl. \eng{mean squared error}, kurz MSE) genannt.
-	
-Zusammenfassend kann man also sagen, dass der \eng{loss} die Abweichung von den aktuellen Ausgaben des Netzwerkes zu den idealen Ausgaben des Netzwerkes darstellt -- ein perfektes neuronales Netz hätte einen \eng{loss} von 0. Aufgrund der Trainingsdatensätze und der Verlustfunktion weiß man nun, wie stark die Ausgabeschicht abweicht und entsprechend verändert werden muss.
-
-\threesub{Backpropagation}
+% \threesub{Backpropagation}
 
 % Mithilfer der sogenanten Backpropagation werden die Gewichte des Netzwerkes mithilfe der Datensätze angepasst, um den \eng{loss} zu senken.
 
@@ -987,8 +1019,12 @@ Außerdem gibt es die L1- und L2-Regularisierungen.
 Die Idee hinter ist ähnlich zum Dropout, dass sie verhindert, dass das Netzwerk zu komplex wird und sich zu sehr an die Trainingsdaten anpasst.
 Im Gegensatz zu \feng{Dropout} wird bei der L2-Regularisierung eine Penalties-Funktion zum Verlust hinzugefügt, die das Ausmaß der Gewichte des Modells beschränkt. Stattdessen wird es gezwungen, eine gewisse Einfachheit beizubehalten, was dazu beitragen kann, dass das Netzwerk besser auf neue, noch nicht gesehene Daten generalisiert.
 
-Die Verwendung von Rauschen (\eng{noise}) auf dem Input für ein Neuronales Netzwerk kann dazu beitragen, das Overfitting zu vermeiden und die allgemeine Robustheit des Modells zu erhöhen.
+Die Verwendung von Rauschen (\eng{noise}) auf den Eingaben für ein Neuronales Netzwerk kann dazu beitragen, das Overfitting zu vermeiden und die allgemeine Robustheit des Modells zu erhöhen.
 Die Idee hinter der Verwendung von Rauschen auf dem Input ist, dass das Netzwerk gezwungen wird, sich an zusätzliche Unschärfen in den Eingaben zu gewöhnen und somit besser auf neue, noch nicht gesehene Daten generalisieren kann. Durch die Erhöhung der Robustheit des Modells gegenüber kleinen Änderungen der Eingaben kann es auch weniger empfindlich auf kleine Störungen oder Verzerrungen in den Daten reagieren.
+
+\subsubsection{Unser neuronales Netzwerk}
+
+Wir verwenden momentan ein neuronales Netzwerk
 
 \section{Ergebnisse}
 
@@ -1126,7 +1162,7 @@ TODO:
         % Abb. \ref{fig:dense_nn} %
         % & Kopiert und abgeändert von \href{https://tikz.net/regular-vs-bayes-nn/}{https://tikz.net/regular-vs-bayes-nn/}, ursprünglicher Author ist Janosh Riebesell \\
         Abb. \ref{fig:OPV} %
-        & Linker Teil: \href{https://www.conrad.de/de/ratgeber/handwerk-industrie-wiki/elektronik-bauteile/lm393.html}{https://www.conrad.de/de/ratgeber/handwerk-industrie-wiki/elektronik-bauteile/lm393.html}, Rechter Teil: \href{https://www.reichelt.de/operationsverstaerker-2-fach-dip-8-lm-358-dip-p10483.html?CCOUNTRY=445\&LANGUAGE=de}{https://www.reichelt.de/operationsverstaerker-2-fach-dip-8-lm-358-dip-p10483.html?CCOUNTRY=445\&LANGUAGE=de}\\
+        & Linkes Bild: \href{https://www.conrad.de/de/ratgeber/handwerk-industrie-wiki/elektronik-bauteile/lm393.html}{https://www.conrad.de/de/ratgeber/handwerk-industrie-wiki/elektronik-bauteile/lm393.html}, rechtes Bild: \href{https://www.reichelt.de/operationsverstaerker-2-fach-dip-8-lm-358-dip-p10483.html}{https://www.reichelt.de/operationsverstaerker-2-fach-dip-8-lm-358-dip-p10483.html} \\
     \end{tabular}
     }
     \label{tab:my_label}
