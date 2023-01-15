@@ -19,76 +19,76 @@ config.CHANNELS_USED = [i for i = 1:16]
         ) =#
 
 modelOmegaA = Chain( # Model Omega A (+1 Dense(16,16))
-        Conv((3, 1), 60 => 64, relu),
-        Dropout(0.2),
-        MaxPool((2, 1)),
-        Conv((2, 1), 64 => 32, relu),
-        MaxPool((2, 1)),
-        Conv((2, 1), 32 => 16, relu),
-        MaxPool((2, 1)),
-        Flux.flatten,
-        Dropout(0.2),
-        Dense(16, 16, tanh),
-        Dense(16, 64, tanh),
-        Dense(64, 16, tanh),
-        Dense(16, 3),
-    )
+    Conv((3, 1), 60 => 64, relu),
+    Dropout(0.2),
+    MaxPool((2, 1)),
+    Conv((2, 1), 64 => 32, relu),
+    MaxPool((2, 1)),
+    Conv((2, 1), 32 => 16, relu),
+    MaxPool((2, 1)),
+    Flux.flatten,
+    Dropout(0.2),
+    Dense(16, 16, tanh),
+    Dense(16, 64, tanh),
+    Dense(64, 16, tanh),
+    Dense(16, 3),
+)
 
 modelOmegaB = Chain( # Model Omega B (zu A: +1 Dense(16,16))
-        Conv((3, 1), 60 => 64, relu),
-        Dropout(0.2),
-        MaxPool((2, 1)),
-        Conv((2, 1), 64 => 32, relu),
-        MaxPool((2, 1)),
-        Conv((2, 1), 32 => 16, relu),
-        MaxPool((2, 1)),
-        Flux.flatten,
-        Dropout(0.2),
-        Dense(16, 16, tanh),
-        Dense(16, 16, tanh),
-        Dense(16, 64, tanh),
-        Dense(64, 16, tanh),
-        Dense(16, 3),
-    )
+    Conv((3, 1), 60 => 64, relu),
+    Dropout(0.2),
+    MaxPool((2, 1)),
+    Conv((2, 1), 64 => 32, relu),
+    MaxPool((2, 1)),
+    Conv((2, 1), 32 => 16, relu),
+    MaxPool((2, 1)),
+    Flux.flatten,
+    Dropout(0.2),
+    Dense(16, 16, tanh),
+    Dense(16, 16, tanh),
+    Dense(16, 64, tanh),
+    Dense(64, 16, tanh),
+    Dense(16, 3),
+)
 
 modelOmegaC = Chain( # Model Omega C
-        Conv((3, 1), 60 => 64, relu),
-        Dropout(0.2),
-        MaxPool((2, 1)),
-        Conv((2, 1), 64 => 32, relu),
-        MaxPool((2, 1)),
-        Conv((2, 1), 32 => 16, relu),
-        MaxPool((2, 1)),
-        Flux.flatten,
-        Dropout(0.2),
-        Dense(16, 16, tanh),
-        Dense(16, 32, tanh),
-        Dense(32, 64, tanh),
-        Dense(64, 16, tanh),
-        Dense(16, 3),
-    )
+    Conv((3, 1), 60 => 64, relu),
+    Dropout(0.2),
+    MaxPool((2, 1)),
+    Conv((2, 1), 64 => 32, relu),
+    MaxPool((2, 1)),
+    Conv((2, 1), 32 => 16, relu),
+    MaxPool((2, 1)),
+    Flux.flatten,
+    Dropout(0.2),
+    Dense(16, 16, tanh),
+    Dense(16, 32, tanh),
+    Dense(32, 64, tanh),
+    Dense(64, 16, tanh),
+    Dense(16, 3),
+)
 
 config.MODEL = Chain( # Model Omega D
-        Conv((3, 1), 60 => 64, relu),
-        Dropout(0.2),
-        MaxPool((2, 1)),
-        Conv((2, 1), 64 => 32, relu),
-        MaxPool((2, 1)),
-        Conv((2, 1), 32 => 16, relu),
-        MaxPool((2, 1)),
-        Flux.flatten,
-        Dropout(0.2),
-        Dense(16, 16, tanh),
-        Dense(16, 64, tanh),
-        Dense(64, 16, tanh),
-        Dense(16, 3),
-    )
+    Conv((3, 1), 60 => 64, relu),
+    Dropout(0.2),
+    MaxPool((2, 1)),
+    Conv((2, 1), 64 => 32, relu),
+    MaxPool((2, 1)),
+    Conv((2, 1), 32 => 16, relu),
+    MaxPool((2, 1)),
+    Flux.flatten,
+    Dropout(0.2),
+    Dense(16, 16, tanh),
+    Dense(16, 64, tanh),
+    Dense(64, 16, tanh),
+    Dense(16, 3),
+)
 
 config.MODEL = Chain( # Model Omega E
     Conv((3, 1), 60 => 64, relu),
     Dropout(0.2),
     MaxPool((2, 1)),
-    Conv((2, 1), 64 => 32, pad = SamePad(), relu),
+    Conv((2, 1), 64 => 32, pad=SamePad(), relu),
     Conv((2, 1), 32 => 32, relu),
     MaxPool((2, 1)),
     Conv((2, 1), 32 => 16, relu),
@@ -157,10 +157,68 @@ modelOmegaH = Chain( # Model Omega G (reduced from Omeg F)
     Dense(64, 64, tanh),
     Dropout(0.1),
     Dense(64, 16, tanh),
+    Dense(16, 3, tanh),
+)
+
+modelOmegaI = Chain(
+    Conv((3, 1), 60 => 64, relu),
+    MaxPool((2, 1)),
+    Dropout(0.2),
+    Conv((2, 1), 64 => 32, relu),
+    MaxPool((2, 1)),
+    Dropout(0.2),
+    Conv((2, 1), 32 => 16, relu),
+    MaxPool((2, 1)),
+    Dropout(0.2),
+    Flux.flatten,
+    Dropout(0.2),
+    Dense(16, 64, tanh),
+    Dense(64, 16, tanh),
     Dense(16, 3),
 )
 
-config.MODEL = modelOmegaH
+modelOmegaJ = Chain(
+    Conv((3, 1), 60 => 64, relu),
+    MaxPool((2, 1)),
+    Dropout(0.3),
+    Conv((2, 1), 64 => 16, relu),
+    MaxPool((2, 1)),
+    Dropout(0.2),
+    Flux.flatten,
+    Dropout(0.2),
+    Dense(48, 64, tanh),
+    Dropout(0.4),
+    Dense(64, 16, tanh),
+    Dense(16, 3),
+)
+
+modelOmegaK = Chain(
+    Conv((3, 1), 60 => 64, relu),
+    MaxPool((2, 1)),
+    Dropout(0.2),
+    Conv((2, 1), 64 => 32, relu),
+    Conv((2, 1), 32 => 32, relu),
+    MaxPool((2, 1)),
+    Dropout(0.2),
+    Conv((2, 1), 32 => 16, relu),
+    Dropout(0.4),
+    Conv((2, 1), 16 => 16, relu),
+    MaxPool((2, 1)),
+    Dropout(0.2),
+    Flux.flatten,
+    Dropout(0.2),
+    Dense(16, 3),
+)
+
+config.CHANNELS_USED = [12, 10, 9, 11]
+path_prefix = "holy_"
+config.TEST_DATA = [
+    (path_prefix * "data/left/", [1.0, 0.0, 0.0]),
+    (path_prefix * "data/none/", [0.0, 1.0, 0.0]),
+    (path_prefix * "data/right/", [0.0, 0.0, 1.0])
+]
+
+config.MODEL = modelOmegaA
 
 config.LEARNING_RATE = 0.00001
-config.MODEL_NAME = "OmegaH_16c_sentdex_e" * string(config.LEARNING_RATE) * "_*"
+config.MODEL_NAME = "OmegaA_4c_gangTest_e" * string(config.LEARNING_RATE) * "_*"
