@@ -4,7 +4,7 @@ using Documenter
 DocMeta.setdocmeta!(BCIInterface, :DocTestSetup, :(using BCIInterface); recursive=true)
 
 makedocs(;
-    modules=[BCIInterface, BCIInterface.EEG],
+    modules=[BCIInterface],
     authors="Alexander Reimer <alexander.reimer2357@gmail.com>, Matteo Friedrich <matteo.r.friedrich@gmail.com>",
     repo="https://github.com/AR102/Interpreting-EEG-with-AI/blob/{commit}{path}#{line}",
     sitename="BCIInterface.jl",
@@ -16,10 +16,11 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
-        "EEG" => "eeg.md",
-        "BCI" => "bci.md",
-        "Advanced Customisation" => "advanced_customisation.md",
-        "MCP3208" => "MCP3208.md",
+        "Function & Type Documentation" => "API.md",
+        # "EEG" => "eeg.md",
+        "Supported Boards" => "supported_boards.md",
+        # "Advanced Customisation" => "advanced_customisation.md",
+        # "MCP3208" => "MCP3208.md",
         "Package Development" => "developers.md",
     ]
 )

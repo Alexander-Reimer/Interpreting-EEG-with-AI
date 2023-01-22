@@ -15,11 +15,3 @@ device = Device(MCP3208("/dev/spidev0.0", 8))
 
 For details about `MCP3208`, see [`MCP3208`](@ref).
 ## Processing data
-
-## Reference
-```@index
-Modules = [BCIInterface.EEG]
-```
-```@autodocs
-Modules = [BCIInterface.EEG]
-```
