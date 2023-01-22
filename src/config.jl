@@ -4,9 +4,10 @@ config = init_config()
 config.EPOCHS = 50
 config.BATCH_SIZE = 128
 config.CHANNELS_USED = [12, 10, 9, 11]
+config.CHANNELS_USED = [i for i = 1:16]
 # config.CHANNELS_USED = [12]
 # Model A bzw. allConv(_4c)_1)
-#= config.MODEL = Chain(
+ModelA = Chain(
     # @autosize begin
         Conv((5,1), 60 => 64, pad = SamePad(), relu),
         Conv((5,1), 64 => 64, pad = SamePad(), relu),
@@ -15,7 +16,7 @@ config.CHANNELS_USED = [12, 10, 9, 11]
         Conv((5,1), 256 => 512, pad = SamePad(), relu),
         Conv((length(config.CHANNELS_USED),1), 512 => 3),
         Flux.flatten,
-        ) =#
+        )
 
 # Model B
 config.MODEL = Chain(
@@ -58,14 +59,15 @@ config.MODEL = Chain(
 )
 
 config.LEARNING_RATE = 0.001
-config.MODEL_NAME = "E_4c_moreTest_e" * string(config.LEARNING_RATE) * "_*"
+config.MODEL_NAME = "A_16c_e" * string(config.LEARNING_RATE) * "_*"
+config.MODEL = ModelA
 config.PRUNE_FREQUENCY = 10
-path_prefix = "holy_"
-config.TEST_DATA = [
-    (path_prefix * "data/left/", [1.0, 0.0, 0.0]),
-    (path_prefix * "data/none/", [0.0, 1.0, 0.0]),
-    (path_prefix * "data/right/", [0.0, 0.0, 1.0])
-    ]
+# path_prefix = "holy_"
+# config.TEST_DATA = [
+#     (path_prefix * "data/left/", [1.0, 0.0, 0.0]),
+#     (path_prefix * "data/none/", [0.0, 1.0, 0.0]),
+#     (path_prefix * "data/right/", [0.0, 0.0, 1.0])
+#     ]
 # config.TRAIN_DATA = [
 #     (path_prefix * "data/left/", [1.0, 0.0, 0.0]),
 #     (path_prefix * "data/none/", [0.0, 1.0, 0.0]),
