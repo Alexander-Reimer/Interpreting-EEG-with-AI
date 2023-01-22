@@ -18,7 +18,7 @@ function test_lengths(lengths, expected_len)
     return true
 end
 
-function test_experiment(board::BCIInterface.EEG.EEGBoard, name::String, gather_time)
+function test_experiment(board::BCIInterface.EEGBoard, name::String, gather_time)
     device = Device(board)
     experiment = Experiment(device, name, tags=["test", "significant"],
         extra_info=Dict(:delay => 2), path=TEST_DIR)
@@ -41,7 +41,7 @@ function test_experiment(board::BCIInterface.EEG.EEGBoard, name::String, gather_
     total_num = experiment.num_samples
 
     # clear all data of experiment
-    BCIInterface.EEG.clear!(experiment)
+    BCIInterface.clear!(experiment)
     @test experiment.num_samples == 0
     @test size(experiment.data.df)[1] == 0
 
@@ -61,7 +61,7 @@ function test_experiment(board::BCIInterface.EEG.EEGBoard, name::String, gather_
     @test data.num_samples == size(data.df, 1)
 
     # direct, manual loading
-    df = BCIInterface.EEG.CSV.read("testdata/" * name * "/RawData.csv", BCIInterface.EEG.DataFrame; skipto=2)
+    df = BCIInterface.CSV.read("testdata/" * name * "/RawData.csv", BCIInterface.DataFrame; skipto=2)
 
     # create new, empty experiment
     experiment2 = Experiment(device, name, tags=["test", "significant"],
@@ -94,28 +94,28 @@ end
                 online=false)
 
             dev = Device(board)
-            @test is(BCIInterface.EEG.get_voltage(dev.board, 1), Number)
+            @test is(BCIInterface.get_voltage(dev.board, 1), Number)
             # Test if channel limits are checked
-            @test_throws "Given channel" BCIInterface.EEG.get_voltage(dev.board, 9)
-            @test_throws "Given channel" BCIInterface.EEG.get_voltage(dev.board, 0)
+            @test_throws "Given channel" BCIInterface.get_voltage(dev.board, 9)
+            @test_throws "Given channel" BCIInterface.get_voltage(dev.board, 0)
             
             test_experiment(board, "MCP3208", 0.005)
         end
         # TODO: implement for CI
-        @testset "GanglionGUI" begin
-            board = GanglionGUI(NUM_CHANNELS)
-            test_experiment(board, "GanglionGUI", 0.01)
-        end
+        # @testset "GanglionGUI" begin
+        #     board = GanglionGUI(NUM_CHANNELS)
+        #     test_experiment(board, "GanglionGUI", 0.01)
+        # end
     end
     # @testset "Data Saving & Loading"
     @testset "Data processing" begin
         function creation_tests()
-            _ = BCIInterface.EEG.Standard()
+            _ = BCIInterface.Standard()
             return true
         end
         @test creation_tests()
 
-        std_processor = BCIInterface.EEG.Standard()
+        std_processor = BCIInterface.Standard()
         # @test BCIInterface.process()
     end
     @testset "AI Models" begin
