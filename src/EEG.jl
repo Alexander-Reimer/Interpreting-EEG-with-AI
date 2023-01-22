@@ -137,7 +137,6 @@ Internal method used for reading from file; in function to make later
 switch of file format easier.
 """
 function _read_metadata(filepath)
-    @info "bruh"
     md = BSON.load(filepath, @__MODULE__)
     return Metadata(md)
 end
