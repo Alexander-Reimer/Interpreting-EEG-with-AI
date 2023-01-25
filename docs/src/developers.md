@@ -3,6 +3,20 @@
 Pages = ["developers.md"]
 Depth = 3
 ```
+
+This is the first package we have ever developed. This means that it will hopefully improve significantly over time, but also that any help, experiences and advice would be greatly appreciated.
+
+Feel free to contact us over email ([alexander.reimer2357@gmail.com](mailto:alexander.reimer2357@gmail.com)) or open an issue on the GitHub repository.
+
+## Design Principle
+
+This package has two main goals: Firstly to make the experience for the user as simple, fast and uncomplicated as possible, and secondly make it useable in every scenario.
+
+To combine these two, we decided to make this package as modular and adjustable as possible.
+This way, we can provide "default" modules, so people don't have to deal with every single aspect, while still making it possible to adjust anything if a project requires it.
+
+For example, say you use an unsupported EEG or want to use a different EEG processing pipeline -- this way, you won't need to recode big chunks of the program for small changes.
+
 ## Example workflow ideas
 ### Gathering data
 ```julia
@@ -83,9 +97,8 @@ ai.max_accuracy = 0.9
 train!(ai, 100)
 ```
 See [https://fluxml.ai/Flux.jl/stable/outputsize/](https://fluxml.ai/Flux.jl/stable/outputsize/).
-## For Package Developers
-This section is for everybody who wants to directly contribute to this package (and for us to not forget details!).
-### Documentation
+
+## Documentation
 To preview the documentation locally before pushing to GitHub, use `previewDocs.sh` (Linux) or manually execute
 
     `julia --project=docs -ie 'using BCIInterface, LiveServer; servedocs()'`

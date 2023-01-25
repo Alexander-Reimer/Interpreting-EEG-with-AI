@@ -17,11 +17,8 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "Function & Type Documentation" => "API.md",
-        # "EEG" => "eeg.md",
         "Supported Boards" => "supported_boards.md",
-        # "Advanced Customisation" => "advanced_customisation.md",
-        # "MCP3208" => "MCP3208.md",
-        "Package Development" => "developers.md",
+        "Package Development" => "developers.md"
     ]
 )
 
