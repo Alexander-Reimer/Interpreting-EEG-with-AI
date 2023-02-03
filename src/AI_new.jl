@@ -1,5 +1,5 @@
 # module AI
-using Flux, DataFrames, ProgressMeter, TensorBoardLogger, CUDA
+using Flux, DataFrames, ProgressMeter, TensorBoardLogger, CUDA, BSON
 export ModelData, create_model, train!
 
 struct ModelData
@@ -121,6 +121,8 @@ end
 mutable struct Model
     network::Flux.Chain
     epochs::Int
+    savedir::String
+    modelname::String
 end
 
 # Overloading Flux Methods:
@@ -173,11 +175,21 @@ function get_inputshape(data_desc::FFTDataDescriptor)
     return (data_desc.num_channels, data_desc.max_freq)
 end
 
+function get_timestr()::String
+    return Dates.format(now(), "YYYY-mm-dd_HH-MM-SS")
+end
+
+function parse_modelname(modelname::String)
+    timestr = get_timestr()
+    return replace(modelname, "*t" => timestr)
+end
+
 function create_model(inputshape, outputshape, datadescriptor;
-    network_constructor::Function=standard_network)::Model
+    network_constructor::Function=standard_network, savedir = "models/", modelname = "Standard_*t")::Model
     network = network_constructor(inputshape, outputshape, datadescriptor)
     epochs = 0
-    return Model(network, epochs)
+    modelname = parse_modelname(modelname)
+    return Model(network, epochs, savedir, modelname)
 end
 
 """
@@ -197,6 +209,26 @@ function create_model(data::ModelData; network_constructor::Function=standard_ne
         network_constructor=network_constructor)
 end
 
+function save(model::Model, path::String, overwrite = false)
+    if !overwrite && isfile(path)
+        throw(ErrorException("File $path already exists! Specify a different file or set overwrite to true!"))
+    end
+    if !isdir(dirname(path))
+        createpath(dirname(path) * "/")
+    end
+    model.network = model.network |> cpu
+    bson(path, model=model)
+end
+
+function save(model::Model)
+    save(model, joinpath(model.savedir, model.modelname, "model_" * get_timestr() * ".bson"))
+end
+
+function load_model(path::String)::Model
+    model = BSON.load(path, @__MODULE__)[:model]
+    return model
+end
+
 mutable struct TrainingParameters
     # Learning rate.
     η::Float32
@@ -214,7 +246,10 @@ mutable struct TrainingParameters
     opt_params::Array
     # whether to show progress bar
     show_progress::Bool
+    # interval for auto saving model; if negative, model won't be saved
+    autosave::Integer
 end
+
 
 function standard_trainingparameters()
     η = 0.01
@@ -226,22 +261,36 @@ function standard_trainingparameters()
     # params to pass to opt_rule apart from η
     opt_params = []
     show_progress = true
-    TrainingParameters(η, epochs, noise, device, loss, opt_rule, opt_params, show_progress)
+    autosave = 5
+    TrainingParameters(η, epochs, noise, device, loss, opt_rule, opt_params, show_progress, autosave)
 end
 
 function train!(model::Model, data::ModelData, params::TrainingParameters)
+    # callbacks:
+    if params.autosave >= 0
+        _save_model(model::Model) = begin
+            save(model)
+            model.network = model.network |> params.device
+        end
+        saving_cb = Flux.throttle(_save_model, params.autosave)
+    else
+        saving_cb = () -> ()
+    end
+    epochgoal = model.epochs + params.epochs
+    trainmode!(model)
+    opt = Flux.setup(params.opt_rule(params.η, params.opt_params...), model.network)
+    model.network = model.network |> params.device
     # TODO: performance considerations of try/catch
     try
-        epochgoal = model.epochs + params.epochs
-        trainmode!(model)
-        opt = Flux.setup(params.opt_rule(params.η, params.opt_params...), model.network)
-        model.network = model.network |> params.device
         while model.epochs < epochgoal
             # move train_loss up into this scope
             local train_loss::eltype(data.dataloader.data.inputs)
+
+            # init progress bar
             num_samples = size(data.dataloader.data.outputs, ndims(data.dataloader.data.outputs))
-            p = Progress(num_samples, enabled = params.show_progress)
+            p = Progress(num_samples, enabled=params.show_progress)
             i = 0
+
             for (x, y) in data.dataloader
                 # move inputs and outputs to device and apply noise on inputs
                 x = x |> params.device |> params.noise
@@ -257,6 +306,7 @@ function train!(model::Model, data::ModelData, params::TrainingParameters)
                 i += size(y, ndims(y))
                 update!(p, i)
             end
+            saving_cb(model)
             model.epochs += 1
         end
     catch e
@@ -270,8 +320,7 @@ function train!(model::Model, data::ModelData, params::TrainingParameters)
 end
 
 function train!(model::Model, data::ModelData;
-    parameters::Function=standard_trainingparameters, kws...)
-    params::TrainingParameters = parameters()
+    params::TrainingParameters=standard_trainingparameters(), kws...)
     for key in keys(kws)
         if !hasfield(TrainingParameters, key)
             throw(ArgumentError("Given kwarg $key not recognized!"))
