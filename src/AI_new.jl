@@ -118,14 +118,14 @@ function ModelData(data::Data, tag2output::Dict; batchsize=5, shuffle=true)
     )
 end
 
-struct Model
+mutable struct Model
     network::Flux.Chain
     epochs::Int
 end
 
 # Overloading Flux Methods:
 
-trainmode!(model::Model) = trainmode!(model.network)
+trainmode!(model::Model) = Flux.trainmode!(model.network)
 # make model(inputs) = model.network(inputs)
 (model::Model)(inputs) = model.network(inputs)
 
@@ -133,10 +133,12 @@ trainmode!(model::Model) = trainmode!(model.network)
 add_dimension(layer) = reshape(layer, size(layer)[1:end-1], 1, size(layer)[end])
 
 function standard_network(inputshape, outputshape, datadescriptor)::Flux.Chain
+    # add dimension because of samples
+    inputshape = (inputshape..., 1)
     if datadescriptor isa FFTDataDescriptor
         # only 1 output dimension
         if length(outputshape) == 1
-            return Chain(
+            return @autosize (inputshape...,) Chain(
                 Conv((5,), inputshape[2] => 64, relu, pad=SamePad()),
                 Conv((5,), 64 => 64, relu, pad=SamePad()),
                 Conv((5,), 64 => 128, relu, pad=SamePad()),
@@ -144,8 +146,10 @@ function standard_network(inputshape, outputshape, datadescriptor)::Flux.Chain
                 Conv((5,), 256 => 512, relu, pad=SamePad()),
                 Conv((3,), 512 => outputshape[1]),
                 Flux.flatten,
+                Dense(_, outputshape[1])
             )
         end
+        # TODO: error...?
     end
     if datadescriptor isa RawDataDescriptor
         # only 1 output dimension
@@ -196,10 +200,20 @@ end
 mutable struct TrainingParameters
     # Learning rate.
     η::Float32
+    # how many epochs to train.
     epochs::Int
+    # a noise function to apply to inputs
     noise::Function
+    # a device to move data to (`gpu` or `cpu`)
     device::Function
-    loss::Array{Function}
+    # a loss function `f(ŷ, y)`` returning a single number
+    loss::Function
+    # optimiser to use; `Adam`, `GradientDescent` etc.
+    opt_rule::Any
+    # parameters to pass to optimiser, e.g. [β = 0.4]
+    opt_params::Array
+    # whether to show progress bar
+    show_progress::Bool
 end
 
 function standard_trainingparameters()
@@ -207,29 +221,43 @@ function standard_trainingparameters()
     epochs = 10
     noise = x -> x
     device = CUDA.functional() ? gpu : cpu
-    loss = [Flux.logitcrossentropy]
-    TrainingParameters(η, epochs, noise, device, loss)
+    loss = Flux.logitcrossentropy
+    opt_rule = Adam
+    # params to pass to opt_rule apart from η
+    opt_params = []
+    show_progress = true
+    TrainingParameters(η, epochs, noise, device, loss, opt_rule, opt_params, show_progress)
 end
 
-function train_epoch!(model::Model, data::ModelData, params::TrainingParameters, epochgoal::Int)
-    local training_loss
-    ps = Flux.Params()
-    for (x, y) in data.dataloader
-        x = x |> params.device |> params.noise
-        y = y |> params.device
-        gs = gradient(ps) do
-            training_loss = loss()
-        end
-    end
-end
-
-Flux.train!
 function train!(model::Model, data::ModelData, params::TrainingParameters)
+    # TODO: performance considerations of try/catch
     try
         epochgoal = model.epochs + params.epochs
         trainmode!(model)
+        opt = Flux.setup(params.opt_rule(params.η, params.opt_params...), model.network)
+        model.network = model.network |> params.device
         while model.epochs < epochgoal
-
+            # move train_loss up into this scope
+            local train_loss::eltype(data.dataloader.data.inputs)
+            num_samples = size(data.dataloader.data.outputs, ndims(data.dataloader.data.outputs))
+            p = Progress(num_samples, enabled = params.show_progress)
+            i = 0
+            for (x, y) in data.dataloader
+                # move inputs and outputs to device and apply noise on inputs
+                x = x |> params.device |> params.noise
+                y = y |> params.device
+                # calculate gradients
+                train_loss, gs = Flux.withgradient(model.network, x) do network, xs
+                    ŷ = network(xs)
+                    return params.loss(ŷ, y)
+                end
+                # update weights
+                Flux.update!(opt, model.network, gs[1])
+                # update progress bar
+                i += size(y, ndims(y))
+                update!(p, i)
+            end
+            model.epochs += 1
         end
     catch e
         if typeof(e) == InterruptException
@@ -250,6 +278,7 @@ function train!(model::Model, data::ModelData;
         end
         setproperty!(params, key, kws[key])
     end
+    train!(model, data, params)
 end
 
 # end # module
