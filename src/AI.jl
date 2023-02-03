@@ -51,7 +51,7 @@ mutable struct EEGModel
     test_loss_history::Array{Float32,1}
     train_acc_history::Array{Float32,1}
     test_acc_history::Array{Float32,1}
-    prune_guard::Array{Int8, 1}
+    prune_guard::Array{Int8,1}
 end
 
 sqnorm(x) = sum(abs2, x)
@@ -116,7 +116,7 @@ Create new, independent model using given configuration.
 function new_model(config)::EEGModel
     loss = config.LOSS
     params = create_params(config)
-    
+
     opt = params.opt_type(config.LEARNING_RATE)
     net = config.MODEL #params.network_builder()
     logger_name, logger = new_logger(params)
