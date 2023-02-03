@@ -410,9 +410,12 @@ Create necessary folders and file if they don't exist yet, so that
 """
 function createpath(path::String)
     mkpath(dirname(path)) # create directories containing file
-    if !isfile(path)
-        io = open(path, create=true) # create file
-        close(io)
+    # if path points to file (doesn't end in "/")
+    if dirname(path) !== path
+        if !isfile(path)
+            io = open(path, create=true) # create file
+            close(io)
+        end
     end
 end
 
