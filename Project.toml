@@ -14,8 +14,10 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 LSL = "57c3d5b1-721f-43a0-b20c-e9152d812276"
+ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+TensorBoardLogger = "899adc3e-224a-11e9-021f-63837185c80f"
 Traceur = "37b6cedf-1f77-55f8-9503-c64b63398394"
 
 [compat]
