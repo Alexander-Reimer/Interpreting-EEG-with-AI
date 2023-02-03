@@ -1,6 +1,6 @@
 # module AI
-using Flux, DataFrames
-export ModelData
+using Flux, DataFrames, ProgressMeter, TensorBoardLogger, CUDA
+export ModelData, create_model, train!
 
 struct ModelData
     dataloader::Flux.DataLoader
@@ -120,9 +120,12 @@ end
 
 struct Model
     network::Flux.Chain
-    # loss::Function
+    epochs::Int
 end
 
+# Overloading Flux Methods:
+
+trainmode!(model::Model) = trainmode!(model.network)
 # make model(inputs) = model.network(inputs)
 (model::Model)(inputs) = model.network(inputs)
 
@@ -158,7 +161,7 @@ function standard_network(inputshape, outputshape, datadescriptor)::Flux.Chain
             )
         end
     end
-    
+
     throw(ArgumentError("No standard network structure defined for datadescriptor of type $(typeof(datadescriptor))!"))
 end
 
@@ -169,7 +172,8 @@ end
 function create_model(inputshape, outputshape, datadescriptor;
     network_constructor::Function=standard_network)::Model
     network = network_constructor(inputshape, outputshape, datadescriptor)
-    return Model(network)
+    epochs = 0
+    return Model(network, epochs)
 end
 
 """
@@ -188,4 +192,64 @@ function create_model(data::ModelData; network_constructor::Function=standard_ne
     return create_model(inputshape, outputshape, data.datadescriptor,
         network_constructor=network_constructor)
 end
+
+mutable struct TrainingParameters
+    # Learning rate.
+    η::Float32
+    epochs::Int
+    noise::Function
+    device::Function
+    loss::Array{Function}
+end
+
+function standard_trainingparameters()
+    η = 0.01
+    epochs = 10
+    noise = x -> x
+    device = CUDA.functional() ? gpu : cpu
+    loss = [Flux.logitcrossentropy]
+    TrainingParameters(η, epochs, noise, device, loss)
+end
+
+function train_epoch!(model::Model, data::ModelData, params::TrainingParameters, epochgoal::Int)
+    local training_loss
+    ps = Flux.Params()
+    for (x, y) in data.dataloader
+        x = x |> params.device |> params.noise
+        y = y |> params.device
+        gs = gradient(ps) do
+            training_loss = loss()
+        end
+    end
+end
+
+Flux.train!
+function train!(model::Model, data::ModelData, params::TrainingParameters)
+    try
+        epochgoal = model.epochs + params.epochs
+        trainmode!(model)
+        while model.epochs < epochgoal
+
+        end
+    catch e
+        if typeof(e) == InterruptException
+            @info "Handling Interruption..."
+            # TODO: save model
+        else
+            throw(e)
+        end
+    end
+end
+
+function train!(model::Model, data::ModelData;
+    parameters::Function=standard_trainingparameters, kws...)
+    params::TrainingParameters = parameters()
+    for key in keys(kws)
+        if !hasfield(TrainingParameters, key)
+            throw(ArgumentError("Given kwarg $key not recognized!"))
+        end
+        setproperty!(params, key, kws[key])
+    end
+end
+
 # end # module
