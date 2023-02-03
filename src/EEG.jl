@@ -7,11 +7,26 @@ export Experiment, gather_data!, save_data, load_data, load_data!
 Abstract class containing data processors.
 
 Defined data processors:
+
 `StandardProcessor`: The standard processors with preset arguments and functions, for 
 details see [`StandardProcessor`](@ref).
 """
 abstract type DataProcessor end
+
+"""
+Abstract type containing data descriptors.
+
+Data is processed and trained on differently depending on the data descriptor.
+If you store or use your data in a format which doesn't have a data descriptor
+yet, you will need to define your own and overload the following functions:
+
+`create_data(name::String, data_desc::MyDataDescriptor)`
+`get_inputshape(data_desc::MyDataDescriptor)`
+`inputarray(data_descriptor::MyDataDescriptor, num_samples::Int)`
+`row2inputs(data_descriptor::MyDataDescriptor, row::Vector)`
+"""
 abstract type DataDescriptor end
+
 using BrainFlow, DataFrames, Dates, CSV, BSON, LSL
 import PyPlot
 Plt = PyPlot
@@ -19,15 +34,12 @@ Plt.pygui(true)
 
 include("EEG_Devices.jl")
 
-#= struct EEGDataType
-    name::Symbol
-end
+"""
+    datetime(seconds_since_epoch)
 
-RAW_EEG_DATA = EEGDataType(:raw_eeg)
-FFT_DATA = EEGDataType(:raw_eeg) =#
-
-# Utilitiy functions:
-datetime(seconds_since_epoch) = Dates.unix2datetime(seconds_since_epoch)
+Convert seconds since unix epoch into a DateTime object.
+"""
+datetime(seconds_since_epoch::Number) = Dates.unix2datetime(seconds_since_epoch)
 
 """
 Device for gathering EEG data. Create it using
@@ -477,7 +489,7 @@ function load_data(folderpath, name; start_pos=1, num_samples=:all, exact_num=fa
     end
 
     datapath = get_datapath(folderpath, name)
-    type_map = Dict(:tags => Array{String, 1})
+    type_map = Dict(:tags => Array{String,1})
     if num_samples == :all
         df = CSV.read(datapath, DataFrame; skipto=start_pos + 1, types=type_map) # +1 for headers
     else
