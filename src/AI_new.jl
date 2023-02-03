@@ -1,6 +1,6 @@
 # module AI
 using Flux, DataFrames, ProgressMeter, TensorBoardLogger, CUDA, BSON
-export ModelData, create_model, train!
+export ModelData, create_model, train!, save, load_model
 
 struct ModelData
     dataloader::Flux.DataLoader
@@ -125,6 +125,30 @@ mutable struct Model
     modelname::String
 end
 
+function Base.:(==)(a::Flux.Chain, b::Flux.Chain)
+    # check number of layers
+    if length(a.layers) !== length(b.layers)
+        return false
+    end
+    for (layer_a, layer_b) in zip(a.layers, b.layers)
+        # check types of layers
+        if typeof(layer_a) !== typeof(layer_b)
+            return false
+        end
+        # check weights, biases, etc.
+        for field in fieldnames(typeof(layer_a))
+            if any(getfield(layer_a, field) .!== getfield(layer_b, field))
+                return false
+            end
+        end
+    end
+    return true
+end
+
+Base.:(==)(a::Model, b::Model) =
+    a.epochs == b.epochs && a.savedir == b.savedir &&
+    a.modelname == b.modelname && a.network == b.network
+
 # Overloading Flux Methods:
 
 trainmode!(model::Model) = Flux.trainmode!(model.network)
@@ -156,14 +180,15 @@ function standard_network(inputshape, outputshape, datadescriptor)::Flux.Chain
     if datadescriptor isa RawDataDescriptor
         # only 1 output dimension
         if length(outputshape) == 1
-            return Chain(
-                Conv((5,), 60 => 64, relu, pad=SamePad()),
+            return @autosize (inputshape...,) Chain(
+                Conv((5,), 1 => 64, relu, pad=SamePad()),
                 Conv((5,), 64 => 64, relu, pad=SamePad()),
                 Conv((5,), 64 => 128, relu, pad=SamePad()),
                 Conv((5,), 128 => 256, relu, pad=SamePad()),
                 Conv((5,), 256 => 512, relu, pad=SamePad()),
                 Conv((3,), 512 => outputshape[1]),
                 Flux.flatten,
+                Dense(_, outputshape[1])
             )
         end
     end
@@ -185,7 +210,7 @@ function parse_modelname(modelname::String)
 end
 
 function create_model(inputshape, outputshape, datadescriptor;
-    network_constructor::Function=standard_network, savedir = "models/", modelname = "Standard_*t")::Model
+    network_constructor::Function=standard_network, savedir="models/", modelname="Standard_*t")::Model
     network = network_constructor(inputshape, outputshape, datadescriptor)
     epochs = 0
     modelname = parse_modelname(modelname)
@@ -201,15 +226,16 @@ Create a model with a neural network for classifying / regressing `data`.
 input shape and output shape of the data, each represented by a tuple, and the
 data descriptor of type DataDescriptor.
 """
-function create_model(data::ModelData; network_constructor::Function=standard_network)::Model
+function create_model(data::ModelData; network_constructor::Function=standard_network,
+    savedir="models/", modelname="Standard_*t")::Model
     # end-1 because last dimension is along samples
     inputshape = size(data.inputs)[1:end-1]
     outputshape = size(data.outputs)[1:end-1]
     return create_model(inputshape, outputshape, data.datadescriptor,
-        network_constructor=network_constructor)
+        network_constructor=network_constructor, savedir = savedir, modelname = modelname)
 end
 
-function save(model::Model, path::String, overwrite = false)
+function save(model::Model, path::String, overwrite=false)
     if !overwrite && isfile(path)
         throw(ErrorException("File $path already exists! Specify a different file or set overwrite to true!"))
     end
@@ -224,7 +250,29 @@ function save(model::Model)
     save(model, joinpath(model.savedir, model.modelname, "model_" * get_timestr() * ".bson"))
 end
 
+function get_most_recent(dir_path::String)::String
+    files = []
+    for file in readdir(dir_path)
+        if file[end-4:end] == ".bson"
+            push!(files, file)
+        end
+    end
+    times = []
+    for file_path in files
+        time_str = file_path[7:end-5]
+        push!(times, DateTime(time_str, "YYYY-mm-dd_HH-MM-SS"))
+    end
+    file = files[argmax(times)]
+    return dir_path * "/" * file
+end
+
 function load_model(path::String)::Model
+    if isdir(path)
+        path = get_most_recent(path)
+    end
+    if !isfile(path)
+        throw("File $path doesn't exist!")
+    end
     model = BSON.load(path, @__MODULE__)[:model]
     return model
 end
