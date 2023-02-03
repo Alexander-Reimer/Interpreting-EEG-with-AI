@@ -108,7 +108,21 @@ end
         # end
     end
     @testset "AI" begin
-        # data = ... # TODO
+        outputs = Dict(:left => [1.0,0.0, 0.0], :none => [0.0, 1.0, 0.0], :right => [0.0, 0.0, 1.0])
+        data = load_data("testdata/MCP3208/", "RawData")
+        modeldata = ModelData(data, outputs)
+        model = create_model(modeldata, modelname = "TestModel")
+
+        inputs = modeldata.dataloader.data.inputs
+        sample = selectdim(inputs, ndims(inputs), 1)
+        @test_broken model(sample) == [] # TODO: get currect result for comparison
+
+        train!(model, modeldata, epochs = 2)
+        # TODO: test if loss is lower
+
+        save(model)
+        model2 = load_model("model/TestModel/")
+        @test model == model2
     end
     # @testset "Data Saving & Loading"
     @testset "Data processing" begin
@@ -120,8 +134,5 @@ end
 
         std_processor = BCIInterface.Standard()
         # @test BCIInterface.process()
-    end
-    @testset "AI Models" begin
-        
     end
 end
