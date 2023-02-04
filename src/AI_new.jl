@@ -1,12 +1,19 @@
-# module AI
-using Flux, DataFrames, ProgressMeter, TensorBoardLogger, CUDA, BSON
-export ModelData, create_model, train!, save, load_model
-export cpu, gpu
+"""
+    ModelData
 
+A type for storing data in a neural network friendly way.
+
+# Fields:
+- `dataloader::DataLoader`: Store the data in a Flux.DataLoader. Data can be accessed with
+  dataloader.data, returning a named tuple `(inputs=..., outputs=...)`. Both fields of the
+  tuple are multidimensional arrays with the last dimension corresponding to the sample.
+- `tag2output`: see `outputs` described in the constructor [`ModelData`](@ref).
+- `datadescriptor`: The [`AbstractDataDescriptor`](@ref) of the original data.
+"""
 struct ModelData
     dataloader::Flux.DataLoader
     tag2output::Dict{Symbol,Array{Number}}
-    datadescriptor::DataDescriptor
+    datadescriptor::AbstractDataDescriptor
 end
 
 function Base.getproperty(obj::ModelData, name::Symbol)
@@ -35,46 +42,39 @@ function rowstomatrix(df::SubDataFrame, row::Int, numrows::Int)
     return result
 end
 
+"""
+    element(dict::Dict)
+
+Return the value of the first key-value pair of `dict`.
+"""
 element(dict::Dict) = collect(dict)[1][2]
 
 numrows(::FFTDataDescriptor) = 1
 function inputarray(data_descriptor::FFTDataDescriptor, num_samples::Int)
-    return Array{Float32,3}(undef,
-        data_descriptor.num_channels,
-        data_descriptor.max_freq,
-        num_samples
+    return Array{Float32,3}(
+        undef, data_descriptor.num_channels, data_descriptor.max_freq, num_samples
     )
 end
 function rows2input(data_descriptor::FFTDataDescriptor, rows::Matrix)
-    return reshape(rows,
-        data_descriptor.num_channels,
-        data_descriptor.max_freq,
-        1
-    )
+    return reshape(rows, data_descriptor.num_channels, data_descriptor.max_freq, 1)
 end
 
 numrows(::RawDataDescriptor) = 200
 function inputarray(data_descriptor::RawDataDescriptor, num_samples::Int)
-    return Array{Float32,3}(undef,
-        data_descriptor.num_channels,
-        numrows(data_descriptor),
-        num_samples
+    return Array{Float32,3}(
+        undef, data_descriptor.num_channels, numrows(data_descriptor), num_samples
     )
 end
 function rows2input(data_descriptor::RawDataDescriptor, rows::Matrix)
-    return reshape(rows,
-        data_descriptor.sample_width,
-        numrows(data_descriptor),
-        1
-    )
+    return reshape(rows, data_descriptor.sample_width, numrows(data_descriptor), 1)
 end
 
 """
     ModelData(data::Data, outputs::Dict; batchsize=5, shuffle=true)
 
 Create `ModelData` suitable for use with neural networks.
- 
-`data`: EEG data.
+
+`data`: A [`Data`] object storing the EEG data.
 
 `tag2output`: Dictionary; each key is a tag (saved in data) with the value
 representing the output the model should give for that tag.
@@ -102,22 +102,23 @@ modeldata_reg = ModelData(data, tag2output_reg)
 ```
 """
 function ModelData(data::Data, tag2output::Dict; batchsize=5, shuffle=true)
+    # seperate inputs using tag2output; store each tag's inputs as a df in an array of dfs
     seperated_inputs = Array{SubDataFrame,1}(undef, length(tag2output))
     seperated_outputs = Array{valtype(tag2output),1}(undef, length(tag2output))
-
     for (i, tag) in enumerate(keys(tag2output))
         seperated_inputs[i] = @view data.df[in.(string(tag), data.df.tags), 4:end]
         seperated_outputs[i] = tag2output[tag]
     end
 
     num_samples = sum(size.(seperated_inputs, 1))
-    outputs = Array{valtype(element(tag2output)),ndims(element(tag2output)) + 1}(undef, size(element(tag2output))..., num_samples)
-    fill!(outputs, 0)
-
+    # `outputs` has same type and same number of dimensions + 1 dimension for samples
+    outputs = Array{valtype(tag2output),ndims(tag2output) + 1}(
+        undef, size(element(tag2output))..., num_samples
+    )
     inputs = inputarray(data.data_descriptor, num_samples)
-    i = 1
 
     # TODO: speed up by using comprehensions, map?
+    i = 1
     for (df, output) in zip(seperated_inputs, seperated_outputs)
         num_rows = numrows(data.data_descriptor)
         for row in 1:num_rows:size(df, 1)
@@ -127,7 +128,9 @@ function ModelData(data::Data, tag2output::Dict; batchsize=5, shuffle=true)
             # create view of inputs for this sample by indexing only last
             # dimension with i
             inputs_sample = selectdim(inputs, ndims(inputs), i)
-            inputs_sample[:] = rows2input(data.data_descriptor, rowstomatrix(df, row, num_rows))
+            inputs_sample[:] = rows2input(
+                data.data_descriptor, rowstomatrix(df, row, num_rows)
+            )
             # create view of outputs for this sample by indexing only last
             # dimension with i
             output_sample = selectdim(outputs, ndims(outputs), i)
@@ -135,9 +138,13 @@ function ModelData(data::Data, tag2output::Dict; batchsize=5, shuffle=true)
             i += 1
         end
     end
+
     return ModelData(
-        Flux.DataLoader((inputs=inputs, outputs=outputs), shuffle=shuffle, batchsize=batchsize),
-        tag2output, data.data_descriptor
+        Flux.DataLoader(
+            (inputs=inputs, outputs=outputs); shuffle=shuffle, batchsize=batchsize
+        ),
+        tag2output,
+        data.data_descriptor,
     )
 end
 
@@ -205,9 +212,12 @@ if a == b
 end
 ```
 """
-Base.:(==)(a::Model, b::Model) =
-    a.epochs == b.epochs && a.savedir == b.savedir &&
-    a.modelname == b.modelname && a.network == b.network
+function Base.:(==)(a::Model, b::Model)
+    return a.epochs == b.epochs &&
+           a.savedir == b.savedir &&
+           a.modelname == b.modelname &&
+           a.network == b.network
+end
 
 # Overloading Flux Methods:
 """
@@ -259,50 +269,48 @@ There are only networks predefined for `RawDataDescriptor` and
 function standard_network(inputshape, outputshape, datadescriptor)::Flux.Chain
     # add dimension because of samples
     inputshape = (inputshape..., 1)
+
     if datadescriptor isa FFTDataDescriptor
         # only 1 output dimension
         if length(outputshape) == 1
             return @autosize (inputshape...,) Chain(
-                Conv((5,), inputshape[2] => 64, relu, pad=SamePad()),
-                Conv((5,), 64 => 64, relu, pad=SamePad()),
-                Conv((5,), 64 => 128, relu, pad=SamePad()),
-                Conv((5,), 128 => 256, relu, pad=SamePad()),
-                Conv((5,), 256 => 512, relu, pad=SamePad()),
+                Conv((5,), inputshape[2] => 64, relu; pad=SamePad()),
+                Conv((5,), 64 => 64, relu; pad=SamePad()),
+                Conv((5,), 64 => 128, relu; pad=SamePad()),
+                Conv((5,), 128 => 256, relu; pad=SamePad()),
+                Conv((5,), 256 => 512, relu; pad=SamePad()),
                 Conv((3,), 512 => outputshape[1]),
                 Flux.flatten,
-                Dense(_, outputshape[1])
+                Dense(_, outputshape[1]),
             )
         end
-        # TODO: error...?
+        throw(ArgumentError("No standard network defined for FFT data
+                            with more than 1 outputs dimension."))
     end
+
     if datadescriptor isa RawDataDescriptor
         # only 1 output dimension
         if length(outputshape) == 1
             return @autosize (inputshape...,) Chain(
-                Conv((5,), _ => 64, relu, pad=SamePad()),
-                Conv((5,), 64 => 64, relu, pad=SamePad()),
-                Conv((5,), 64 => 128, relu, pad=SamePad()),
-                Conv((5,), 128 => 256, relu, pad=SamePad()),
-                Conv((5,), 256 => 512, relu, pad=SamePad()),
+                Conv((5,), _ => 64, relu; pad=SamePad()),
+                Conv((5,), 64 => 64, relu; pad=SamePad()),
+                Conv((5,), 64 => 128, relu; pad=SamePad()),
+                Conv((5,), 128 => 256, relu; pad=SamePad()),
+                Conv((5,), 256 => 512, relu; pad=SamePad()),
                 Conv((3,), 512 => outputshape[1]),
                 Flux.flatten,
-                Dense(_, outputshape[1])
+                Dense(_, outputshape[1]),
             )
         end
+        throw(ArgumentError("No standard network defined for Raw data
+                    with more than 1 outputs dimension."))
     end
 
-    throw(ArgumentError("No standard network structure defined for datadescriptor of type $(typeof(datadescriptor))!"))
-end
-
-# TODO: obsolete? remove?
-"""
-    get_inputshape(data_desc::FFTDataDescriptor)
-
-Return the input shape data with data descriptor `data_desc` should have for a
-neural network, as a tuple of dimensions.
-"""
-function get_inputshape(data_desc::FFTDataDescriptor)
-    return (data_desc.num_channels, data_desc.max_freq)
+    throw(
+        ArgumentError(
+            "No standard network structure defined for data of type $(typeof(datadescriptor))!",
+        ),
+    )
 end
 
 """
@@ -312,9 +320,7 @@ Return the current time as a string of the form YYYY-mm-dd_HH-MM-SS.
 
 Used for file and folder names.
 """
-function get_timestr()::String
-    return Dates.format(now(), "YYYY-mm-dd_HH-MM-SS")
-end
+get_timestr()::String = Dates.format(now(), "YYYY-mm-dd_HH-MM-SS")
 
 """
     parse_modelname(modelname::String)
@@ -336,8 +342,14 @@ function parse_modelname(modelname::String)
     return replace(modelname, "*t" => timestr)
 end
 
-function create_model(inputshape, outputshape, datadescriptor;
-    network_constructor::Function=standard_network, savedir="models/", modelname="Standard_*t")::Model
+function create_model(
+    inputshape,
+    outputshape,
+    datadescriptor;
+    network_constructor::Function=standard_network,
+    savedir="models/",
+    modelname="Standard_*t",
+)::Model
     network = network_constructor(inputshape, outputshape, datadescriptor)
     epochs = 0
     modelname = parse_modelname(modelname)
@@ -346,7 +358,7 @@ end
 
 """
     create_model(data::ModelData; network_constructor::Function=standard_network)
-    
+
 Create a model with a neural network for classifying / regressing `data`.
 
 `network_constructor`: The given function is given three arguments: the
@@ -355,13 +367,23 @@ data descriptor of type DataDescriptor.
 
 The default `network_constructor` if not supplied is [`standard_network`](@ref).
 """
-function create_model(data::ModelData; network_constructor::Function=standard_network,
-    savedir="models/", modelname="Standard_*t")::Model
+function create_model(
+    data::ModelData;
+    network_constructor::Function=standard_network,
+    savedir="models/",
+    modelname="Standard_*t",
+)::Model
     # end-1 because last dimension is along samples
-    inputshape = size(data.inputs)[1:end-1]
-    outputshape = size(data.outputs)[1:end-1]
-    return create_model(inputshape, outputshape, data.datadescriptor,
-        network_constructor=network_constructor, savedir=savedir, modelname=modelname)
+    inputshape = size(data.inputs)[1:(end - 1)]
+    outputshape = size(data.outputs)[1:(end - 1)]
+    return create_model(
+        inputshape,
+        outputshape,
+        data.datadescriptor;
+        network_constructor=network_constructor,
+        savedir=savedir,
+        modelname=modelname,
+    )
 end
 
 """
@@ -377,13 +399,17 @@ exists.
 """
 function save(model::Model, path::String, overwrite=false)
     if !overwrite && isfile(path)
-        throw(ErrorException("File $path already exists! Specify a different file or set overwrite to true!"))
+        throw(
+            ErrorException(
+                "File $path already exists! Specify a different file or set overwrite to true!",
+            ),
+        )
     end
     if !isdir(dirname(path))
         createpath(dirname(path) * "/")
     end
-    model.network = model.network |> cpu
-    bson(path, model=model)
+    model.network = cpu(model.network)
+    return bson(path; model=model)
 end
 
 """
@@ -395,7 +421,9 @@ as given by [`get_timestr`](@ref).
 
 """
 function save(model::Model)
-    save(model, joinpath(model.savedir, model.modelname, "model_" * get_timestr() * ".bson"))
+    return save(
+        model, joinpath(model.savedir, model.modelname, "model_" * get_timestr() * ".bson")
+    )
 end
 
 """
@@ -409,13 +437,13 @@ YYYY-mm-dd_HH-MM-SS.
 function get_most_recent(dir_path::String)::String
     files = []
     for file in readdir(dir_path)
-        if file[end-4:end] == ".bson"
+        if file[(end - 4):end] == ".bson"
             push!(files, file)
         end
     end
     times = []
     for file_path in files
-        time_str = file_path[7:end-5]
+        time_str = file_path[7:(end - 5)]
         push!(times, DateTime(time_str, "YYYY-mm-dd_HH-MM-SS"))
     end
     file = files[argmax(times)]
@@ -462,7 +490,6 @@ mutable struct TrainingParameters
     autosave::Integer
 end
 
-
 function standard_trainingparameters()
     η = 0.01
     epochs = 10
@@ -474,7 +501,9 @@ function standard_trainingparameters()
     opt_params = []
     show_progress = true
     autosave = 5
-    TrainingParameters(η, epochs, noise, device, loss, opt_rule, opt_params, show_progress, autosave)
+    return TrainingParameters(
+        η, epochs, noise, device, loss, opt_rule, opt_params, show_progress, autosave
+    )
 end
 
 function train!(model::Model, data::ModelData, params::TrainingParameters)
@@ -482,7 +511,7 @@ function train!(model::Model, data::ModelData, params::TrainingParameters)
     if params.autosave >= 0
         _save_model(model::Model) = begin
             save(model)
-            model.network = model.network |> params.device
+            model.network = params.device(model.network)
         end
         saving_cb = Flux.throttle(_save_model, params.autosave)
     else
@@ -491,7 +520,7 @@ function train!(model::Model, data::ModelData, params::TrainingParameters)
     epochgoal = model.epochs + params.epochs
     trainmode!(model)
     opt = Flux.setup(params.opt_rule(params.η, params.opt_params...), model.network)
-    model.network = model.network |> params.device
+    model.network = params.device(model.network)
     # TODO: performance considerations of try/catch
     try
         while model.epochs < epochgoal
@@ -499,14 +528,16 @@ function train!(model::Model, data::ModelData, params::TrainingParameters)
             local train_loss::eltype(data.dataloader.data.inputs)
 
             # init progress bar
-            num_samples = size(data.dataloader.data.outputs, ndims(data.dataloader.data.outputs))
-            p = Progress(num_samples, enabled=params.show_progress)
+            num_samples = size(
+                data.dataloader.data.outputs, ndims(data.dataloader.data.outputs)
+            )
+            p = Progress(num_samples; enabled=params.show_progress)
             i = 0
 
             for (x, y) in data.dataloader
                 # move inputs and outputs to device and apply noise on inputs
-                x = x |> params.device |> params.noise
-                y = y |> params.device
+                x = params.noise(params.device(x))
+                y = params.device(y)
                 # calculate gradients
                 train_loss, gs = Flux.withgradient(model.network, x) do network, xs
                     ŷ = network(xs)
@@ -550,21 +581,23 @@ train!(model, modeldata, epochs = 20, show_progress = false, opt_rule = Gradient
 ```
 
 ```julia
-myparams = TrainingParameters(0.02, 20, x -> x, cpu, Flux.logitcrossentropy, 
+myparams = TrainingParameters(0.02, 20, x -> x, cpu, Flux.logitcrossentropy,
         GradientDescent, [], false, 5)
 
 train!(model, modeldata, params = myparams)
 ```
 """
-function train!(model::Model, data::ModelData;
-    params::TrainingParameters=standard_trainingparameters(), kws...)
+function train!(
+    model::Model,
+    data::ModelData;
+    params::TrainingParameters=standard_trainingparameters(),
+    kws...,
+)
     for key in keys(kws)
         if !hasfield(TrainingParameters, key)
             throw(ArgumentError("Given kwarg $key not recognized!"))
         end
         setproperty!(params, key, kws[key])
     end
-    train!(model, data, params)
+    return train!(model, data, params)
 end
-
-# end # module

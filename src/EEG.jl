@@ -1,17 +1,12 @@
-# module EEG
-export Device
-export Data
-export Experiment, gather_data!, save_data, load_data, load_data!
-
 """
 Abstract class containing data processors.
 
 Defined data processors:
 
-`StandardProcessor`: The standard processors with preset arguments and functions, for 
+`StandardProcessor`: The standard processors with preset arguments and functions, for
 details see [`StandardProcessor`](@ref).
 """
-abstract type DataProcessor end
+abstract type AbstractDataProcessor end
 
 """
 Abstract type containing data descriptors.
@@ -28,12 +23,7 @@ yet, you will need to define your own and overload the following functions:
 
 `row2inputs(data_descriptor::MyDataDescriptor, row::Vector)`
 """
-abstract type DataDescriptor end
-
-using BrainFlow, DataFrames, Dates, CSV, BSON, LSL
-import PyPlot
-Plt = PyPlot
-Plt.pygui(true)
+abstract type AbstractDataDescriptor end
 
 include("EEG_Devices.jl")
 
@@ -46,30 +36,30 @@ datetime(seconds_since_epoch::Number) = Dates.unix2datetime(seconds_since_epoch)
 
 """
 Device for gathering EEG data. Create it using
-    
+
 Device(board::EEGBoard)
 
-... TODO
+TODO: remove, doesn't add anything to `EEGBoard` apart from `session_start` which isn't used
+anyways.
 """
 mutable struct Device
     board::EEGBoard
     session_start::Float64
 end
 
-function Device(board::EEGBoard)
-    return Device(board, time())
-end
+Device(board::EEGBoard) = Device(board, time())
 
 """
-Standard configuration for processing EEG data. It uses a preset of functions and 
+Standard configuration for processing EEG data. It uses a preset of functions and
 options and may not work for you.
 
 Create with [`Standard`](@ref).
 """
-struct StandardProcessor <: DataProcessor
+struct StandardProcessor <: AbstractDataProcessor
     output_type::Dict{Symbol,Any}
     fft_maxfreq::Integer
 end
+
 """
     Standard()::StandardProcessor
 
@@ -110,19 +100,15 @@ struct Metadata
     md::Dict
 end
 
+# Overloading Base for Metadata
 function Base.copy(metadata::Metadata)
     new_md = copy(metadata.md)
     return Metadata(new_md)
 end
 # For `meta.name` syntax (e.g. meta.num_channels)
 function Base.getproperty(meta::Metadata, name::Symbol)
-    if name == :md
-        return getfield(meta, name)
-    else
-        meta.md[name]
-    end
+    return name == :md ? getfield(meta, name) : meta.md[name]
 end
-
 # For `meta.name = value` syntax
 function Base.setproperty!(meta::Metadata, name::Symbol, value)
     if name == :md
@@ -135,20 +121,20 @@ end
 """
     _write_metadata(filepath, metadata::Metadata)
 
-Internal method used for writing to file; in function to make later 
+Internal method used for writing to file; in function to make later
 switch of file format easier.
 """
 function _write_metadata(filepath, metadata::Metadata)
     if !isfile(filepath)
         createpath(filepath)
     end
-    bson(filepath, metadata.md)
+    return bson(filepath, metadata.md)
 end
 
 """
     _read_metadata(filepath)
 
-Internal method used for reading from file; in function to make later 
+Internal method used for reading from file; in function to make later
 switch of file format easier.
 """
 function _read_metadata(filepath)
@@ -161,7 +147,7 @@ mutable struct Data
     metadata::Metadata
     name::String
     savedindex::Integer
-    data_descriptor::DataDescriptor
+    data_descriptor::AbstractDataDescriptor
 end
 
 """
@@ -171,48 +157,52 @@ Create new `Data`-Object for raw data (MCP3208).
 """
 function create_data(name::String, data_desc::RawDataDescriptor)
     column_names = ["time", "tags", "extraInfo"]
-    for channel = 1:data_desc.num_channels
+    for channel in 1:(data_desc.num_channels)
         push!(column_names, string(channel))
     end
     types = fill(Float64[], data_desc.num_channels)
-    #        Time       tags                      extra_info    voltages  
+    #        Time       tags                      extra_info    voltages
     types = [Float64[], Array{Array{String},1}(), Dict[], types...]
     df = DataFrame(types, column_names)
     # column_names =  ["version",     "num_samples",  "column_names"]
     # types =         [VersionNumber[], Integer[],     AbstractArray{String}[]]
-    metadata = Metadata(Dict(
-        :version => v"0.0.0",
-        :num_samples => 0,
-        :column_names => column_names,
-        :descriptor => data_desc
-    ))
+    metadata = Metadata(
+        Dict(
+            :version => v"0.0.0",
+            :num_samples => 0,
+            :column_names => column_names,
+            :descriptor => data_desc,
+        ),
+    )
     return Data(df, metadata, name, 0, data_desc)
 end
 
 """
     create_data(name::String, data_desc::RawDataDescriptor)
 
-Create new `Data`-Object for FFT data. 
+Create new `Data`-Object for FFT data.
 """
 function create_data(name::String, data_desc::FFTDataDescriptor)
     column_names = ["time", "tags", "extraInfo"]
-    for channel = 1:data_desc.num_channels
-        for freq = 1:data_desc.max_freq
+    for channel in 1:(data_desc.num_channels)
+        for freq in 1:(data_desc.max_freq)
             push!(column_names, string(channel) * "_" * string(freq))
         end
     end
     types = fill(Float64[], data_desc.sample_width)
-    #        Time       tags                      extra_info    voltages  
+    #        Time       tags                      extra_info    voltages
     types = [Float64[], Array{Array{String},1}(), Dict[], types...]
     df = DataFrame(types, column_names)
     # column_names =  ["version",       "num_samples", "column_names"]
     # types =         [VersionNumber[], Integer[],     AbstractArray{String}[]]
-    metadata = Metadata(Dict(
-        :version => v"0.0.0",
-        :num_samples => 0,
-        :column_names => column_names,
-        :descriptor => data_desc
-    ))
+    metadata = Metadata(
+        Dict(
+            :version => v"0.0.0",
+            :num_samples => 0,
+            :column_names => column_names,
+            :descriptor => data_desc,
+        ),
+    )
     return Data(df, metadata, name, 0, data_desc)
 end
 
@@ -221,9 +211,7 @@ end
 
 Create `Data`-Object which fits given device (raw data, fft data, etc.).
 """
-function create_data(name::String, device::Device)
-    return create_data(name, device.board.data_descriptor)
-end
+create_data(name::String, device::Device) = create_data(name, device.board.data_descriptor)
 
 Base.push!(data::Data, val) = push!(data.df, val)
 
@@ -255,8 +243,8 @@ function Base.getproperty(experiment::Experiment, name::Symbol)
 end
 
 """
-    Experiment(device::Device, name::String; tags::Array=[], 
-    extra_info::Dict=Dict(), path::String="data/", load_previous::Bool=false)
+    Experiment(device::Device, name::String; tags::Array=[],
+    extra_info::Dict= Dict(), path::String="data/", load_previous::Bool=false)
 
 `name`: Name of the experiment (e.g. "BlinkDetection").
 
@@ -267,12 +255,18 @@ end
 TODO: descs for keywords
 TODO: `load_previous` not implemented yet (maybe in another function?)
 """
-function Experiment(device::Device, name::String; tags::Array=[],
-    extra_info::Dict=Dict(), path::String="data/", load_previous::Bool=false)
+function Experiment(
+    device::Device,
+    name::String;
+    tags::Array=[],
+    extra_info::Dict=Dict(),
+    path::String="data/",
+    load_previous::Bool=false,
+)
     folderpath = joinpath(path, name, "")
     data = create_data("RawData", device)
     experiment = Experiment(device, data, string.(tags), extra_info, folderpath)
-    save_data(experiment)
+    save(experiment)
     return experiment
 end
 
@@ -284,7 +278,7 @@ Delete all saved data.
 function clear!(data::Data)
     empty!(data.df)
     data.metadata.num_samples = 0
-    data.savedindex = 0
+    return data.savedindex = 0
 end
 
 """
@@ -292,9 +286,7 @@ end
 
 Delete all saved raw data from experiment.
 """
-function clear!(experiment::Experiment)
-    clear!(experiment.data)
-end
+clear!(experiment::Experiment) = clear!(experiment.data)
 
 """
     get_sample!(board::EEGBoard)
@@ -302,16 +294,15 @@ end
 Updates board.sample to new data from board.
 """
 function get_sample!(board::EEGBoard)
-    for channel = 1:board.data_descriptor.num_channels
+    for channel in 1:(board.data_descriptor.num_channels)
         board.sample[channel] = get_voltage(board, channel)
     end
 end
-
 """
-    gather_data!(experiment::Experiment, runtime::Number; tags::Array=[], 
+    gather_data!(experiment::Experiment, runtime::Number; tags::Array=[],
     extra_info::Dict=Dict())
 
-Gather raw EEG data. 
+Gather raw EEG data.
 
 `runtime`: Runtime in seconds.
 
@@ -319,11 +310,16 @@ Optional arguments:
 
 `tags`: Tags to add to every data point on top of tags given to [`Experiment`](@ref)
 
-`extra_info`: Extra info to add to every data point on top of extra info given 
+`extra_info`: Extra info to add to every data point on top of extra info given
 to [`Experiment`](@ref)
 """
-function gather_data!(experiment::Experiment, runtime::Number; tags::Array=[],
-    extra_info::Dict=Dict(), delay::Number=0, save::Bool=true
+function gather_data!(
+    experiment::Experiment,
+    runtime::Number;
+    tags::Array=[],
+    extra_info::Dict=Dict(),
+    delay::Number=0,
+    save::Bool=true,
 )
     if !iscompatible(experiment.data, load_metadata(experiment))
         throw(ErrorException("TODO")) # TODO
@@ -331,9 +327,7 @@ function gather_data!(experiment::Experiment, runtime::Number; tags::Array=[],
 
     start_time = time()
 
-    new_row = Array{Any,1}(
-        undef, 3 + experiment.device.board.data_descriptor.sample_width
-    )
+    new_row = Array{Any,1}(undef, 3 + experiment.device.board.data_descriptor.sample_width)
 
     # combine default strings with given strings
     new_row[2] = vcat(experiment.tags, string.(tags))
@@ -348,7 +342,7 @@ function gather_data!(experiment::Experiment, runtime::Number; tags::Array=[],
         push!(experiment.data, new_row)
 
         if save
-            save_data(experiment, updatemeta=false, checkmeta=false)
+            save(experiment; updatemeta=false, checkmeta=false)
         end
         if delay != 0
             sleep(delay)
@@ -359,13 +353,12 @@ end
 
 get_metadatapath(folder_path, name) = joinpath(folder_path, name * "Metadata.bson")
 
-function load_metadata(path::String)
+load_metadata(path::String) =
     if isfile(path)
         return _read_metadata(path)
     else
         return nothing
     end
-end
 
 load_metadata(folder_path, name) = load_metadata(get_metadatapath(folder_path, name))
 load_metadata(experiment::Experiment) = load_metadata(experiment.folderpath, "RawData")
@@ -388,10 +381,9 @@ function iscompatible(df::DataFrame, metadata::Union{Metadata,Nothing})
     return false
 end
 
-iscompatible(data::Data, metadata::Union{Metadata,Nothing}) = iscompatible(
-    data.df,
-    metadata
-)
+function iscompatible(data::Data, metadata::Union{Metadata,Nothing})
+    return iscompatible(data.df, metadata)
+end
 
 function combine_metadata(data::Data, meta::Metadata; repeat=false)
     # TODO: weird?
@@ -416,24 +408,28 @@ function createpath(path::String)
     # if path points to file (doesn't end in "/")
     if dirname(path) !== path
         if !isfile(path)
-            io = open(path, create=true) # create file
+            io = open(path; create=true) # create file
             close(io)
         end
     end
 end
 
-function save_data(data::Data, df::DataFrame, folderpath; checkmeta=true,
-    updatemeta=true, repeat=false)
+function save(
+    data::Data, df::DataFrame, folderpath; checkmeta=true, updatemeta=true, repeat=false
+)
     datapath = joinpath(folderpath, data.name * ".csv")
     metapath = get_metadatapath(folderpath, data.name)
     metadata = nothing
     if checkmeta && isfile(metapath)
         if !iscompatible(data.df, load_metadata(metapath))
-            throw(ErrorException( # TODO: more specific error
-                "Data not compatible with DataFrame at $file_path 
-                (perhaps processed vs non-processed data or different 
-                number of channels). If you want to overwrite the old data,
-                delete both $file_path and $meta_file_path."))
+            throw(
+                ErrorException( # TODO: more specific error
+                    "Data not compatible with DataFrame at $file_path
+                    (perhaps processed vs non-processed data or different
+                    number of channels). If you want to overwrite the old data,
+                    delete both $file_path and $meta_file_path.",
+                )
+            )
         end
     end
     if updatemeta
@@ -455,31 +451,35 @@ function save_data(data::Data, df::DataFrame, folderpath; checkmeta=true,
         overwrite = true # overwrite to create headers
     end
     # deactivate append if overwrite --> file is overwritten
-    CSV.write(datapath, df, append=!overwrite)
+    return CSV.write(datapath, df; append=!overwrite)
 end
 
-function save_data(data::Data, folderpath; checkmeta=true, updatemeta=true,
-    repeat=false)
+function save(data::Data, folderpath; checkmeta=true, updatemeta=true, repeat=false)
     # if !isempty(data.df)
     if repeat
         df_new = data.df
     else
-        df_new = data.df[(data.savedindex+1):end, :]
+        df_new = data.df[(data.savedindex + 1):end, :]
     end
-    save_data(data, df_new, folderpath, checkmeta=checkmeta, updatemeta=updatemeta,
-        repeat=repeat)
-    data.savedindex = lastindex(data.df, 1)
+    save(
+        data, df_new, folderpath; checkmeta=checkmeta, updatemeta=updatemeta, repeat=repeat
+    )
+    return data.savedindex = lastindex(data.df, 1)
     # end
 end
 
-function save_data(experiment::Experiment; checkmeta=true, updatemeta=true,
-    repeat=false)
-    save_data(experiment.data, experiment.folderpath, checkmeta=checkmeta,
-        updatemeta=updatemeta, repeat=repeat)
+function save(experiment::Experiment; checkmeta=true, updatemeta=true, repeat=false)
+    return save(
+        experiment.data,
+        experiment.folderpath;
+        checkmeta=checkmeta,
+        updatemeta=updatemeta,
+        repeat=repeat,
+    )
 end
 
 function CSV.tryparse(t::Type{Vector{String}}, str::String)
-    return chop.(split(chop(str, head=1, tail=1), ", "), head=1, tail=1)
+    return chop.(split(chop(str; head=1, tail=1), ", "), head=1, tail=1)
 end
 
 # function CSV.tryparse(t::Type{Dict{Any, Any}}, str::String)
@@ -488,20 +488,28 @@ end
 
 function load_data(folderpath, name; start_pos=1, num_samples=:all, exact_num=false)
     metapath = get_metadatapath(folderpath, name)
-    metadata = load_metadata(metapath) # TODO: loading RawData not working because of meta name
+    # TODO: loading RawData not working because of meta name
+    metadata = load_metadata(metapath)
     if metadata === nothing
-        throw(ErrorException("Metadata from $metapath couldn't be read! 
+        throw(ErrorException("Metadata from $metapath couldn't be read!
         Maybe the file doesn't exist anymore?"))
     end
 
     datapath = get_datapath(folderpath, name)
     type_map = Dict(:tags => Array{String,1})
     if num_samples == :all
-        df = CSV.read(datapath, DataFrame; skipto=start_pos + 1, types=type_map) # +1 for headers
+        # +1 for headers
+        df = CSV.read(datapath, DataFrame; skipto=start_pos + 1, types=type_map)
     else
         ntasks = exact_num ? 1 : Threads.nthreads()
-        df = CSV.read(datapath, DataFrame; skipto=start_pos + 1, limit=num_samples,
-            ntasks=ntasks, types=type_map) # +1 for headers
+        df = CSV.read(
+            datapath,
+            DataFrame;
+            skipto=start_pos + 1,
+            limit=num_samples,
+            ntasks=ntasks,
+            types=type_map,
+        ) # +1 for headers
     end
 
     # Update metadata in case data was previously saved using updatemeta = false
@@ -520,19 +528,25 @@ end
 # TODO: use savedindex to avoid duplicates
 function combine!(data1::Data, data2::Data; append=true)
     if append
-        append!(data1.df, data2.df, promote=true)
+        append!(data1.df, data2.df; promote=true)
     else
-        prepend!(data1.df, data2.df, promote=true)
+        prepend!(data1.df, data2.df; promote=true)
     end
-    data1.metadata = combine_metadata(data2, data1.metadata, repeat=true)
+    return data1.metadata = combine_metadata(data2, data1.metadata; repeat=true)
 end
 
 # TODO: test
-function load_data!(experiment::Experiment; start_pos=1, num_samples=:all,
-    exact_num=false, append=true)
-    old_data = load_data(experiment.folderpath, experiment.data.name,
-        start_pos=start_pos, num_samples=num_samples, exact_num=exact_num)
-    combine!(experiment.data, old_data, append=append)
+function load_data!(
+    experiment::Experiment; start_pos=1, num_samples=:all, exact_num=false, append=true
+)
+    old_data = load_data(
+        experiment.folderpath,
+        experiment.data.name;
+        start_pos=start_pos,
+        num_samples=num_samples,
+        exact_num=exact_num,
+    )
+    return combine!(experiment.data, old_data; append=append)
 end
 
 mutable struct DataFilter
@@ -542,8 +556,8 @@ mutable struct DataFilter
 end
 
 struct DataHandler
-    data_processor::DataProcessor
-    data_io#::DataIO
+    data_processor::AbstractDataProcessor
+    data_io::Any#::DataIO
     cases::Union{Array{Symbol,1},Nothing}
     name::Union{String,Nothing}
     max_freq::Union{Int,Nothing}
@@ -553,7 +567,7 @@ end
     DataHandler(data_processor::DataProcessor, data_io::DataIO; cases=nothing,
     name=nothing, max_freq=nothing)
 
-Create a DataHandler instance. `cases`, `name` and `max_freq` are automatically 
+Create a DataHandler instance. `cases`, `name` and `max_freq` are automatically
 determined by data saved at path if they are `nothing`.
 
 Example:
@@ -561,8 +575,10 @@ Example:
     data_io = DataIO("data/test", states)
     data_handler = DataHandler(data_io, StandardFFT())
 """
-function DataHandler(data_processor::DataProcessor, data_io; cases=nothing,
-    name=nothing, max_freq=nothing)
-
-end
-# end
+function DataHandler(
+    data_processor::AbstractDataProcessor,
+    data_io;
+    cases=nothing,
+    name=nothing,
+    max_freq=nothing,
+) end
