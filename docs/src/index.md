@@ -105,7 +105,7 @@ modeldata = ModelData(data, outputs)
 println(size(modeldata.dataloader.data.inputs))
 ```
 
-Now, you can create a `Model` (neural network) by using [`create_model`](@ref):
+Now you can create a [`Model`](@ref) (neural network) by using [`create_model`](@ref):
 
 ```@example ex1
 model = create_model(modeldata)
@@ -117,4 +117,10 @@ To apply this model to some inputs:
 # take first 100 samples from modeldata
 sample = modeldata.dataloader.data.inputs[:, :, 1:100]
 model(sample)
+```
+
+To train the model, use [`train!`](@ref):
+
+```julia
+train!(model, modeldata, epochs=5)
 ```
