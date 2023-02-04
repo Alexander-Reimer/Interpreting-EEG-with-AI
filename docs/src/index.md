@@ -10,12 +10,11 @@ Documentation for [BCIInterface](https://github.com/AR102/Interpreting-EEG-with-
 
 ## Installation
 
-> Note: Not working right now!
 You can install this package with:
 
 ```julia
 using Pkg
-Pkg.add("https://github.com/AR102/Interpreting-EEG-with-AI#refactor")
+Pkg.add(url="https://github.com/AR102/Interpreting-EEG-with-AI", rev="refactor")
 ```
 
 ## Basic Usage
