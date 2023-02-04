@@ -14,7 +14,7 @@ using ProgressMeter # used: Progress, update!
 using PyPlot # used: pygui
 
 include("EEG.jl")
-include("AI_new.jl")
+include("AI.jl")
 
 Plt = PyPlot
 Plt.pygui(true)
