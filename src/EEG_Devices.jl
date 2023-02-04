@@ -29,6 +29,9 @@ Data descriptor for raw data in the format of a 1D-Array per sample, with each c
 """
 RawDataDescriptor(num_channels::Int) = RawDataDescriptor(num_channels, num_channels)
 
+"""
+TODO
+"""
 abstract type EEGBoard end
 
 #===================#

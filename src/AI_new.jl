@@ -18,8 +18,25 @@ end
 rowtovec(df::DataFrame, row::Int) = [df[row, i] for i in 1:ncol(df)]
 rowtovec(df::SubDataFrame, row::Int) = [df[row, i] for i in 1:ncol(df)]
 
+function rowstomatrix(df::DataFrame, row::Int, numrows::Int)
+    result = Array{typeof(df[1, 1]),2}(undef, ncol(df), numrows)
+    for i in 1:numrows
+        result[:, i] = rowtovec(df, row + i - 1)
+    end
+    return result
+end
+
+function rowstomatrix(df::SubDataFrame, row::Int, numrows::Int)
+    result = Array{typeof(df[1, 1]),2}(undef, ncol(df), numrows)
+    for i in 1:numrows
+        result[:, i] = rowtovec(df, row + i - 1)
+    end
+    return result
+end
+
 element(dict::Dict) = collect(dict)[1][2]
 
+numrows(::FFTDataDescriptor) = 1
 function inputarray(data_descriptor::FFTDataDescriptor, num_samples::Int)
     return Array{Float32,3}(undef,
         data_descriptor.num_channels,
@@ -27,25 +44,26 @@ function inputarray(data_descriptor::FFTDataDescriptor, num_samples::Int)
         num_samples
     )
 end
-
-function row2inputs(data_descriptor::FFTDataDescriptor, row::Vector)
-    return reshape(row,
+function rows2input(data_descriptor::FFTDataDescriptor, rows::Matrix)
+    return reshape(rows,
         data_descriptor.num_channels,
         data_descriptor.max_freq,
         1
     )
 end
 
+numrows(::RawDataDescriptor) = 200
 function inputarray(data_descriptor::RawDataDescriptor, num_samples::Int)
-    return Array{Float32,2}(undef,
+    return Array{Float32,3}(undef,
         data_descriptor.num_channels,
+        numrows(data_descriptor),
         num_samples
     )
 end
-
-function row2inputs(data_descriptor::RawDataDescriptor, row::Vector)
-    return reshape(row,
+function rows2input(data_descriptor::RawDataDescriptor, rows::Matrix)
+    return reshape(rows,
         data_descriptor.sample_width,
+        numrows(data_descriptor),
         1
     )
 end
@@ -100,11 +118,15 @@ function ModelData(data::Data, tag2output::Dict; batchsize=5, shuffle=true)
 
     # TODO: speed up by using comprehensions, map?
     for (df, output) in zip(seperated_inputs, seperated_outputs)
-        for row in 1:size(df, 1)
+        num_rows = numrows(data.data_descriptor)
+        for row in 1:num_rows:size(df, 1)
+            if (size(df, 1) - row) < num_rows
+                break
+            end
             # create view of inputs for this sample by indexing only last
             # dimension with i
             inputs_sample = selectdim(inputs, ndims(inputs), i)
-            inputs_sample[:] = row2inputs(data.data_descriptor, rowtovec(df, row))
+            inputs_sample[:] = rows2input(data.data_descriptor, rowstomatrix(df, row, num_rows))
             # create view of outputs for this sample by indexing only last
             # dimension with i
             output_sample = selectdim(outputs, ndims(outputs), i)
@@ -158,6 +180,17 @@ trainmode!(model::Model) = Flux.trainmode!(model.network)
 # e.g. make (10, 3, 7, 8) into (10, 3, 7, 1, 8)
 add_dimension(layer) = reshape(layer, size(layer)[1:end-1], 1, size(layer)[end])
 
+"""
+    standard_network(inputshape, outputshape, datadescriptor)::Flux.Chain
+
+Choose and create a neural network based on the given `inputshape`,
+`outputsshape` and `datadescriptor`.
+
+These networks are what we're currently using and may not be ideal for you.
+
+There are only networks predefined for `RawDataDescriptor` and
+`FFTDataDescriptor` with a 1d output.
+"""
 function standard_network(inputshape, outputshape, datadescriptor)::Flux.Chain
     # add dimension because of samples
     inputshape = (inputshape..., 1)
@@ -181,7 +214,7 @@ function standard_network(inputshape, outputshape, datadescriptor)::Flux.Chain
         # only 1 output dimension
         if length(outputshape) == 1
             return @autosize (inputshape...,) Chain(
-                Conv((5,), 1 => 64, relu, pad=SamePad()),
+                Conv((5,), _ => 64, relu, pad=SamePad()),
                 Conv((5,), 64 => 64, relu, pad=SamePad()),
                 Conv((5,), 64 => 128, relu, pad=SamePad()),
                 Conv((5,), 128 => 256, relu, pad=SamePad()),
@@ -225,6 +258,8 @@ Create a model with a neural network for classifying / regressing `data`.
 `network_constructor`: The given function is given three arguments: the
 input shape and output shape of the data, each represented by a tuple, and the
 data descriptor of type DataDescriptor.
+
+The default `network_constructor` if not supplied is [`standard_network`](@ref).
 """
 function create_model(data::ModelData; network_constructor::Function=standard_network,
     savedir="models/", modelname="Standard_*t")::Model
@@ -232,7 +267,7 @@ function create_model(data::ModelData; network_constructor::Function=standard_ne
     inputshape = size(data.inputs)[1:end-1]
     outputshape = size(data.outputs)[1:end-1]
     return create_model(inputshape, outputshape, data.datadescriptor,
-        network_constructor=network_constructor, savedir = savedir, modelname = modelname)
+        network_constructor=network_constructor, savedir=savedir, modelname=modelname)
 end
 
 function save(model::Model, path::String, overwrite=false)
