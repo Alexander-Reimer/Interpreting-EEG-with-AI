@@ -35,21 +35,6 @@ Convert seconds since unix epoch into a DateTime object.
 datetime(seconds_since_epoch::Number) = Dates.unix2datetime(seconds_since_epoch)
 
 """
-Device for gathering EEG data. Create it using
-
-Device(board::EEGBoard)
-
-TODO: remove, doesn't add anything to `EEGBoard` apart from `session_start` which isn't used
-anyways.
-"""
-mutable struct Device
-    board::EEGBoard
-    session_start::Float64
-end
-
-Device(board::EEGBoard) = Device(board, time())
-
-"""
 Standard configuration for processing EEG data. It uses a preset of functions and
 options and may not work for you.
 
@@ -75,7 +60,7 @@ function Standard()
 end
 
 """
-    process(device::Device, processor::StandardProcessor)
+    process(board::EEGBoard, processor::StandardProcessor)
 
 TODO: Processing
 
@@ -86,8 +71,8 @@ Also see [this](https://www.sciencedirect.com/science/article/pii\
 /S1877705812022114/pdf?md5=3c7a2bdf5717d518cf46c4ef5d145d33&pid=1-s2\
 .0-S1877705812022114-main.pdf), page 2529.
 """
-function process(device::Device, processor::StandardProcessor)
-    result = Array{Float64,2}(undef, device.board.num_channels, processor.fft_maxfreq)
+function process(board::EEGBoard, processor::StandardProcessor)
+    result = Array{Float64,2}(undef, board.num_channels, processor.fft_maxfreq)
     # Temporarily skip all processing
     # TODO
     for i in eachindex(result)
@@ -207,11 +192,11 @@ function create_data(name::String, data_desc::FFTDataDescriptor)
 end
 
 """
-    create_data(name::String, device::Device)
+    create_data(name::String, board::EEGBoard)
 
-Create `Data`-Object which fits given device (raw data, fft data, etc.).
+Create `Data`-Object which fits given board (raw data, fft data, etc.).
 """
-create_data(name::String, device::Device) = create_data(name, device.board.data_descriptor)
+create_data(name::String, board::EEGBoard) = create_data(name, board.data_descriptor)
 
 Base.push!(data::Data, val) = push!(data.df, val)
 
@@ -225,7 +210,7 @@ end
 get_datapath(folderpath, name) = joinpath(folderpath, name * ".csv")
 
 struct Experiment
-    device::Device
+    board::EEGBoard
     data::Data
     tags::Array{String,1}
     extra_info::Dict{Symbol,Any}
@@ -243,7 +228,7 @@ function Base.getproperty(experiment::Experiment, name::Symbol)
 end
 
 """
-    Experiment(device::Device, name::String; tags::Array=[],
+    Experiment(board::EEGBoard, name::String; tags::Array=[],
     extra_info::Dict= Dict(), path::String="data/", load_previous::Bool=false)
 
 `name`: Name of the experiment (e.g. "BlinkDetection").
@@ -256,7 +241,7 @@ TODO: descs for keywords
 TODO: `load_previous` not implemented yet (maybe in another function?)
 """
 function Experiment(
-    device::Device,
+    board::EEGBoard,
     name::String;
     tags::Array=[],
     extra_info::Dict=Dict(),
@@ -264,8 +249,8 @@ function Experiment(
     load_previous::Bool=false,
 )
     folderpath = joinpath(path, name, "")
-    data = create_data("RawData", device)
-    experiment = Experiment(device, data, string.(tags), extra_info, folderpath)
+    data = create_data("RawData", board)
+    experiment = Experiment(board, data, string.(tags), extra_info, folderpath)
     save(experiment)
     return experiment
 end
@@ -298,6 +283,7 @@ function get_sample!(board::EEGBoard)
         board.sample[channel] = get_voltage(board, channel)
     end
 end
+
 """
     gather_data!(experiment::Experiment, runtime::Number; tags::Array=[],
     extra_info::Dict=Dict())
@@ -325,20 +311,18 @@ function gather_data!(
         throw(ErrorException("TODO")) # TODO
     end
 
-    start_time = time()
-
-    new_row = Array{Any,1}(undef, 3 + experiment.device.board.data_descriptor.sample_width)
-
+    new_row = Array{Any,1}(undef, 3 + experiment.board.data_descriptor.sample_width)
     # combine default strings with given strings
     new_row[2] = vcat(experiment.tags, string.(tags))
     new_row[3] = merge(experiment.extra_info, extra_info)
 
+    start_time = time()
     while (time() - start_time) < runtime
         new_row[1] = time()
-        # update sample stored in `device`
-        get_sample!(experiment.device.board)
+        # update sample stored in `board`
+        get_sample!(experiment.board)
         # bring this data into new_row
-        new_row[4:end] = experiment.device.board.sample
+        new_row[4:end] = experiment.board.sample
         push!(experiment.data, new_row)
 
         if save
@@ -347,7 +331,7 @@ function gather_data!(
         if delay != 0
             sleep(delay)
         end
-        experiment.data.metadata.num_samples += 1
+        experiment.data.metadata.num_samples += 1 # TODO
     end
 end
 

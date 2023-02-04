@@ -6,7 +6,9 @@ CurrentModule = BCIInterface
 
 Documentation for [BCIInterface](https://github.com/AR102/Interpreting-EEG-with-AI).
 
-> **WARNING**: This package is currently undergoing large changes and refactoring, meaning the documentation may be out of date and the current development branch ("refactor") isn't finished yet.
+> **WARNING**: This package is currently undergoing large changes and refactoring, meaning
+> the documentation may be out of date and the current development branch ("refactor") isn't
+> finished yet.
 
 ## Installation
 
@@ -25,7 +27,8 @@ Include the package in your code with
 using BCIInterface
 ```
 
-To start collecting EEG data, first create an [`EEGBoard`](@ref) using the instructions in [Supported Boards](@ref).
+To start collecting EEG data, first create a [`EEGBoard`](@ref) using the instructions in
+[Supported Boards](@ref).
 
 An offline example for trying out the rest of the framework would be
 
@@ -34,17 +37,16 @@ board = MCP3208("UselessBoard", 8, online = false)
 nothing # hide
 ```
 
-Then create a [`Device`](@ref) and [`Experiment`](@ref) with it:
+Then create an `Experiment`](@ref) with it:
 
 ```@example ex1
-device = Device(board)
-experiment = Experiment(device, "NameOfMyExperiment")
+experiment = Experiment(board, "NameOfMyExperiment")
 nothing # hide
 ```
 
 Now, say you want to later let an AI predict what colour a test person is thinking of.
-For this, you want the AI to classify the data using three categories: The
-person thinking of red, blue and yellow.
+For this, you want the AI to classify the data using three categories: The person thinking
+of red, blue and yellow.
 
 A possible setup would be to first make the test person think of red for 5
 seconds (by telling them to or showing it on a screen) and start gathering data
@@ -102,7 +104,6 @@ And now to create the [`ModelData`](@ref) object:
 
 ```@example ex1
 modeldata = ModelData(data, outputs)
-println(size(modeldata.dataloader.data.inputs))
 ```
 
 Now you can create a [`Model`](@ref) (neural network) by using [`create_model`](@ref):
@@ -116,6 +117,7 @@ To apply this model to some inputs:
 ```@example ex1
 # take first 100 samples from modeldata
 sample = modeldata.dataloader.data.inputs[:, :, 1:100]
+# calculate results, should be 3x100 (3 outputs, 100 samples)
 model(sample)
 ```
 

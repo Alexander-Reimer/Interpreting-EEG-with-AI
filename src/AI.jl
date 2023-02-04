@@ -111,11 +111,13 @@ function ModelData(data::Data, tag2output::Dict; batchsize=5, shuffle=true)
     end
 
     num_samples = sum(size.(seperated_inputs, 1))
-    # `outputs` has same type and same number of dimensions + 1 dimension for samples
-    outputs = Array{valtype(tag2output),ndims(tag2output) + 1}(
-        undef, size(element(tag2output))..., num_samples
-    )
     inputs = inputarray(data.data_descriptor, num_samples)
+    # use input type for outputs to avoid type conversions during training, especially
+    # important when using the GPU
+    output_type = valtype(inputs)
+    output_dims = size(element(tag2output))
+    # `outputs` has same number of dimensions + 1 dimension for samples
+    outputs = Array{output_type,length(output_dims) + 1}(undef, output_dims..., num_samples)
 
     # TODO: speed up by using comprehensions, map?
     i = 1
@@ -134,7 +136,7 @@ function ModelData(data::Data, tag2output::Dict; batchsize=5, shuffle=true)
             # create view of outputs for this sample by indexing only last
             # dimension with i
             output_sample = selectdim(outputs, ndims(outputs), i)
-            output_sample[:] = output
+            output_sample[:] = convert.(output_type, output)
             i += 1
         end
     end
