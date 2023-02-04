@@ -1,6 +1,7 @@
 # module AI
 using Flux, DataFrames, ProgressMeter, TensorBoardLogger, CUDA, BSON
 export ModelData, create_model, train!, save, load_model
+export cpu, gpu
 
 struct ModelData
     dataloader::Flux.DataLoader
@@ -140,6 +141,19 @@ function ModelData(data::Data, tag2output::Dict; batchsize=5, shuffle=true)
     )
 end
 
+"""
+    Model(network::Flux.Chain, epochs::Int, savedir::String, modelname::String)
+
+Create a `Model` object with four fields:
+
+`network`: The neural network in the form of a Flux `Chain`.
+
+`epochs`: The number of epochs the model has already been trained for.
+
+`savedir`: The directory where the model will be saved.
+
+`modelname`: The name of the subdirectory where the model will be saved.
+"""
 mutable struct Model
     network::Flux.Chain
     epochs::Int
@@ -147,6 +161,15 @@ mutable struct Model
     modelname::String
 end
 
+"""
+    Base.:(==)(a::Flux.Chain, b::Flux.Chain)
+
+Check two Flux Chains for equality. Returns true if
+
+- number and types of layers are the same
+
+- all fields (weight, bias, etc.) of all layers are the same
+"""
 function Base.:(==)(a::Flux.Chain, b::Flux.Chain)
     # check number of layers
     if length(a.layers) !== length(b.layers)
@@ -167,18 +190,60 @@ function Base.:(==)(a::Flux.Chain, b::Flux.Chain)
     return true
 end
 
+"""
+    Base.:(==)(a::Model, b::Model)
+
+Check two `Model`s for equality.
+
+Example:
+```julia
+a::Model
+b::Model
+
+if a == b
+    println("both models are the same!")
+end
+```
+"""
 Base.:(==)(a::Model, b::Model) =
     a.epochs == b.epochs && a.savedir == b.savedir &&
     a.modelname == b.modelname && a.network == b.network
 
 # Overloading Flux Methods:
+"""
+    trainmode!(model::Model)
 
+Some layers of neural networks behave differently when training and when testing
+the network (e.g. Dropout).
+
+Use this to set the model into training mode (Dropout etc. will be executed.)
+
+Use [`testmode!`](@ref) for putting the model into testing mode.
+"""
 trainmode!(model::Model) = Flux.trainmode!(model.network)
-# make model(inputs) = model.network(inputs)
-(model::Model)(inputs) = model.network(inputs)
+"""
+    trainmode!(model::Model)
 
-# e.g. make (10, 3, 7, 8) into (10, 3, 7, 1, 8)
-add_dimension(layer) = reshape(layer, size(layer)[1:end-1], 1, size(layer)[end])
+Some layers of neural networks behave differently when training and when testing
+the network (e.g. Dropout).
+
+Use this to set the model into testing mode (Dropout etc. will not be executed.)
+
+Use [`trainmode!`](@ref) for putting the model into training mode.
+"""
+testmode!(model::Model) = Flux.testmode!(model.network)
+"""
+    (model::Model)(inputs)
+
+Apply model to inputs to calculate outputs.
+
+Example:
+
+```julia
+model(inputs)
+```
+"""
+(model::Model)(inputs) = model.network(inputs)
 
 """
     standard_network(inputshape, outputshape, datadescriptor)::Flux.Chain
@@ -229,14 +294,43 @@ function standard_network(inputshape, outputshape, datadescriptor)::Flux.Chain
     throw(ArgumentError("No standard network structure defined for datadescriptor of type $(typeof(datadescriptor))!"))
 end
 
+# TODO: obsolete? remove?
+"""
+    get_inputshape(data_desc::FFTDataDescriptor)
+
+Return the input shape data with data descriptor `data_desc` should have for a
+neural network, as a tuple of dimensions.
+"""
 function get_inputshape(data_desc::FFTDataDescriptor)
     return (data_desc.num_channels, data_desc.max_freq)
 end
 
+"""
+    get_timestr()::String
+
+Return the current time as a string of the form YYYY-mm-dd_HH-MM-SS.
+
+Used for file and folder names.
+"""
 function get_timestr()::String
     return Dates.format(now(), "YYYY-mm-dd_HH-MM-SS")
 end
 
+"""
+    parse_modelname(modelname::String)
+
+Parse all special characters in given string.
+
+Special characters:
+
+- *t -> replace with current date and time (see [`get_timestr`](@ref)).
+
+Example:
+```julia
+julia> parse_modelname("mymodel_*t_blue")
+"mymodel_2023-02-04_14-17-51_blue"
+```
+"""
 function parse_modelname(modelname::String)
     timestr = get_timestr()
     return replace(modelname, "*t" => timestr)
@@ -270,6 +364,17 @@ function create_model(data::ModelData; network_constructor::Function=standard_ne
         network_constructor=network_constructor, savedir=savedir, modelname=modelname)
 end
 
+"""
+    save(model::Model, path::String, overwrite=false)
+
+Save given `model` at `path`.
+
+If `path` is a directory, save the model there as a file with the current time
+as filename.
+
+If `overwrite=false` (default), throw an error if the file at `path` already
+exists.
+"""
 function save(model::Model, path::String, overwrite=false)
     if !overwrite && isfile(path)
         throw(ErrorException("File $path already exists! Specify a different file or set overwrite to true!"))
@@ -281,10 +386,26 @@ function save(model::Model, path::String, overwrite=false)
     bson(path, model=model)
 end
 
+"""
+    save(model::Model)
+
+Save the model in the folder `model.savedir`, in the subfolder `model.modelname`
+with the filename "model_\$currentTime", where \$currentTime is the current time
+as given by [`get_timestr`](@ref).
+
+"""
 function save(model::Model)
     save(model, joinpath(model.savedir, model.modelname, "model_" * get_timestr() * ".bson"))
 end
 
+"""
+    get_most_recent(dir_path::String)::String
+
+Return the path of the file with the most recent date in the file name. Only
+works on files where the data starts at the seventh character and has the format
+YYYY-mm-dd_HH-MM-SS.
+````
+"""
 function get_most_recent(dir_path::String)::String
     files = []
     for file in readdir(dir_path)
@@ -301,6 +422,14 @@ function get_most_recent(dir_path::String)::String
     return dir_path * "/" * file
 end
 
+"""
+    load_model(path::String)::Model
+
+Load the model saved in file at `path`.
+
+If `path` is a directory, use [`get_most_recent`](@ref) to find file with the
+most recent time in the file name.
+"""
 function load_model(path::String)::Model
     if isdir(path)
         path = get_most_recent(path)
@@ -402,6 +531,31 @@ function train!(model::Model, data::ModelData, params::TrainingParameters)
     end
 end
 
+"""
+    train!(model::Model, data::ModelData;
+    params::TrainingParameters=standard_trainingparameters(), kws...)
+
+Train the given `model` using given `data` as training data.
+
+To adjust training parameters, you can either create your own
+`TrainingParameters` object and pass it as `params=myparams` or adjust the
+default `TrainingParameters` object (given by
+[`standard_trainingparameters`](@ref)) by passing key-value pairs like
+`epochs=3, η=0.02, autosave=3`.
+
+Examples:
+
+```julia
+train!(model, modeldata, epochs = 20, show_progress = false, opt_rule = GradientDescent)
+```
+
+```julia
+myparams = TrainingParameters(0.02, 20, x -> x, cpu, Flux.logitcrossentropy, 
+        GradientDescent, [], false, 5)
+
+train!(model, modeldata, params = myparams)
+```
+"""
 function train!(model::Model, data::ModelData;
     params::TrainingParameters=standard_trainingparameters(), kws...)
     for key in keys(kws)

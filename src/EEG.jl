@@ -21,8 +21,11 @@ If you store or use your data in a format which doesn't have a data descriptor
 yet, you will need to define your own and overload the following functions:
 
 `create_data(name::String, data_desc::MyDataDescriptor)`
+
 `get_inputshape(data_desc::MyDataDescriptor)`
+
 `inputarray(data_descriptor::MyDataDescriptor, num_samples::Int)`
+
 `row2inputs(data_descriptor::MyDataDescriptor, row::Vector)`
 """
 abstract type DataDescriptor end
