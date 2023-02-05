@@ -1,138 +1,19 @@
 using BCIInterface
 using Test
 
-function is(var, t)
-    return typeof(var) <: t ? true : false
-end
+const TEST_DIR = "tmpdata/"
+const MODEL_DIR = "tmpmodels/"
+const MODEL_NAME = "TestModel"
 
-macro executes(expr1)
-    return true
-end
+is(var, t::DataType) = typeof(var) <: t ? true : false
 
-function test_lengths(lengths, expected_len)
-    for len in lengths
-        if len[1] != expected_len || len[2] != expected_len
-            return false
-        end
+for dir in [TEST_DIR, MODEL_DIR]
+    if isdir(dir)
+        rm(dir; recursive=true)
     end
-    return true
-end
-
-function test_experiment(board::BCIInterface.EEGBoard, name::String, gather_time)
-    device = Device(board)
-    experiment = Experiment(device, name, tags=["test", "significant"],
-        extra_info=Dict(:delay => 2), path=TEST_DIR)
-
-    # set up necessary files etc. to avoid problems with timing
-    save_data(experiment)
-    # Compiling
-    gather_data!(experiment, 0.1)
-    # Actual execution
-    gather_data!(experiment, 0.1)
-    # With additional tags
-    gather_data!(experiment, 0.1, tags=[:left, :foo])
-    # Test if it added some elements
-    @test experiment.num_samples > 10
-
-    # Test if `getproperty` works
-    @test experiment.num_samples == size(experiment.data.df)[1]
-
-    # save number of samples (in seperate var because of later clearing)
-    total_num = experiment.num_samples
-
-    # clear all data of experiment
-    BCIInterface.clear!(experiment)
-    @test experiment.num_samples == 0
-    @test size(experiment.data.df)[1] == 0
-
-    # without saving in real-time
-    gather_data!(experiment, gather_time, save=false)
-    @test experiment.num_samples == size(experiment.data.df)[1]
-    # Test if it added some elements
-    @test experiment.num_samples > 100
-
-    total_num += experiment.num_samples
-
-    # now save the unsaved data
-    save_data(experiment)
-    # load saved data into `data`
-    data = load_data(TEST_DIR * name, "RawData", exact_num=true)
-    # check if metadata is correct
-    @test data.num_samples == size(data.df, 1)
-
-    # direct, manual loading
-    df = BCIInterface.CSV.read("testdata/" * name * "/RawData.csv", BCIInterface.DataFrame; skipto=2)
-
-    # create new, empty experiment
-    experiment2 = Experiment(device, name, tags=["test", "significant"],
-        extra_info=Dict(:delay => 2), path=TEST_DIR)
-    # load saved data into it
-    load_data!(experiment2, exact_num=true)
-    # check if metadata is correct
-    @test experiment2.data.num_samples == size(experiment2.data.df, 1)
-
-    # compare data of `data` with data of `experiment2`
-    @test_broken df == data.df # because of extraInfo not being loaded correctly (String instead of Dict)
-    @test data.df == experiment2.data.df
-    # check if number of collected samples equals number of loaded samples
-    @test total_num == data.num_samples
-    @test total_num == experiment2.data.num_samples
-end
-
-TEST_DIR = "testdata/"
-if isdir(TEST_DIR)
-    rm(TEST_DIR, recursive=true)
 end
 
 @testset "BCIInterface.jl" begin
-    @testset "Experiment" begin
-        NUM_CHANNELS = 8
-        NUM_COLS_META = 3 # time, tags, extraInfo
-
-        @testset "MCP3208" begin
-            board = MCP3208("/test/offline", NUM_CHANNELS, max_speed_hz=200,
-                online=false)
-
-            dev = Device(board)
-            @test is(BCIInterface.get_voltage(dev.board, 1), Number)
-            # Test if channel limits are checked
-            @test_throws "Given channel" BCIInterface.get_voltage(dev.board, 9)
-            @test_throws "Given channel" BCIInterface.get_voltage(dev.board, 0)
-            
-            test_experiment(board, "MCP3208", 0.005)
-        end
-        # TODO: implement for CI
-        # @testset "GanglionGUI" begin
-        #     board = GanglionGUI(NUM_CHANNELS)
-        #     test_experiment(board, "GanglionGUI", 0.01)
-        # end
-    end
-    @testset "AI" begin
-        outputs = Dict(:left => [1.0,0.0, 0.0], :none => [0.0, 1.0, 0.0], :right => [0.0, 0.0, 1.0])
-        data = load_data("testdata/MCP3208/", "RawData")
-        modeldata = ModelData(data, outputs)
-        model = create_model(modeldata, modelname = "TestModel")
-
-        inputs = modeldata.dataloader.data.inputs
-        sample = selectdim(inputs, ndims(inputs), 1)
-        @test_broken model(sample) == [] # TODO: get currect result for comparison
-
-        train!(model, modeldata, epochs = 2)
-        # TODO: test if loss is lower
-
-        save(model)
-        model2 = load_model("model/TestModel/")
-        @test model == model2
-    end
-    # @testset "Data Saving & Loading"
-    @testset "Data processing" begin
-        function creation_tests()
-            _ = BCIInterface.Standard()
-            return true
-        end
-        @test creation_tests()
-
-        std_processor = BCIInterface.Standard()
-        # @test BCIInterface.process()
-    end
+    include("EEG.jl")
+    include("AI.jl")
 end
