@@ -69,7 +69,7 @@ struct Metadata
 end
 
 Base.:(==)(a::Metadata, b::Metadata) = a.md == b.md
-Base.copy(metadata::Metadata) = Metadata(Base.copy(metadata.md))
+Base.copy(metadata::Metadata) = Metadata(copy(metadata.md))
 # For `meta.name` syntax (e.g. meta.num_channels)
 Base.getproperty(x::Metadata, name::Symbol) = name == :md ? getfield(x, name) : x.md[name]
 # For `meta.name = value` syntax
