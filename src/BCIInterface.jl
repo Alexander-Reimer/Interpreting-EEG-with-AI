@@ -1,6 +1,7 @@
 module BCIInterface
 
 using BaremetalPi # used: init_spi, spi_transfer!
+import Base: copy
 using BSON # used: bson, load
 using CSV # used: write, read, extended: tryparse
 using CUDA # used: functional
@@ -18,7 +19,7 @@ include("AI.jl")
 
 Plt = PyPlot
 Plt.pygui(true)
-
+export copy
 # EEG
 export Device, Data, Experiment, gather_data!, save, load_data, load_data!
 export MCP3208, GanglionGUI

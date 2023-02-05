@@ -1,10 +1,50 @@
-export MCP3208, GanglionGUI
+"""
+Supertpye of all EEG boards.
+
+When creating your own EEG board, you should make it a subtype of `AbstractEEGBoard` with
+
+```julia
+struct MyBoard <: AbstractEEGBoard
+    ...
+end
+```
+"""
+abstract type EEGBoard end
+
+"""
+    get_sample!(board::EEGBoard)
+
+Updates board.sample to new data from board.
+"""
+function get_sample!(board::EEGBoard)
+    for channel in 1:(board.data_descriptor.num_channels)
+        board.sample[channel] = get_voltage(board, channel)
+    end
+end
+
+"""
+Abstract type containing data descriptors.
+
+Data is processed and trained on differently depending on the data descriptor.
+If you store or use your data in a format which doesn't have a data descriptor
+yet, you will need to define your own and overload the following functions:
+
+`create_data(name::String, data_desc::MyDataDescriptor)`
+
+`get_inputshape(data_desc::MyDataDescriptor)`
+
+`inputarray(data_descriptor::MyDataDescriptor, num_samples::Int)`
+
+`row2inputs(data_descriptor::MyDataDescriptor, row::Vector)`
+"""
+abstract type AbstractDataDescriptor end
 
 struct FFTDataDescriptor <: AbstractDataDescriptor
     num_channels::Int
     max_freq::Int
     sample_width::Int
 end
+copy(x::FFTDataDescriptor) = FFTDataDescriptor(x.num_channels, x.max_freq, x.sample_width)
 
 """
     FFTDataDescriptor(num_channels::Int, max_freq::Int)
@@ -21,6 +61,7 @@ struct RawDataDescriptor <: AbstractDataDescriptor
     num_channels::Int
     sample_width::Int
 end
+copy(x::RawDataDescriptor) = RawDataDescriptor(x.num_channels, x.sample_width)
 
 """
     RawDataDescriptor(num_channels::Int)
@@ -31,11 +72,6 @@ voltage in a row.
 `num_channels::Int`: Number of channels the data has (= width of the row).
 """
 RawDataDescriptor(num_channels::Int) = RawDataDescriptor(num_channels, num_channels)
-
-"""
-TODO
-"""
-abstract type EEGBoard end
 
 #===================#
 #       DEVICES     #

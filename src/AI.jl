@@ -465,7 +465,7 @@ function load_model(path::String)::Model
         path = get_most_recent(path)
     end
     if !isfile(path)
-        throw("File $path doesn't exist!")
+        throw("File / folder $path doesn't exist!")
     end
     model = BSON.load(path, @__MODULE__)[:model]
     return model
@@ -492,6 +492,13 @@ mutable struct TrainingParameters
     autosave::Integer
 end
 
+"""
+    standard_trainingparameters()
+
+Returns a `TrainingParameters` object with all fields populated with (hopefully) reasonable
+defaults.
+
+"""
 function standard_trainingparameters()
     η = 0.01
     epochs = 10

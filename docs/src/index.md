@@ -27,7 +27,7 @@ Include the package in your code with
 using BCIInterface
 ```
 
-To start collecting EEG data, first create a [`EEGBoard`](@ref) using the instructions in
+To start collecting EEG data, first create an [`EEGBoard`](@ref) using the instructions in
 [Supported Boards](@ref).
 
 An offline example for trying out the rest of the framework would be
@@ -57,9 +57,9 @@ gather_data!(experiment, 5, tags=[:red])
 ```
 
 ```@example ex1
-gather_data!(experiment, 0.3, tags=[:red], save = false) # hide
-gather_data!(experiment, 0.3, tags=[:yellow], save = false) # hide
-gather_data!(experiment, 0.3, tags=[:blue], save = false) # hide
+gather_data!(experiment, 0.3, tags=[:red], autosave = false) # hide
+gather_data!(experiment, 0.3, tags=[:yellow], autosave = false) # hide
+gather_data!(experiment, 0.3, tags=[:blue], autosave = false) # hide
 ```
 
 Then, you repeat the same for yellow and blue, replacing `[:red]` by `[:yellow]`

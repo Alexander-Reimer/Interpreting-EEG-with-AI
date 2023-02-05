@@ -1,3 +1,5 @@
+include("EEG_Devices.jl")
+
 """
 Abstract class containing data processors.
 
@@ -7,25 +9,6 @@ Defined data processors:
 details see [`StandardProcessor`](@ref).
 """
 abstract type AbstractDataProcessor end
-
-"""
-Abstract type containing data descriptors.
-
-Data is processed and trained on differently depending on the data descriptor.
-If you store or use your data in a format which doesn't have a data descriptor
-yet, you will need to define your own and overload the following functions:
-
-`create_data(name::String, data_desc::MyDataDescriptor)`
-
-`get_inputshape(data_desc::MyDataDescriptor)`
-
-`inputarray(data_descriptor::MyDataDescriptor, num_samples::Int)`
-
-`row2inputs(data_descriptor::MyDataDescriptor, row::Vector)`
-"""
-abstract type AbstractDataDescriptor end
-
-include("EEG_Devices.jl")
 
 """
     datetime(seconds_since_epoch)
@@ -85,22 +68,13 @@ struct Metadata
     md::Dict
 end
 
-# Overloading Base for Metadata
-function Base.copy(metadata::Metadata)
-    new_md = copy(metadata.md)
-    return Metadata(new_md)
-end
+Base.:(==)(a::Metadata, b::Metadata) = a.md == b.md
+Base.copy(metadata::Metadata) = Metadata(Base.copy(metadata.md))
 # For `meta.name` syntax (e.g. meta.num_channels)
-function Base.getproperty(meta::Metadata, name::Symbol)
-    return name == :md ? getfield(meta, name) : meta.md[name]
-end
+Base.getproperty(x::Metadata, name::Symbol) = name == :md ? getfield(x, name) : x.md[name]
 # For `meta.name = value` syntax
-function Base.setproperty!(meta::Metadata, name::Symbol, value)
-    if name == :md
-        setfield!(meta, name, value)
-    else
-        meta.md[name] = value
-    end
+function Base.setproperty!(x::Metadata, name::Symbol, value)
+    return name == :md ? setfield!(x, name, value) : x.md[name] = value
 end
 
 """
@@ -109,11 +83,11 @@ end
 Internal method used for writing to file; in function to make later
 switch of file format easier.
 """
-function _write_metadata(filepath, metadata::Metadata)
-    if !isfile(filepath)
-        createpath(filepath)
+function _write_metadata(path, metadata::Metadata)
+    if !isfile(path)
+        createpath(path)
     end
-    return bson(filepath, metadata.md)
+    return bson(path, metadata.md)
 end
 
 """
@@ -122,25 +96,75 @@ end
 Internal method used for reading from file; in function to make later
 switch of file format easier.
 """
-function _read_metadata(filepath)
-    md = BSON.load(filepath, @__MODULE__)
+function _read_metadata(path)
+    md = BSON.load(path, @__MODULE__)
     return Metadata(md)
+end
+
+load_metadata(path::String) = isfile(path) ? _read_metadata(path) : nothing
+get_metadatapath(folder, name) = joinpath(folder, name * "Metadata.bson")
+load_metadata(folder, name) = load_metadata(get_metadatapath(folder, name))
+
+# TODO: clarify "compatible"
+"""
+    is_compat(df::DataFrame, metadata::Union{Metadata, Nothing})
+
+Check if `df` is "compatible" with `metadata`.
+
+If `metadata` is `nothing`, then return true (for easy use with `load_metadata`
+which returns nothing when no `metadata` is defined)
+"""
+function iscompatible(df::DataFrame, metadata::Union{Metadata,Nothing})
+    if metadata === nothing
+        return true
+    end
+    if metadata.column_names == names(df)
+        return true
+    end
+    return false
 end
 
 mutable struct Data
     df::DataFrame
     metadata::Metadata
     name::String
+    dir::String
     savedindex::Integer
     data_descriptor::AbstractDataDescriptor
 end
 
+function Base.copy(x::Data)
+    return Data(
+        copy(x.df), copy(x.metadata), x.name, x.dir, x.savedindex, copy(x.data_descriptor)
+    )
+end
+function Base.:(==)(a::Data, b::Data)
+    return a.df == b.df &&
+           a.metadata == b.metadata &&
+           a.name == b.name &&
+           a.dir == b.dir &&
+           a.savedindex == b.savedindex &&
+           a.data_descriptor == b.data_descriptor
+end
+Base.push!(data::Data, val) = push!(data.df, val)
+function Base.getproperty(x::Data, name::Symbol)
+    if name == :folderpath
+        return joinpath(x.dir, x.name)
+    elseif name in fieldnames(Data)
+        return getfield(x, name)
+    else
+        return getproperty(x.metadata, name)
+    end
+end
+
+load_metadata(data::Data; name="data") = load_metadata(joinpath(data.dir, data.name), name)
+
 """
-    create_data(name::String, data_desc::RawDataDescriptor)
+    Data(name::String, data_desc::RawDataDescriptor; dir = "data/")
 
 Create new `Data`-Object for raw data (MCP3208).
 """
-function create_data(name::String, data_desc::RawDataDescriptor)
+function Data(name::String, data_desc::RawDataDescriptor; dir="data/")
     column_names = ["time", "tags", "extraInfo"]
     for channel in 1:(data_desc.num_channels)
         push!(column_names, string(channel))
@@ -159,15 +183,15 @@ function create_data(name::String, data_desc::RawDataDescriptor)
             :descriptor => data_desc,
         ),
     )
-    return Data(df, metadata, name, 0, data_desc)
+    return Data(df, metadata, name, dir, 0, data_desc)
 end
 
 """
-    create_data(name::String, data_desc::RawDataDescriptor)
+    Data(name::String, data_desc::FFTDataDescriptor; dir="data/")
 
 Create new `Data`-Object for FFT data.
 """
-function create_data(name::String, data_desc::FFTDataDescriptor)
+function Data(name::String, data_desc::FFTDataDescriptor; dir="data/")
     column_names = ["time", "tags", "extraInfo"]
     for channel in 1:(data_desc.num_channels)
         for freq in 1:(data_desc.max_freq)
@@ -188,34 +212,149 @@ function create_data(name::String, data_desc::FFTDataDescriptor)
             :descriptor => data_desc,
         ),
     )
-    return Data(df, metadata, name, 0, data_desc)
+    return Data(df, metadata, name, dir, 0, data_desc)
 end
 
 """
-    create_data(name::String, board::EEGBoard)
+    Data(name::String, board::EEGBoard; dir="data/")
 
 Create `Data`-Object which fits given board (raw data, fft data, etc.).
 """
-create_data(name::String, board::EEGBoard) = create_data(name, board.data_descriptor)
-
-Base.push!(data::Data, val) = push!(data.df, val)
-
-function Base.getproperty(data::Data, name::Symbol)
-    if name in fieldnames(Data)
-        return getfield(data, name)
-    end
-    return getproperty(data.metadata, name)
+function Data(name::String, board::EEGBoard; dir="data/")
+    return Data(name, board.data_descriptor; dir=dir)
 end
 
-get_datapath(folderpath, name) = joinpath(folderpath, name * ".csv")
+"""
+    clear!(data::Data)
+
+Delete all saved data.
+"""
+function clear!(data::Data)
+    empty!(data.df)
+    data.metadata.num_samples = 0
+    return data.savedindex = 0
+end
+
+get_datapath(folder, name) = joinpath(folder, name * ".csv")
+iscompatible(d::Data, metadata::Union{Metadata,Nothing}) = iscompatible(d.df, metadata)
+
+# TODO: doc string
+function combine_metadata(data::Data, meta::Metadata; repeat=false)
+    # TODO: weird?
+    new_meta = copy(meta)
+    add_length = data.metadata.num_samples
+    if !repeat
+        add_length -= data.savedindex
+    end
+    new_meta.num_samples += add_length
+    return new_meta
+end
+
+"""
+    create_path(path::String)
+
+Create necessary folders and file if they don't exist yet, so that
+`isdir(path)` or `isfile(path)` returns true depending on whether
+`path` points to a folder or a file.
+"""
+function createpath(path::String)
+    mkpath(dirname(path)) # create directories containing file
+    # if path points to file
+    if !isdirpath(path)
+        # check if already exists
+        if !isfile(path)
+            io = open(path; create=true) # create file
+            close(io)
+        end
+    end
+end
+
+"""
+    save(data::Data, df::DataFrame; name="data", checkmeta=true, updatemeta=true,
+        overwrite=false)
+
+Save given `df`. Folder is determined by `data` (`data.dir` and `data.name`), file name by
+`name`.
+
+# Keywords
+- `checkmeta=true`: Load and check `Metadata` saved at the location for compatibility if it
+  already exists.
+
+- `updatemeta=true`: Save the updated `Metadata`.
+
+- `overwrite=false`: When true, overwrite already existing data and meta data.
+"""
+function save(
+    data::Data, df::DataFrame; name="data", checkmeta=true, updatemeta=true, overwrite=false
+)
+    dir = joinpath(data.dir, data.name)
+    datapath = get_datapath(dir, name)
+    metapath = get_metadatapath(dir, name)
+    # only load metadata if it is needed; check compatibility even if checkmeta is false
+    if checkmeta
+        metadata = load_metadata(metapath)
+        if !iscompatible(data.df, metadata)
+            throw(
+                ErrorException( # TODO: more specific error
+                    "Data not compatible with DataFrame at $file_path
+                    (perhaps processed vs non-processed data or different
+                    number of channels). If you want to overwrite the old data,
+                    delete both $datapath and $metapath.",
+                )
+            )
+        end
+    end
+    if updatemeta
+        if metadata === nothing || overwrite
+            # if metadata doesn't exist yet or should be overwritten
+            newmeta = data.metadata
+        else
+            newmeta = combine_metadata(data, metadata)
+        end
+        _write_metadata(metapath, newmeta)
+    end
+    append = !overwrite
+    # Make sure file exist
+    if !isfile(datapath)
+        createpath(datapath)
+        # if file doesn't exist yet, append must be false as otherwise, headers won't be
+        # written
+        append = false
+    end
+    # TODO: also check file contents if header exists.
+    return CSV.write(datapath, df; append=append)
+end
+
+"""
+    save(data::Data; checkmeta=true, updatemeta=true, overwrite=false, repeat=false)
+
+Save given `data`. Folder is determined by `data` (`data.dir * "/" * data.name`), file name by
+`name`.
+"""
+function save(
+    data::Data; name="data", checkmeta=true, updatemeta=true, overwrite=false, repeat=false
+)
+    if repeat
+        df_new = data.df
+    else
+        df_new = data.df[(data.savedindex + 1):end, :]
+    end
+    save(
+        data,
+        df_new;
+        name=name,
+        checkmeta=checkmeta,
+        updatemeta=updatemeta,
+        overwrite=overwrite,
+    )
+    return data.savedindex = lastindex(data.df, 1)
+end
 
 struct Experiment
     board::EEGBoard
     data::Data
     tags::Array{String,1}
     extra_info::Dict{Symbol,Any}
-    folderpath::String
-    # cases::Array{Symbol,1}
 end
 
 # For `experiment.num_samples`
@@ -238,50 +377,30 @@ end
 `path`: To top-level of data directory (e.g. "data/"). If empty, files can't be saved.
 
 TODO: descs for keywords
-TODO: `load_previous` not implemented yet (maybe in another function?)
 """
 function Experiment(
     board::EEGBoard,
     name::String;
     tags::Array=[],
     extra_info::Dict=Dict(),
-    path::String="data/",
-    load_previous::Bool=false,
+    dir::String="data/",
 )
-    folderpath = joinpath(path, name, "")
-    data = create_data("RawData", board)
-    experiment = Experiment(board, data, string.(tags), extra_info, folderpath)
+    data = Data(name, board; dir=dir)
+    experiment = Experiment(board, data, string.(tags), extra_info)
     save(experiment)
     return experiment
 end
 
 """
-    clear!(data::Data)
+    clear!(experiment::Experiment)
 
 Delete all saved data.
 """
-function clear!(data::Data)
-    empty!(data.df)
-    data.metadata.num_samples = 0
-    return data.savedindex = 0
-end
-
-"""
-    clear!(experiment::Experiment)
-
-Delete all saved raw data from experiment.
-"""
 clear!(experiment::Experiment) = clear!(experiment.data)
 
-"""
-    get_sample!(board::EEGBoard)
-
-Updates board.sample to new data from board.
-"""
-function get_sample!(board::EEGBoard)
-    for channel in 1:(board.data_descriptor.num_channels)
-        board.sample[channel] = get_voltage(board, channel)
-    end
+# load_metadata(experiment::Experiment) = load_metadata(experiment.data)
+function load_metadata(experiment::Experiment, name="data")
+    return load_metadata(experiment.data; name=name)
 end
 
 """
@@ -305,7 +424,8 @@ function gather_data!(
     tags::Array=[],
     extra_info::Dict=Dict(),
     delay::Number=0,
-    save::Bool=true,
+    autosave::Bool=true,
+    name::String="data",
 )
     if !iscompatible(experiment.data, load_metadata(experiment))
         throw(ErrorException("TODO")) # TODO
@@ -325,7 +445,7 @@ function gather_data!(
         new_row[4:end] = experiment.board.sample
         push!(experiment.data, new_row)
 
-        if save
+        if autosave
             save(experiment; updatemeta=false, checkmeta=false)
         end
         if delay != 0
@@ -333,129 +453,15 @@ function gather_data!(
         end
         experiment.data.metadata.num_samples += 1 # TODO
     end
-end
-
-get_metadatapath(folder_path, name) = joinpath(folder_path, name * "Metadata.bson")
-
-load_metadata(path::String) =
-    if isfile(path)
-        return _read_metadata(path)
-    else
-        return nothing
-    end
-
-load_metadata(folder_path, name) = load_metadata(get_metadatapath(folder_path, name))
-load_metadata(experiment::Experiment) = load_metadata(experiment.folderpath, "RawData")
-
-"""
-    is_compat(df::DataFrame, metadata::Union{Metadata, Nothing})
-
-Check if `df` is "compatible" with `metadata`.
-
-If `metadata` is `nothing`, then return true (for easy use with `load_metadata`
-which returns nothing when no `metadata` is defined)
-"""
-function iscompatible(df::DataFrame, metadata::Union{Metadata,Nothing})
-    if metadata === nothing
-        return true
-    end
-    if metadata.column_names == names(df)
-        return true
-    end
-    return false
-end
-
-function iscompatible(data::Data, metadata::Union{Metadata,Nothing})
-    return iscompatible(data.df, metadata)
-end
-
-function combine_metadata(data::Data, meta::Metadata; repeat=false)
-    # TODO: weird?
-    new_meta = copy(meta)
-    add_length = data.metadata.num_samples
-    if !repeat
-        add_length -= data.savedindex
-    end
-    new_meta.num_samples += add_length
-    return new_meta
-end
-
-"""
-    create_path(path::String)
-
-Create necessary folders and file if they don't exist yet, so that
-`isdir(path)` or `isfile(path)` returns true depending on whether
-`path` points to a folder or a file.
-"""
-function createpath(path::String)
-    mkpath(dirname(path)) # create directories containing file
-    # if path points to file (doesn't end in "/")
-    if dirname(path) !== path
-        if !isfile(path)
-            io = open(path; create=true) # create file
-            close(io)
-        end
-    end
+    return save(experiment)
 end
 
 function save(
-    data::Data, df::DataFrame, folderpath; checkmeta=true, updatemeta=true, repeat=false
+    experiment::Experiment; name="data", checkmeta=true, updatemeta=true, repeat=false
 )
-    datapath = joinpath(folderpath, data.name * ".csv")
-    metapath = get_metadatapath(folderpath, data.name)
-    metadata = nothing
-    if checkmeta && isfile(metapath)
-        if !iscompatible(data.df, load_metadata(metapath))
-            throw(
-                ErrorException( # TODO: more specific error
-                    "Data not compatible with DataFrame at $file_path
-                    (perhaps processed vs non-processed data or different
-                    number of channels). If you want to overwrite the old data,
-                    delete both $file_path and $meta_file_path.",
-                )
-            )
-        end
-    end
-    if updatemeta
-        # TODO: what?
-        if metadata === nothing
-            metadata = load_metadata(metapath)
-        end
-        if metadata === nothing
-            newmeta = data.metadata
-        else
-            newmeta = combine_metadata(data, metadata)
-        end
-        _write_metadata(metapath, newmeta)
-    end
-    # Make sure file exist
-    overwrite = false
-    if !isfile(datapath)
-        createpath(datapath)
-        overwrite = true # overwrite to create headers
-    end
-    # deactivate append if overwrite --> file is overwritten
-    return CSV.write(datapath, df; append=!overwrite)
-end
-
-function save(data::Data, folderpath; checkmeta=true, updatemeta=true, repeat=false)
-    # if !isempty(data.df)
-    if repeat
-        df_new = data.df
-    else
-        df_new = data.df[(data.savedindex + 1):end, :]
-    end
-    save(
-        data, df_new, folderpath; checkmeta=checkmeta, updatemeta=updatemeta, repeat=repeat
-    )
-    return data.savedindex = lastindex(data.df, 1)
-    # end
-end
-
-function save(experiment::Experiment; checkmeta=true, updatemeta=true, repeat=false)
     return save(
-        experiment.data,
-        experiment.folderpath;
+        experiment.data;
+        name=name,
         checkmeta=checkmeta,
         updatemeta=updatemeta,
         repeat=repeat,
@@ -470,7 +476,10 @@ end
 #     return chop.(split(chop(str, head=1, tail=1), ", "), head=1, tail=1)
 # end
 
-function load_data(folderpath, name; start_pos=1, num_samples=:all, exact_num=false)
+function load_data(
+    dataname; dir="data", name="data", start_pos=1, num_samples=:all, exact_num=false
+)
+    folderpath = joinpath(dir, dataname)
     metapath = get_metadatapath(folderpath, name)
     # TODO: loading RawData not working because of meta name
     metadata = load_metadata(metapath)
@@ -480,7 +489,7 @@ function load_data(folderpath, name; start_pos=1, num_samples=:all, exact_num=fa
     end
 
     datapath = get_datapath(folderpath, name)
-    type_map = Dict(:tags => Array{String,1})
+    type_map = Dict(:tags => Array{String,1}, :time => Float64) #:extraInfo=>Dict{Any,Any}
     if num_samples == :all
         # +1 for headers
         df = CSV.read(datapath, DataFrame; skipto=start_pos + 1, types=type_map)
@@ -501,7 +510,7 @@ function load_data(folderpath, name; start_pos=1, num_samples=:all, exact_num=fa
     # And save it again
     _write_metadata(metapath, metadata)
 
-    data = create_data(name, metadata.descriptor)
+    data = Data(dataname, metadata.descriptor; dir=dir)
     data.metadata = metadata
     data.df = df
     data.savedindex = data.num_samples
@@ -519,13 +528,26 @@ function combine!(data1::Data, data2::Data; append=true)
     return data1.metadata = combine_metadata(data2, data1.metadata; repeat=true)
 end
 
-# TODO: test
 function load_data!(
-    experiment::Experiment; start_pos=1, num_samples=:all, exact_num=false, append=true
+    experiment::Experiment;
+    name::String="data",
+    start_pos=1,
+    num_samples=:all,
+    exact_num=false,
+    repeat=false,
+    append=true,
 )
+    if !repeat
+        if start_pos !== 1
+            @warn ("Given start_pos will be ignored because repeat=true!")
+        end
+        start_pos = experiment.data.savedindex + 1
+    end
+
     old_data = load_data(
-        experiment.folderpath,
         experiment.data.name;
+        dir=experiment.data.dir,
+        name=name,
         start_pos=start_pos,
         num_samples=num_samples,
         exact_num=exact_num,
