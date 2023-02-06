@@ -1,4 +1,5 @@
-> ***Note***
+> **Note**
+> 
 > Please see the [refactor branch](https://github.com/AR102/Interpreting-EEG-with-AI/tree/refactor), not this one, as the refactor branch is the one currently under development and also much more representative of a future stable version of this package.
 > The main branch is abandoned and currently all features of main are being rewritten in refactor.
 
