@@ -1,6 +1,5 @@
 [comment]: <> "LTeX: language=en-US"
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://AR102.github.io/Interpreting-EEG-with-AI/stable/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://AR102.github.io/Interpreting-EEG-with-AI/dev/)
 [![CI](https://github.com/AR102/Interpreting-EEG-with-AI/actions/workflows/CI.yml/badge.svg?branch=refactor)](https://github.com/AR102/Interpreting-EEG-with-AI/actions/workflows/CI.yml)
 [![codecov](https://codecov.io/gh/AR102/Interpreting-EEG-with-AI/branch/refactor/graph/badge.svg?token=YA9DXVHWU8)](https://codecov.io/gh/AR102/Interpreting-EEG-with-AI)
