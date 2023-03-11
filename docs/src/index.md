@@ -54,6 +54,7 @@ at the same time using [`gather_data!`](@ref)
 
 ```julia
 gather_data!(experiment, 5, tags=[:red])
+nothing # hide
 ```
 
 ```@example ex1

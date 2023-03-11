@@ -532,18 +532,19 @@ function train!(model::Model, data::ModelData, params::TrainingParameters)
     model.network = params.device(model.network)
     # TODO: performance considerations of try/catch
     try
+        num_samples = size(
+            data.dataloader.data.outputs, ndims(data.dataloader.data.outputs)
+        )
         while model.epochs < epochgoal
             # move train_loss up into this scope
             local train_loss::eltype(data.dataloader.data.inputs)
-
             # init progress bar
-            num_samples = size(
-                data.dataloader.data.outputs, ndims(data.dataloader.data.outputs)
-            )
             p = Progress(num_samples; enabled=params.show_progress)
+            accurate_predictions = 0
+            total = 0
             i = 0
-
             for (x, y) in data.dataloader
+                local ŷ
                 # move inputs and outputs to device and apply noise on inputs
                 x = params.noise(params.device(x))
                 y = params.device(y)
@@ -552,14 +553,22 @@ function train!(model::Model, data::ModelData, params::TrainingParameters)
                     ŷ = network(xs)
                     return params.loss(ŷ, y)
                 end
+                ŷ = model.network(x)
                 # update weights
                 Flux.update!(opt, model.network, gs[1])
+                same_result_bitarray = cpu((Flux.onecold(ŷ) .== Flux.onecold(y)))
+                accurate_predictions += sum(same_result_bitarray)
+                total += length(same_result_bitarray)
                 # update progress bar
                 i += size(y, ndims(y))
                 update!(p, i)
             end
+            train_acc = accurate_predictions / total
             saving_cb(model)
             model.epochs += 1
+            println("Epoch $(model.epochs):")
+            println("   Train loss: $train_loss")
+            println("   Train accuracy: $train_acc")
         end
     catch e
         if typeof(e) == InterruptException
