@@ -50,8 +50,8 @@ copy(x::FFTDataDescriptor) = FFTDataDescriptor(x.num_channels, x.max_freq, x.sam
     FFTDataDescriptor(num_channels::Int, max_freq::Int)
 
 Data descriptor for FFT data in the format of a 2D-Array per sample, with the first
-dimension corresponding to the frequncies from 1 to max_freq and the seconds dimension
-corresponding to the channels from 1 to num_channels.
+dimension corresponding to the frequncies from 1 to `max_freq` and the seconds dimension
+corresponding to the channels from 1 to `num_channels`.
 """
 function FFTDataDescriptor(num_channels::Int, max_freq::Int)
     return FFTDataDescriptor(num_channels, max_freq, num_channels * max_freq)
