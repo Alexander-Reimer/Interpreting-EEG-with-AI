@@ -1,2 +1,0 @@
-Original folders & files created by PkgTemplate
-Template used: https://juliaci.github.io/PkgTemplates.jl/stable/user/#A-More-Complicated-Example-1
