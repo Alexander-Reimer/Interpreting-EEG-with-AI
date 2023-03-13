@@ -24,7 +24,7 @@ export copy
 export Device, Data, Experiment, gather_data!, save, load_data, load_data!
 export MCP3208, GanglionGUI
 # AI
-export ModelData, create_model, train!, save, load_model, parse_modelname
+export ModelData, create_model, Model, train!, save, load_model, parse_modelname
 export cpu, gpu
 
 end
