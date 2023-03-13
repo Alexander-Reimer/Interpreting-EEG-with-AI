@@ -37,7 +37,7 @@ board = MCP3208("UselessBoard", 8, online = false)
 nothing # hide
 ```
 
-Then create an `Experiment`](@ref) with it:
+Then create an [`Experiment`](@ref) with it:
 
 ```@example ex1
 experiment = Experiment(board, "NameOfMyExperiment")
@@ -54,13 +54,12 @@ at the same time using [`gather_data!`](@ref)
 
 ```julia
 gather_data!(experiment, 5, tags=[:red])
-nothing # hide
 ```
 
 ```@example ex1
-gather_data!(experiment, 0.3, tags=[:red], autosave = false) # hide
-gather_data!(experiment, 0.3, tags=[:yellow], autosave = false) # hide
-gather_data!(experiment, 0.3, tags=[:blue], autosave = false) # hide
+gather_data!(experiment, 0.3, tags=[:red], autosave = false, saveafter = false) # hide
+gather_data!(experiment, 0.3, tags=[:yellow], autosave = false, saveafter = false) # hide
+gather_data!(experiment, 0.3, tags=[:blue], autosave = false, saveafter = false) # hide
 ```
 
 Then, you repeat the same for yellow and blue, replacing `[:red]` by `[:yellow]`

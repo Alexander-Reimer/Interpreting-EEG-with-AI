@@ -426,6 +426,7 @@ function gather_data!(
     delay::Number=0,
     autosave::Bool=true,
     name::String="data",
+    saveafter::Bool=true,
 )
     if !iscompatible(experiment.data, load_metadata(experiment))
         throw(ErrorException("TODO")) # TODO
@@ -453,7 +454,10 @@ function gather_data!(
         end
         experiment.data.metadata.num_samples += 1 # TODO
     end
-    return save(experiment)
+    if saveafter
+        return save(experiment)
+    end
+    return nothing
 end
 
 function save(
