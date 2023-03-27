@@ -22,3 +22,6 @@ this project. Any help and advice is appreciated!
 
 See the [documentation](https://AR102.github.io/Interpreting-EEG-with-AI/) for installation
 and usage instructions.
+
+See the [paper branch](https://github.com/AR102/Interpreting-EEG-with-AI/tree/refactor) for
+(German) papers describing this project and our journey.
