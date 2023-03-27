@@ -8,9 +8,11 @@
     \usepackage{polyglossia} %| Für deutsche Sprache & Sonderzeichen
     \setmainlanguage{german} %| 
     \usepackage{microtype} % Für schöneren Blocksatz
-    \usepackage{parskip} % Für "deutche" Absätze
+    % \baselineskip = 30pt
+    \usepackage[skip=4pt]{parskip} % Für "deutche" Absätze
     \usepackage[official]{eurosym} % Für Eurozeichen
     \usepackage[locale=DE, per-mode=symbol]{siunitx} % Für Einheiten
+    \DeclareSIUnit{\dek}{Dekade}
     \DeclareSIUnit{\eur}{\mbox{\euro}}
     \usepackage{fontspec}
     % https://tex.stackexchange.com/questions/25249/how-do-i-use-a-particular-font-for-a-small-section-of-text-in-my-document/37251#37251
@@ -29,6 +31,7 @@
     \newcommand{\sig}{\textrm{sig}}
     % \newcommand{\tanh}{\textrm{tanh}}
     \newcommand{\netin}{\textrm{net}}
+    \usepackage{mathtools} % \xRightarrow
 
 %%%%%%%%%%%%%% TEXTLAYOUT
     \usepackage{geometry} % Für Anpassung der Seitenränder
@@ -37,9 +40,21 @@
     	left=2.5cm,
     	right=2.5cm,
     	bottom=2cm,
-    	footskip=13.6pt
+    	% footskip=13.6pt
     }
     \usepackage{fancyhdr} % Kopf- und Fußzeilen
+    % \pagestyle{plain}{
+    % \fancyhf{}
+    % \fancyhead[R]{JUGEND FORSCHT -- PROJEKTBERICHT}
+    % }
+    % \fancyfoot[C]{\thepage}
+    
+\renewcommand{\subsectionmark}[1]{%
+  \markright{\MakeUppercase{\thesubsection.\ #1}}}%
+\renewcommand{\sectionmark}[1]{%
+  \markright{\MakeUppercase{\thesection.\ #1}}}%
+% \renewcommand{\subsubsectionmark}[1]{%
+%  \markright{\MakeUppercase{\thesubsubsection.\ #1}}}%
     \usepackage{multicol} % Text in mehreren Spalten
     \newcommand{\threesub}[1]{
         \vspace{1.5ex}
@@ -52,19 +67,22 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     \usepackage{float} % Figure "H" Option zur Positionierung
     \usepackage{caption} % Für custom captions
-    \captionsetup{textfont={footnotesize}, labelfont={footnotesize, bf}, position=below, format=plain}
+    \captionsetup{textfont={footnotesize}, labelfont={footnotesize, bf}, position=below, format=plain, skip=7pt}
+    % \captionsetup[listing]{aboveskip=}
     \usepackage{wrapfig} % Für wrapfigure (Text um Bilder herum)
     \usepackage{graphicx} % Für das Einfügen von Bildern
 
 %%%%%%%%%%%%%%% TIKZ
     \usepackage{tikz}
     \usetikzlibrary{matrix, positioning, calc, %
-    decorations.pathreplacing, calligraphy % for curly braces
+    decorations.pathreplacing, calligraphy, % for curly braces
+    plotmarks % für mehr plot marks
     }
     \usepackage{circuitikz} % Schaltplan,Schaltzeichen usw.
     \tikzset{big elko/.style={elko=#1, capacitors/width=0.3}}
     \usepackage{pgfplots} % Plots
-     \pgfplotsset{compat=1.18} % Neuste Version nutzen
+    \pgfplotsset{compat=1.18} % Neuste Version nutzen
+    \usepackage{adjustbox} % Für Scaling von tikz pcitures
 
 %%%%%%%%%%%%%%% PROGRAMMAUSSCHNITTE
     \usepackage[newfloat=true]{minted}
@@ -76,13 +94,14 @@
     %                             #1     #2       #3 #4 #5
     \NewDocumentEnvironment{code}{O{0.7} O{julia}  m  m}{%
         \VerbatimEnvironment%
-        \begin{listing}[H]%
+        \begin{listing}[h!]%
             \centering% also for centering
             \begin{varwidth}{#1\textwidth}%
                 \begin{minted}[bgcolor=bg, linenos, breaklines]{#2}%
                     } {%
                 \end{minted}%
             \end{varwidth}%
+            \vspace{-1ex}%
             \caption{#3}%
             \label{#4}%
         \end{listing}%
@@ -93,31 +112,27 @@
 %%%%%%%%%% QUELLEN & VERWEISE %%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     \usepackage[sorting=none, defernumbers=true]{biblatex} % Für Quellenangaben
-    \DeclareFieldFormat[online,misc]{title}{\mkbibquote{#1}} % Titel in Anführungszeichen
+    \DeclareFieldFormat[online,misc,software]{title}{\mkbibquote{#1}} % Titel in Anführungszeichen
     \DeclareFieldFormat{type}{} % Quellen-Typ nicht anzeigen
     \addbibresource{sources.bib} % Quellen laden
-    
+
     \usepackage[bookmarks=true]{hyperref}
     \hypersetup{
         pdftitle={Entwicklung eines Frameworks und eigener Hardware für Brain-Computer-Interfaces},
-        pdfauthor={Matteo Friedrich \& Alexander Reimer},
-        pdfsubject={},% TODO
+        pdfauthor={Matteo Friedrich, Alexander Reimer, Mattes Brinkmann},
+        % pdfsubject={},% TO/DO
         pdfkeywords={KI, AI, neuronale Netzwerke, EEG, Elektroenzephalographie, Jugend Forscht, BCI, Brain-Computer-Interface}
     }
+    \usepackage{nameref}
 
 \begin{document}
+% }
+% \fancyfoot[C]{\thepage}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%% TODO %%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Ergebnisse (Trainingsverlauf, Genauigkeiten, etc.)
-
 % Vergleich Genauigkeit mit & ohne Dropout
-
-% Vorgehensweise Architektur beschreiben
-
-% Diskussion
-
 
 \pagenumbering{gobble}
 \thispagestyle{empty}
@@ -128,65 +143,76 @@
     {\Large Sammlung, Verarbeitung und Analyse unserer Gehirnsignale} \\[4mm]
     \includegraphics[width=0.8\textwidth]{logo.png} \\[10mm]
     {\huge \textbf{Alexander Reimer, Matteo Friedrich und Mattes Brinkmann}} \\[1em]
-    {\LARGE \textbf{Gymnasium Eversten Oldenburg}}
+    {\LARGE {Gymnasium Eversten Oldenburg}} \\[1.2ex]
+    {\LARGE {Betreuer: Herr Dr. Glade}}
 \end{center}
 
 \newpage
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[L]{\rightmark}
+\fancyhead[R]{JUGEND FORSCHT -- PROJEKTBERICHT}
 \pagenumbering{roman}
+
+% \pagestyle{plain}
 
 \tableofcontents
 
 \section*{Kurzfassung}
-In diesem Projekt wollen wir ein Framework für ein Brain-Computer-Interface (BCI) verwirklichen. Dafür entwickeln wir unsere eigene, deutlich günstigere Alternative des benötigten Messgerätes (EEG), welches mithilfe von Elektroden Spannungsdifferenzen misst, die von Neuronen im Gehirn erzeugt werden. Gleichzeitig versuchen wir anhand einer schwierigen Aufgabe (Erkennung der Gedanken an verschiedene Richtungen) ein allgemein verwendbares Interface zu entwickeln, welches die Verarbeitung der Gehirndaten, die Erstellung eines neuronalen Netzes für die Analyse und die anschließende Verwendung des BCI übernehmen kann. Dieses Interface soll möglichst weit abstrahiert und vereinfacht sein, aber dennoch tiefgreifende Anpassungen leicht ermöglichen, sodass es hoffentlich Anfänger den Bereich näher bringen, aber auch in Zukunft eine gute Grundlage für erfahrene Entwickler bieten kann.
+In diesem Projekt wollen wir ein Framework für ein Brain-Computer-Interface (BCI) verwirklichen. 
+Dafür entwickeln wir unsere eigene, deutlich günstigere Alternative im Vergleich zu den kommerziell erhältlichen Angeboten des benötigten Messgerätes (EEG), welches mithilfe von Elektroden Spannungsdifferenzen misst, die von Neuronen im Gehirn erzeugt werden. 
+Gleichzeitig versuchen wir anhand einer schwierigen Aufgabe (Erkennung der Gedanken von Testpersonen an die Richtungen Rechts und Links) ein allgemein verwendbares Framework zu entwickeln, welches die Verarbeitung der Gehirndaten, die Erstellung eines neuronalen Netzes für die Analyse und die anschließende Verwendung des BCI übernehmen kann. 
+Dieses Framework soll möglichst weit abstrahiert und vereinfacht sein, aber dennoch tiefgreifende Anpassungen leicht ermöglichen, sodass es hoffentlich Anfänger den Bereich näher bringen, aber auch in Zukunft eine gute Grundlage für erfahrene Entwickler bieten kann.
+
+Wir haben es geschafft, ein Framework zu entwickeln, welches modular aufgebaut und somit gut anpassbar ist. Es bietet außerdem ein Standardkonfiguration, sodass der Nutzer möglichst wenig tun muss.
+Die Erkennungsgenauigkeit bei der beschriebenen Aufgabe liegt momentan bei 40\%; dies wollen wir noch verbessern.
+Außerdem müssen wir die Standardkonfiguration noch mit anderen Aufgaben testen und verbessern, sodass wir sicher am Ende sicher sein können, dass sie in möglichst vielen Szenarien ohne Anpassung verwendet werden kann.
 
 \newpage
 
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[L]{\rightmark}
+\fancyhead[R]{JUGEND FORSCHT -- PROJEKTBERICHT}
 \pagenumbering{arabic}
 
 \section{Einleitung}
-Ziel des Projektes ist es, ein Framework für BCIs -- Brain-Computer-Interfaces -- zu entwickeln, welches die Erstellung von BCIs vereinfachen soll, indem der Prozess stark abstrahiert wird.
-Dabei ist uns wichtig, dass unser Framework trotzdem durch viele Anpassungsmöglichkeiten auch fortgeschrittene Personen ansprechen und für eine möglichst große Spannen an Projekten verwendet werden kann.
-
-BCIs sind Schnittstellen zwischen Gehirn und Computer und sollen Kommunikation zwischen diesen ermöglichen.
-Sie können für die bewusste Steuerung von Dingen wie Prothesen, Drohnen und Robotern verwendet werden, aber auch für diagnostische Zwecke, wie die Voraussage von Migränen oder die Erkennung von Gehirnstörungen.
+BCIs -- Brain-Computer-Interfaces -- sind Schnittstellen zwischen Gehirn und Computer und sollen die Kommunikation zwischen diesen ermöglichen.
+Sie können für die bewusste Steuerung von Geräten wie Prothesen, Drohnen und Robotern verwendet werden, sie eignen sich aber auch für diagnostische Zwecke, wie die Voraussage von Migränen oder die Erkennung von Gehirnstörungen.
 So wird zum Beispiel gerade daran gearbeitet, BCIs zu verwenden, um die Kommunikation von Menschen mit vollständigem Locked-in-Syndrom (CLIS) mit der Außenwelt zu ermöglichen, obwohl diese keinerlei bewusste Muskelkontrolle mehr haben. \cite{BCIChaudhary}
 Außerdem lassen sich BCIs mit instrumenteller oder klassischer Konditionierung sogar zur Veränderung unserer Gehirnmuster und -aktivitäten verwenden. \cite{BCIChaudhary}
 
-% Zum Beispiel haben Forscher aus Stanford ein BCI entwickelt, welches in der Lage ist, behinderten Personen die Möglichkeit zu geben, über ihre Gedanken Nachrichten zu schreiben und so kommunizieren zu können. % TODO: keine Quelle!
-% Andere Forscher haben es geschafft, Menschen mit vollständigem Locked-in-Syndrom (CLIS) mithilfe eines BCIs wieder die Kommunikation zu ermöglichen, trotz Fehlen von jeglichen willentlichen Muskelbewegungen.
+Ziel des Projektes ist es, ein Framework zu entwickeln, welches die Erstellung von BCIs vereinfachen soll, indem der Prozess stark abstrahiert wird.
+Dabei ist uns wichtig, dass unser Framework trotzdem durch viele Anpassungsmöglichkeiten auch fortgeschrittene Personen ansprechen und für eine möglichst große Spanne an Projekten verwendet werden kann.
 	
-Wir hoffen, bei der Erarbeitung unseres Projektes neben dem Erlangen von Erfahrung in diesem interessanten Bereich auch selbst dazu beizutragen.
-BCIs sind ein relativ neues Thema und Forschung in diesem Bereich wird, soweit wir gesehen haben, größtenteils durch Forschungsinstitute, Universitäten, etc. durchgeführt.
-Gründe dafür sind vermutlich die hohen Kosten eines EEGs, welches gute Daten liefert, sowie die Komplexität und der Aufwand.
-Letzteres liegt auch daran, dass Kenntnisse in verschiedenen Bereichen notwendig sind: Programmieren, Künstliche Intelligenz, Psychologie und Gehirn-Physiologie sowie die Technik und Physik hinter einem EEG.
+Bei der Erarbeitung unseres Projektes möchten wir neben dem Erlangen von Erfahrung in diesem interessanten Bereich auch selbst dazu beizutragen.
+BCIs sind ein relativ neues Thema und die Forschung in diesem Bereich wird, soweit wir gesehen haben, größtenteils durch Forschungsinstitute, Universitäten und große Technologieunternehmen durchgeführt.
+Gründe dafür sind vermutlich die hohen Kosten eines hochwertigen EEGs, sowie die Komplexität und der benötigte Aufwand. Außerdem sind EEG Daten sehr schwer zu interpretieren, sodass meistens Methoden der künstlichen Intelligenz (KI), wie zum Beispiel neuronale Netze, zur Verarbeitung der Daten verwendet werden.
+Dies führt dazu, dass Kenntnisse in verschiedenen Bereichen notwendig sind: Programmierung, KI, Psychologie und Neurophysiologie sowie die Technik und Physik hinter einem EEG.
 
-Wir haben uns mit einigen dieser Bereiche beschäftigt und haben uns als Ziel gesetzt, diesen Prozess der Entwicklung eines BCI leichter und zugänglicher zu machen.
-
-Wir wollen dazu ein eigenes Software-Framework entwickeln. 
-Dieses soll möglichst viele der oben genannten Aufgaben übernehmen und dem Nutzer ein möglichst abstrahiertes Interface bieten, welches z.B. die Aufbereitung der rohen Daten und die Entwicklung und das Trainieren einer künstlichen Intelligenz übernimmt, ohne dass sich der Nutzer erst detailliert mit diesen Themen auseinander setzen muss.
-
+In unserem Projekt haben wir uns mit einigen dieser Bereiche beschäftigt und haben uns als Ziel gesetzt, den Prozess der Entwicklung eines BCI leichter und zugänglicher zu machen. Dazu haben wir ein eigenes Software-Framework entwickelt. 
+Dieses soll möglichst viele der oben genannten Aufgaben übernehmen und dem Nutzer ein möglichst abstrahiertes Interface bieten, welches z.B. die Aufbereitung der Rohdaten und die Entwicklung und das Trainieren einer künstlichen Intelligenz übernimmt, ohne dass sich der Nutzer erst detailliert mit diesen Themen auseinander setzen muss.
 Gleichzeitig sollen aber Anpassungen und Erweiterungen durch den Nutzer leicht umsetzbar sein, da voraussichtlich nicht in jeder Situation die von uns gewählten Verfahren und Parameter passend sein werden.
 
-Dies ist bereits das zweite Jahr, dass wir an BCIs forschen.
+Dies ist bereits das zweite Jahr, dass wir an BCIs forschen \cite{Bericht}.
 Letztes Jahr hatten wir zwar Erfolg darin, ein BCI zu entwickeln, doch dieses hatte drei hauptsächliche Probleme:
 
 \begin{enumerate}
-    \item Es konnte zwar unsere gewählte zu erkennende Aktivität (Schließen der Augen) erkennen, doch diese ist sehr simpel -- die meisten anderen Verwendungszwecke eines BCI sind viel komplexer und wären vermutlich nicht möglich gewesen.
-    \item Es war nicht nutzerfreundlich, da es kaum dokumentiert war, nicht ohne Weiteres zur Erkennung beliebiger Aktivitäten verwendet oder anders angepasst werden konnte, und schwer in eigenen Programmen zu verwenden war.
-    \item Wir haben das Ganglion EEG von OpenBCI benutzt, welches ca. \SI{500}{\eur} gekostet hat und somit zwar verglichen mit anderen EEGs günstig war, aber unserer Meinung nach noch zu teuer ist, um zugänglich zu sein.
+    \item Es konnte zwar unsere gewählte zu erkennende Aktivität (Schließen der Augen) erkennen, doch diese ist sehr simpel -- die meisten anderen Verwendungszwecke eines BCI sind viel komplexer und wären mit unser damaligen Software nicht realisierbar gewesen.
+    \item Das BCI war nicht nutzerfreundlich, da es kaum dokumentiert war, nicht ohne Weiteres zur Erkennung beliebiger Aktivitäten verwendet oder anders angepasst werden konnte, und schwer in eigenen Programmen zu verwenden war.
+    \item Wir haben das Ganglion EEG von OpenBCI benutzt, welches ca. \SI{500}{\eur} gekostet hat und somit zwar verglichen mit anderen EEGs günstig war, aber unserer Meinung nach noch zu teuer ist, um für private Nutzer zugänglich zu sein.
 \end{enumerate}
 
-Probleme 1 und 2 werden durch das bereits beschriebene Framework abgedeckt; während das Programm letztes Jahr eher ein Proof-of-Concept war, können wir jetzt, da wir etwas mehr Erfahrung haben, mehr auf die Software-Gestaltung achten.
-
-Das dritte Problem, den Preis des EEG, wollen wir angehen, indem wir unser eigenes, günstigeres Selbstbau-EEG entwickeln.
+Durch unser neu entwickeltes Framework werden die Probleme 1 und 2 angegangen. Während das Programm im letzten Jahr eher ein Proof-of-Concept war, konnten wir jetzt, da wir etwas mehr Erfahrung haben, intensiver auf die Software-Gestaltung achten.
+Um das dritte Problem, den Preis des EEG, anzugehen, haben wir unser eigenes günstigeres Selbstbau EEG entwickelt.
+Da dieses EEG erst gegen Ende der Forschungszeit fertig geworden ist, haben wir unser Framework mit öffentlich zugänglichen Daten getestet. 
 
 \newpage % damit Stichpunkte nicht über zwei Seiten aufgeteilt sind
 
-\section{Materialien} 
+\section{Materialien} \label{Materialien}
 
 \begin{itemize}
     % \setlength{\itemsep}{-1cm}
-    
     \item Gekauftes EEG aus dem letzten Jahr %
         \vspace*{-2ex}
         \begin{multicols}{2} %
@@ -209,7 +235,7 @@ Das dritte Problem, den Preis des EEG, wollen wir angehen, indem wir unser eigen
             \item Instrumentenverstärker AD620AN
             \item 5x Operationsverstärker LM385
             \item Diverse Widerstände
-            \item Keramik-/Tantal-/Elektrolytkondensatoren % TODO: welche wurden verwendet?
+            \item Keramik-, Tantal- und Elektrolytkondensatoren
             \item Steckbrett
             \item Kabel, Drähte, Krokodilklemmen
             \item Netzteil/Batterie($\pm$ \SI{9}{\volt})
@@ -242,7 +268,7 @@ Das dritte Problem, den Preis des EEG, wollen wir angehen, indem wir unser eigen
     \end{itemize}
     \end{multicols}
     \vspace*{-2ex}
-    \item OpenBCI GUI
+    \item Software von OpenBCI: OpenBCI GUI
     
     % \begin{itemize}
     %     \item Julia als Programmiersprache für unser ganzes Projekt
@@ -266,18 +292,24 @@ Das dritte Problem, den Preis des EEG, wollen wir angehen, indem wir unser eigen
  
 \section{Vorgehensweise}
 
-Für die Entwicklung unseres Framework und EEG haben wir uns das Ziel gesetzt, neben der Programmierung dessen gleichzeitig damit ein BCI zu entwickeln, welches erkennen soll, ob die Testperson gerade an links, rechts oder nichts denkt.
+Für die Entwicklung unseres Framework und EEG haben wir uns das Ziel gesetzt, neben der Programmierung und des Baus gleichzeitig damit ein BCI zu entwickeln, welches erkennen soll, ob eine Testperson gerade an links, rechts oder keine Richtung denkt.
 Grund dafür ist, dass wir durch ein konkretes Anwendungsbeispiel fortlaufend sehen können, wie Änderungen die Qualität und Nutzbarkeit des Programms und des EEG beeinflussen, indem wir die Leistung dieses spezifischen BCIs sowie Komplexität und Aufwand dieses Programms, welches unser Framework verwendet, betrachten.
 
-Die Inspiration kam von Harrison \enquote{Sentdex}: Dieser hat auf GitHub einen frei verwendbaren Datensatz an EEG-Daten hochgeladen, die er mit genau diesem Ziel (Erkennung der Richtung) aufgenommen hat. \cite{Sentdex}
+Die Inspiration kam von Harrison Kinsley \enquote{Sentdex}: Dieser hat auf GitHub einen frei verwendbaren Datensatz an EEG-Daten zur Verfügung gestellt, die er mit genau diesem Ziel (Erkennung der Richtung) aufgenommen hatte. \cite{Sentdex}
+Dieses Anwendungsbeispiel passt sehr gut, da die Erkennung sehr schwer ist.
+Bei einem sehr einfachen Beispiel hätten wir schnell eine perfekte Genauigkeit von 100\% erreicht und könnten somit nicht die Auswirkungen von weiteren Verbesserungen oder Änderungen beobachten.
 
-Dieses Anwendungsbeispiel passt sehr gut, da es sehr schwer umzusetzen ist und somit viele Verbesserungen benötigt.
-Bei einem sehr einfachen Beispiel hätten wir bereits eine perfekte Genauigkeit von 100\% erreicht und könnten somit nicht die Auswirkungen von weiteren Verbesserungen beobachten.
-
-Außerdem haben wir zu diesem Beispiel von Sentdex zwei nützliche Hilfen:
-Erstens seine aufgenommenen EEG-Daten, mithilfe derer wir bereits mit der Entwicklung der Software beginnen konnten, während wir gerade gleichzeitig das EEG entwickelten.
-Zweitens seine eigene Arbeit an einem BCI auf Basis dieser Daten, bei der er letzendlich eine Genauigkeit von ca 60\% erreichen konnte.
-Dies hilft, weil wir zum einen dadurch die Daten als Fehlerquelle ausschließen können, da wir wussten, dass die Erkennung möglich sein sollte, und sehen konnten, wie die Leistung unseres allgemeinen Frameworks im Vergleich zu seinem spezifischen Programm ausfällt. 
+Diese Vorgehensweise hatte zwei Vorteile:
+%Außerdem haben wir zu diesem Beispiel von Sentdex zwei nützliche Hilfen:
+%Erstens seine aufgenommenen EEG-Daten, mithilfe derer wir 
+Erstens konnten wir
+bereits mit der Entwicklung der Software beginnen, während wir gleichzeitig das EEG entwickelten.
+Zweitens konnten wir unsere Ergebnisse mit den veröffentlichten Ergebnissen vergleichen,
+%seine eigene Arbeit an einem BCI auf Basis dieser Daten, 
+%bei der er letzendlich 
+bei denen eine Genauigkeit von ca. 60\% erreichen werden konnte.
+%Dies hilft, weil wir zum einen dadurch 
+Dadurch konnten wir zum einen die Daten als Fehlerquelle ausschließen, da wir wissen, dass die Erkennung möglich sein sollte, und zum anderen konnten wir sehen, wie die Leistung unseres allgemeinen Frameworks im Vergleich zu dem veröffentlichten spezifischen Programm ausfällt. 
 
 % Unser Projekt lässt sich in zwei Bereiche einteilen. 
 % Zum einen gibt es den neurobiologischen Teil. 
@@ -288,34 +320,31 @@ Dies hilft, weil wir zum einen dadurch die Daten als Fehlerquelle ausschließen 
 
 \subsection{Elektroenzephalographie}
 
+\subsubsection{Grundlagen} 
 Bei der Elektroenzephalographie (EEG) werden Elektroden an der Kopfoberfläche platziert. 
 Diese können sehr kleine Spannungen messen, die durch Potentialänderungen in Neuronengruppen im Gehirn entstehen und durch den Schädel dringen. 
 Eine Elektrode kann nur die Summe aller lokalen Potentialänderungen messen -- sonst wäre eine Elektrode pro Neuron notwendig. 
-Man kann also auch nur ungefähr sagen, wo genau im Gehirn eine Potentialänderung stattgefunden hat. 
-Mit mehr Elektroden kann jedoch die örtliche Genauigkeit der Daten erhöht werden.
+Man kann also auch nur ungefähr sagen, wo genau im Gehirn eine Potentialänderung stattgefunden hat.
+Durch eine Vergrößerung der Anzahl an Elektroden kann jedoch die örtliche Genauigkeit der Daten erhöht werden.
 
 Bei der Messung der Spannung wird immer eine Differenz zwischen einer Elektrode und einem Referenzpunkt gebildet.
 Der Referenzpunkt wird zuvor invertiert.
-
 % Dieser ist bei uns das Ohrläppchen, an dem wir eine Elektrode mit einem Earclip befestigt. 
 Dabei gibt es zwei Verfahren: Bei der unipolaren Ableitung von Gehirnpotentialen wird ein neutraler Punkt wie ein Ohrläppchen, der von Gehirnströmen unbeeinflusst ist, gewählt. 
-Bei jeder Elektrode wird dann die abgeleitete Spannung von dieser abgezogen.
-Bei diesem Verfahren haben also alle Elektroden den gleichen Bezugspunkt
-
+Dieser wird dann als Referenzpunkt für alle Elektroden verwendet.
 Bei der bipolaren Ableitung hat jede Elektrode als Referenz den jeweiligen Nachbarn.
-Bei zwei Elektroden gibt es also nur eine Ausgabe, die Differenz der zwei.
+Bei zwei Elektroden gibt es also nur eine Ausgabe -- die Differenz der beiden.
 Bei drei Elektroden gibt es zwei Ausgaben, einmal die Differenz von Elektroden 1 und 2 und einmal die Differenz von Elektroden 2 und 3. \cite{EEGHausarbeit}
 
-Meistens wird die unipolare Ableitung gewählt, da bei der bipolaren Daten permanent verloren gehen: Zum einen ein Daten-Kanal und zum anderen kann es bei zwei entgegengesetzten EEG-Spannungen (z.B. Elektrode 1 = \SI{7}{\micro\volt}, Elektrode 2 = \SI{-7}{\micro\volt}) zur Auslöschung des Signals kommen. \cite{EEGHausarbeit}
+Üblicherweise wird die unipolare Ableitung verwendet, da bei der bipolaren Ableitung Daten permanent verloren gehen, da es einen Datenkanal weniger gibt (siehe oben) und eine Subtraktion keine umkehrbare Operation ist.
+Außerdem kann es bei zwei entgegengesetzten EEG-Spannungen (z.B. Elektrode 1 = \SI{7}{\micro\volt}, Elektrode 2 = \SI{-7}{\micro\volt}) zur Auslöschung des Signals kommen. \cite{EEGHausarbeit}
+In allen von uns verwendeten EEG-Daten (sowohl extern als auch selbst erzeugt) handelt es deshalb um unipolar abgeleitete Potentiale.
 
-In allen von uns verwendeten EEG-Daten (sowohl extern als auch selbst erzeugt) handelt es sich um unipolar abgeleitete Potentiale.
-
-
-% Da an dieser Referenzelektrode keine Gehirnaktivität gemessen wird, ist die abgezogen Spannung praktisch 0. % TODO: Wieso dann überhaupt?
+% Da an dieser Referenzelektrode keine Gehirnaktivität gemessen wird, ist die abgezogen Spannung praktisch 0. % TO/DO: Wieso dann überhaupt?
 % Somit handelt es sich bei um eine unipolare Ableitung, im Gegensatz zu einer bipolaren Ableitung, bei der jeweils die Differenz von zwei Elektroden an der Kopfhaut gebildet wird. % TO/DO: Quelle +  wieso unipolare und nicht bipolare? Antwort von Mattes ;) : Hier erstmal der Link zur Literatur(auf Seite 29 ff. ist die Antwort) https://www.physik.uni-wuerzburg.de/fileadmin/11010700/_imported/fileadmin/11010700/Didaktik/Zulassungsarbeiten/Schriftliche_Hausarbeit_Feser.pdf------> Kurzfassung: Unipolar bedeutet, dass es nur eine Referenzelektrode gibt. Beim bipolaren EEG ist das Spannungspotential immer relativ zur Nachbarelektrode, was bedeutet, dass immer nur die Potentialdifferenzen (Spannung) zwischen zwei Nachbarelektroden gemessen wird, aber nicht zwischen jeweils einer Elektrode und der Referenzelektrode am Ohr. Je nach Verfahren gibt es halt Vor- und Nachteile zwischen diesen beiden Betriebsarten. Die Ableitung des unipolaren EEG-Signals ist einfacher.
 
-Wir untersuchen ereigniskorrelierte Potentiale (EKPs). 
-Diese sind bestimmte Spannungsschwankungen (\enquote{Potentiale}), welche in Zusammenhang mit einem internen oder externen Ereignis stehen, wie z.B. einem lauten Ton, einer Körperbewegung oder hoher Konzentration.  % TODO: Überprüfen: Richtungen denken = EKP? 
+% Wir untersuchen ereigniskorrelierte Potentiale (EKPs). 
+% Diese sind bestimmte Spannungsschwankungen (\enquote{Potentiale}), welche in Zusammenhang mit einem internen oder externen Ereignis stehen, wie z.B. einem lauten Ton, einer Körperbewegung oder hoher Konzentration.  % TO/DO: Überprüfen: Richtungen denken = EKP? 
 
 
 % \begin{figure}
@@ -327,7 +356,7 @@ Diese sind bestimmte Spannungsschwankungen (\enquote{Potentiale}), welche in Zus
 
 % \begin{figure}[h!]
 %     \centering
-%     % TODO: Bild mit richtiger Elektrodenplatzierung (Vis. Cortex), Abb. fig:ElektrodenPlatzierung
+%     % TO/DO: Bild mit richtiger Elektrodenplatzierung (Vis. Cortex), Abb. fig:ElektrodenPlatzierung
 %     \includegraphics[width=0.46\textwidth]{pictures/EEG-Alex-annotated.png}
 %     \includegraphics[width=0.3\textwidth]{pictures/Ganglion-Board-annotated.png}
 %     \includegraphics[width=0.15\textwidth]{pictures/spike_flat_elektroden.png}
@@ -351,61 +380,62 @@ Diese sind bestimmte Spannungsschwankungen (\enquote{Potentiale}), welche in Zus
 % Dabei hat er entweder links, rechts oder nicht gedacht und währenddessen EEG-Daten aufgenommen.
 % Im folgenden Abschnitt wird nun beschrieben wie wir dabei schrittweise vorgegangen sind.
 
-\subsubsection{Bau unseres eigenen EEG}
+\subsubsection{Bau unseres eigenen EEG} \label{section:UnserEEG}
  
 % Ein EEG stellt vereinfacht nur ein sehr präzises Spannungsmessgerät dar, welches Potentialdifferenzen (Spannungen) im $\mu V$-Bereich messen und anzeigen kann. 
 Die Spannungen, die von den Neuronen durch den Schädel dringen, sind zu gering (unterhalb von einigen hundert Mikrovolt), um direkt von einer Messeinheit verarbeitet werden zu können, es muss zunächst eine Verstärkung des aufzuzeichnenden Signals erfolgen. \cite{EEGHausarbeit}
-% Die für EEG-Messungen relevante Spannungen liegen meist im Bereich von einigen hundert Mikrovolt. 
+Zweitens müssen die gewünschten Frequenzen vorab mittels aktiver Filter herausgefiltert werden, um unerwünschte Störfrequenzen zu entfernen und so eine genauere Signalanalyse zu ermöglichen.
+Je nachdem, welche Phänomene untersucht werden sollen, können unterschiedliche Frequenzbereiche herausgefiltert werden. 
+So wären z.B. bei der Analyse von Konzentration oder visueller Verarbeitung vor allem Alpha-Wellen, die in einem Frequenzbereich von 8 bis \SI{13}{\hertz} liegen, relevant. \cite{Praktikum, Birbaumer2010, wiki:Berger-Effekt}
+ Drittens wird eine Einheit benötigt, die das Ausgangssignal misst und aufzeichnet, damit es weiterverarbeitet und analysiert werden kann. 
+ 
 
-Ebenfalls müssen die gewünschten Frequenzen vorab mittels aktiver Filter herausgefiltert werden, um später eine genaue Signalanalyse zu ermöglichen. 
-Je nachdem, was für Phänomene genau untersucht werden sollen, können entsprechend unterschiedliche Frequenzbereiche herausgefiltert werden. 
-Beispielsweise liegen Alpha-Wellen, die ein bestimmtes Signalschema darstellen und eine wichtige Rolle bei der Konzentration sowie visuellen Verarbeitung spielen, in einem Frequenzbereich von 8 bis 13 Hz. \cite{Praktikum, Birbaumer2010, wiki:Berger-Effekt}
  
- Darüber hinaus wird eine Einheit benötigt, die das Ausgangssignal misst und aufzeichnet, damit es weiterverarbeitet und analysiert werden kann. 
- 
-Sowohl für die Filterung als auch für die Verstärkung werden sogenannte Operationsverstärker (OPV) verwendet. 
-In Abb. \ref{fig:OPV} sieht man rechts das Schaltzeichen mit den jeweiligen Anschlüssen und links einen OPV in einem DIL-Gehäuse. 
- 
- \begin{figure}[h!]
+\begin{figure}[h!]
     \centering
-    \includegraphics[width=0.5\linewidth]{pictures/OPV_cropped.png}
-    \caption{Links: 2-fach OPV LM358 in einem DIL-Gehäuse, Rechts: OPV als Schaltbild }
+    \includegraphics[width=0.6\linewidth]{pictures/OPV.png}
+    \caption{Links: 2-fach OPV LM358 in einem DIL-Gehäuse (Dual In-line Package), Rechts: OPV als Schaltbild }
     \label{fig:OPV}
 \end{figure}
 
+Sowohl für die Filterung als auch für die Verstärkung werden sogenannte Operationsverstärker (OPV) verwendet. 
+In Abb. \ref{fig:OPV} sieht man rechts das Schaltzeichen mit den jeweiligen Anschlüssen und links einen OPV in einem DIL-Gehäuse. 
 OPVs finden vor allem in der Mess- und Regeltechnik Anwendung und bestehen aus Transistoren, die zu integrierten Schaltkreisen zusammengefügt werden.
-Dabei lässt sich die interne Schaltung eines OPVs allgemein in zwei Schaltungensteile untergliedern, den sog. Differenzverstärker, der später für die Potentialmessung wichtig wird, und die dahinter geschaltete Gegentaktendstufe, welche
-für die Leistungsverstärkung zuständig ist.
-Ihr geringer Ausgangswiderstand sowie der hohe Eingangswiderstand als auch der hohe Spannungsverstärkungsfaktor, machen den OPV passend für die Anwendung als EEG-Verstärker.
+Dabei lässt sich die interne Schaltung eines OPVs allgemein in zwei Schaltungsteile untergliedern, den sogenannten Differenzverstärker, der später für die Potentialmessung wichtig wird, und die dahinter geschaltete Gegentaktendstufe, welche für die Leistungsverstärkung zuständig ist.
+Ihr geringer Ausgangswiderstand, der hohe Eingangswiderstand, sowie der hohe Spannungsverstärkungsfaktor machen den OPV passend für die Anwendung als EEG-Verstärker.
 
-OPVs besitzen, neben den Anschlüssen für die Stromversorgung, drei für ihre Funktion wichtige Anschlüsse, einen invertierenden und einen nicht-invertierenden Eingang sowie einen Ausgang, über welche er angesteuert werden kann.
-
-Legt man nun über beiden Eingängen jeweils unterschiedliche Spannungen $U_{1}$ und $U_{2}$ an, so wird am Ausgang des OPVs die Differenz der beiden Spannungen ausgegeben. Also gilt: $U_{2} - U_{1} = U_{\textrm{Diff}}$. 
-Dies macht man sich nun zu Nutze, um die Spannungen bzw. Potentialdifferenzen zwischen zwei Elektroden zu messen. 
+OPVs besitzen, neben den Anschlüssen für die Stromversorgung, drei für ihre Funktion wichtige Anschlüsse, einen invertierenden und einen nicht-invertierenden Eingang sowie einen 
+Ausgang,  % TODO: Ansteuerung über Ausgang?
+über welchen er gesteuert werden kann (Abb. 1 rechts).
+Legt man nun bei beiden Eingängen jeweils unterschiedliche Spannungen $U_{1}$ und $U_{2}$ an, so wird am Ausgang des OPVs die Differenz der beiden Spannungen ausgegeben. 
+Also gilt: $U = U_{2} - U_{1}$. 
+Dies macht man sich nun zu Nutze, um die Spannungen bzw. Potentialdifferenzen zwischen zwei Elektroden zu messen. \cite{Nührmann} 
 % Wie oben bereits beschrieben wird dabei immer die Potentialdifferenz zwischen einer Elektrode, die sich auf der Kopfhaut und einer Referenzelektrode, die sich am Ohrläppchen befindent, gemessen. 
-
 Zudem lassen sich mit einem OPV und wenigen weiteren Bauteilen einfach aktive Filter bauen.
 
-Die Grundschaltung für unsere EEG beruht auf einem englischsprachigem Internetartikel, in dem eine Verstärkerschaltung für ein EEG beschrieben war. Die von uns angepasste Schaltung ist in Abb. \ref{fig:schaltplan} zu sehen.
+Die Grundschaltung für unser EEG beruht auf einem englischsprachigem Internetartikel, in dem eine Verstärkerschaltung für ein EEG beschrieben ist (siehe Abb. 2). \cite{EEGSchaltung} 
+%Die von uns angepasste Schaltung ist in Abb. \ref{fig:schaltplan} zu sehen.
 Wir mussten die ursprüngliche Schaltung etwas verändern, um den gewünschten Frequenzbereich herauszufiltern.
 Basis dieser Schaltung bildet der Instrumentenverstärker AD620AN, welcher extra für EEG- und EKG-Anwendungen entwickelt wurde. 
-Ein Instrumenten ist eine Schaltungskonfiguration aus 3 OPVs, wobei zwei OPVs zu einem Differenzverstärker zusammengeschaltet werden und ein weitere OPV als Impedanzwandler dahinter geschaltet wird.
+Ein Instrumentenverstärker ist eine Schaltungskonfiguration aus 3 OPVs, wobei zwei OPVs zu einem Differenzverstärker zusammengeschaltet werden und ein weiterer OPV als Impedanzwandler dahinter geschaltet wird.
 Instrumentenverstärker sind sehr präzise und haben einen nochmal höheren Verstärkungsfaktor.
 Über Pin 2 und 3 werden die Elektroden angeschlossen, wobei an Pin 2 die Referenzelektrode geklemmt wird. 
+
 \begin{figure}[h!]
     \centering  
+    % \newcommand{\twoLabels}[2]{l2 halign=c, l2=#1 and #2}
     \begin{circuitikz}[european, scale=0.5, transform shape]
         \draw (0,0) node[dipchip, num pins=8, no topmark, external pins width=0.0] (C) {AD620};
         % Verbinde Pins 1 und 8 über Widerstand
         \draw 
             (C.pin 1) -- ++ (-0.5,0) 
             to ++(0,1) 
-            to [R,R={\SI{560}{Ω}}] ++(2.7,0) 
+            to [R={\SI{560}{Ω}}, a=$R_g$] ++(2.7,0) 
             to ++(0,-1) 
             to (C.pin 8);
         % Inputs
-        \node[left=1.5 of C.pin 2, iecsocketR] (inputPos) {};
-        \node[left=1.5 of C.pin 3, iecsocketR] (inputNeg) {};
+        \node[left=1.5 of C.pin 2] (inputPos) {};
+        \node[left=1.5 of C.pin 3] (inputNeg) {};
         \node[above=0cm of inputNeg, xshift=2em, yshift=-1ex] {\small Input $+$};
         \node[above=0cm of inputPos, xshift=2em, yshift=-1ex] {\small Input $-$};
         \draw
@@ -426,17 +456,17 @@ Instrumentenverstärker sind sehr präzise und haben einen nochmal höheren Vers
             (opamp1.+) to [R=$R_1$,-*, a=\SI{318}{\kohm}] 
             ++(-2,0) to [R=$R_2$,-*, a=\SI{318}{\kohm}] 
             ++(-2,0) to ++(0,-1.5)
-            to [C=$C_1$,l_={\SI{10}{\nano\farad}}, -*] ++(1.25,0)
-            to [C=$C_2$,l_={\SI{10}{\nano\farad}}] ++(2.5,0)
+            to [C= $C_1$, a={\SI{10}{\nano\farad}}, -*] ++(1.25,0)
+            to [C= $C_2$, a={\SI{10}{\nano\farad}}] ++(2.5,0)
             to[short,-*] ++(0,1.5)
             (4.84,-0.3) to (4.84,-4) 
-            to [C=$C_3$, a={\SI{20}{\nano\farad}}] ++(0,-2) node[rground]{}
-            (4.1,-1.8) to (4.1,-2.5) to [R=$R_3$, a=\SI{159}{\kohm}] ++(0,-2) to ++(0,-1.5) node[rground]{} 
+            to [C,l2 halign=c, l2=$C_3$ and {\SI{20}{\nano\farad}}] ++(0,-2) node[rground]{}
+            (4.1,-1.8) to (4.1,-2.5) to [R, a2 halign=c, a2=$R_3$ and {\SI{158}{\kohm}}] ++(0,-2) to ++(0,-1.5) node[rground]{} 
             (opamp1.-) to ++(-1,0) to ++(0,1) to ++(3.5,0) to[short,-*] ++(0,-1.5)
-            (opamp1.out) to [C,l={\SI{220}{\nano\farad}},-*] ++(2,0) to [C={\SI{220}{\nano\farad}}] ++(2,0)
-            (11.23,0.25) to [R={\SI{47}{kΩ}}] ++(0,-4) node[rground]{} 
-            (11.23,0.25) to [C, l={\SI{220}{\nano\farad}}] ++(0,3) to [short,-*] ++(2,0) to [R, l_={\SI{220}{kΩ}},-*] ++(0,-3.05);
-            
+            (opamp1.out) to [C= $C_4$,a={\SI{220}{\nano\farad}},-*] ++(2,0) to [C=$C_5$,a={\SI{220}{\nano\farad}}] ++(2,0)
+            (11.23,0.25) to [R, l2 halign=c, l2=$R_4$ and {\SI{47}{kΩ}}] ++(0,-4) node[rground]{} 
+            (11.23,0.25) to [C, l2 halign=c, l2=$C_6$ and {\SI{220}{\nano\farad}}] ++(0,3) to [short,-*] ++(2,0) to [R, l2 halign=c, a2=$R_5$ and {\SI{220}{kΩ}},-*] ++(0,-3.05);
+            %R, l2={A=B} and X, a2={C=D} and Y
         \node[op amp, right=4 of opamp1,yshift=-0.49cm] (opamp2) {OPV2};
         \draw 
             (opamp2.+) node[left] {}
@@ -446,9 +476,9 @@ Instrumentenverstärker sind sehr präzise und haben einen nochmal höheren Vers
             (opamp2.down) -- ++(0,-1.5) node[vee]{\SI{-9}{\volt}}
             (opamp2.out) to[short,*-] ++(0,3.525) to ++(-2.4,0)
             (opamp2.+) to ++(-0.5,0) to ++(0,-3) node[rground]{}
-            (15.6,-0.27) to [R, l={\SI{180}{kΩ}},-*] (17.6,-0.27)
-            (17.6,-0.27) to[C, l_={\SI{100}{\nano\farad}}] ++(0,-3.5) node[rground]{}
-            (17.6,-0.27) to [R, l={\SI{180}{kΩ}}] ++(0,3) to[short, -*] ++(1.9,0) to[C, l_={\SI{25}{\nano\farad}},-*] ++(0,-2.96);
+            (15.6,-0.27) to [R, a=$R_6$, l={\SI{180}{kΩ}},-*] (17.6,-0.27)
+            (17.6,-0.27) to[C= $C_7$, a_={\SI{100}{\nano\farad}}] ++(0,-3.5) node[rground]{}
+            (17.6,-0.27) to [R, l2 halign=c, l2=$R_7$ and {\SI{180}{kΩ}}] ++(0,3) to[short, -*] ++(1.9,0) to[C=$C_8$, a={\SI{25}{\nano\farad}},-*] ++(0,-2.96);
         \node[op amp, right=4 of opamp2,yshift=-0.45cm] (opamp3) {OPV3};
         \draw 
             (opamp3.+) node[left] {}
@@ -456,7 +486,7 @@ Instrumentenverstärker sind sehr präzise und haben einen nochmal höheren Vers
             (opamp3.out) node[right] {}
             (opamp3.up) -- ++(0,1.5) node[vcc]{\SI{9}{\volt}}
             (opamp3.down) -- ++(0,-1.5) node[vee]{\SI{-9}{\volt}}
-            (17.6,-0.27) to[R={\SI{100}{kΩ}}] (opamp3.-)
+            (17.6,-0.27) to[R, a=$R_8$, l={\SI{100}{kΩ}}] (opamp3.-)
             (opamp3.+) to ++(-0.5,0) to ++(0,-2.6) node[rground]{}
             (opamp3.out) to [short,*-] ++(0,3.46) to ++(-2.5,0);
         \node[op amp, right=4 of opamp3,yshift=0.48cm] (opamp4) {OPV4};
@@ -466,78 +496,168 @@ Instrumentenverstärker sind sehr präzise und haben einen nochmal höheren Vers
             (opamp4.out) node[right] {}
             (opamp4.up) -- ++(0,1.5) node[vcc]{\SI{9}{\volt}}
             (opamp4.down) -- ++(0,-1.5) node[vee]{\SI{-9}{\volt}}
-            (opamp3.out) to [big elko, l_={\SI{1}{\mu\farad}}] ++(4,0)
-            (opamp4.+) to[R,l_={\SI{1}{MΩ}},*-] ++(0,-3.25) node[rground]{}
-            (opamp4.-) to[short,-* ] ++(-1.4,0) to ++(-1,0) to [C, l={\SI{10}{\nano\farad}}] ++(0,3) to [short,-*] ++(1,0) to[R,l={\SI{100}{kΩ}}] ++(0,-3)
+            (opamp3.out) to [big elko,l=$C_9$, a={\SI{1}{\micro\farad}}] ++(4,0)
+            (opamp4.+) to[R,a2 halign=c, a2=$R_{11}$ and {\SI{1}{MΩ}},*-] ++(0,-3.25) node[rground]{}
+            (opamp4.-) to[short,-* ] ++(-1.4,0) to ++(-1,0) to [C, l2 halign=c, l2=$C_{10}$ and {\SI{10}{\nano\farad}}] ++(0,3) to [short,-*] ++(1,0) to[R,l2 halign=c, l2=$R_9$ and {\SI{100}{kΩ}}] ++(0,-3)
             (opamp4.out) to ++(0,3.5) to ++(-3.7,0)
-            (24.6,0.5) to (24.6,-2.3) to [R,l_={\SI{220}{Ω}}] ++(0,-2)
-            (24.6,-4.3) to [vR, l=\SI{1}{\kohm}, *-] ++(0,-2) node[rground]{}
+            (24.6,0.5) to (24.6,-2.3) to [R,a2 halign=c, a2=$R_{10}$ and {\SI{220}{Ω}}] ++(0,-2)
+            (24.6,-4.3) to [vR, l2 halign=c, l2=$R_p$ and \SI{1}{\kohm}, *-] ++(0,-2) node[rground]{}
             (24.6,-4.3) to ++(-0.5,0) to[short,-*] ++(0,-0.74) 
-            (opamp4.out) to[big elko, l_={\SI{100}{\mu\farad}},*-] ++(2,0) node[iecsocketL]{\tiny Output};
+            (opamp4.out) to[big elko, l=$C_{10}$ Output, a={\SI{100}{\micro\farad}},*-] ++(2,0) node[]{};
     \end{circuitikz}
-    \caption{Schaltplan des EEG-Verstärkers, OPV1 bis OPV4 sind LM358}
+    \caption{Schaltplan des EEG-Verstärkers für eine Elektrode und eine Referenzelektrode, OPV1 bis OPV4 sind alle LM358 (siehe Materialliste)}
     \label{fig:schaltplan}
 \end{figure}
-Der AD620AN ist ein sehr rauscharmes und leicht zubeschaltendes IC, da für die Einstellung des Verstärkungsfaktors nur ein Widerstand nötig ist. Über die Formel im Datenblatt kann man nun den Vertsärkungsfaktor berechnen\cite{AD620AN}:
 
+Der AD620AN ist ein sehr rauscharmes und leicht zu schaltendes IC, da für die Einstellung des Verstärkungsfaktors nur ein Widerstand nötig ist. Über die Formel im Datenblatt kann man den Verstärkungsfaktor berechnen \cite{AD620AN}:
+%
+\begin{alignat*}{1}
+                & G_1=\frac{\SI{49.4}{\kilo\ohm}}{R_g}+1 
+    %\Rightarrow & G_1
+    =\frac{\SI{49.4}{kΩ}}{\SI{0.560}{kΩ}}+1 = 89.2 \approx 90 
+\end{alignat*}
+
+Hätte man einen größeren Verstärkungsfaktor gewählt, als den der vom Artikel vorgegeben ist, hätte man 
+das, dass dabei das Signal noch absolut ungefiltert verstärkt wird, was bedeutet, dass alle Signale bzw. alle Frequenzen, die das eigentlich gewünschte Signal stören oder überlagern, noch mit verstärkt werden. 
+Die Filter, die nur eine festgelegte Dämpfung haben, können die Störsignale dann nicht mehr ausreichend unterdrücken. 
+Deswegen wird zunächst über den AD620AN nur eine Vorverstärkung vorgenommen. 
+Danach findet eine schrittweise Filterung des Signals statt. 
+Als allererstes wird über den sog. Notch- oder auch Kerbfilter, der aus OPV1 und vorgeschalteten Widerständen sowie Kondensatoren besteht, das \SI{50}{\hertz}-Netzbrummen herausgefiltert.
+Dieses kann das EEG-Signal erheblich stören, da der menschliche Körper unter anderem als eine Art Kondensator fungiert und die \SI{50}{\hertz}-Netzfrequenz des europäischen Stromnetzes zum Eingang des Verstärkers leitet. 
+
+Die Dimensionierung des Verstärkers ist dabei recht einfach. 
+Über die gewünschte Grenzfrequenz $f_g = \SI{50}{\hertz}$ sowie die Kapazität der Keramikkondensatoren ($C_1 = C_2 = \SI{10}{\nano\farad}$), siehe Abb.\ref{fig:schaltplan}) lässt sich der Widerstandswert der beiden Widerstände $R_1$ und $R_2$ berechnen.
+Dazu wird diese Formel verwendet \cite{Notchfilter,Thomson}: % Ist Grenzfrequenz 50Hz nicht schon gegeben? Wieso dann die Formel? Oder wurde sie umgestellt, um R und C zu bestimmen?
+%
+\begin{align*}
+                &f_g = \frac{1}{R_1 \cdot C_1 \cdot 2 \cdot \pi} \\
+\Leftrightarrow &R_1 = \frac{1}{C \cdot 2 \cdot \pi \cdot f_g } = \frac{1}{\SI{10}{\nano\farad} \cdot 2 \cdot \pi \cdot \SI{50}{\hertz}} \approx \SI{318.31}{\kohm}     
+\end{align*}
+%
+Weiterhin gilt für die Schaltung $C_3 = 2 \cdot C_1, R_3 = {R_1} \cdot 0.5$. Es ergibt sich also:
+%
+\begin{align*}
+    C_3 = 2 \cdot \SI{10}{\nano\farad} = \SI{20}{\nano\farad}, \quad
+    R_3 = \frac{\SI{318.31}{kΩ}}{2} \approx \SI{159.16}{kΩ} 
+\end{align*}
+% Wichtig ist hierbei noch zu erwähnen, dass die benötigten Widerstands- und Kapazitätswerte oft keine glatten Zahlen sind. 
+Zudem sind die möglichen Widerstandswerte, je nach Baureihe der Komponenten (E12/E24), beschränkt. 
+Man muss sich also durch geschickte Reihen- und Parallelschaltung der Widerstände bzw. Kondensatoren den Werten annähern. 
+% Die oben angegebenen Werte sind Werte, mit denen wir, für unsere Verhältnisse, möglichst nah an den Sollwert kommen. % TODO: Aber 270 + 33 + 15 = 318 ist doch genau?
+Die \SI{318,31}{kΩ}-Widerstände $R_1$ und $R_2$ bestehen z.B. jeweils aus den drei Widerständen \SI{270}{kΩ}, \SI{33}{kΩ} und \SI{15}{kΩ}, was mit einem Gesamtwiderstand von \SI{318}{\kohm} für uns so nah wie möglich am Soll-Wert liegt.
+% Das Gleiche gilt auch für den \SI{159}{kΩ}-Widerstand. 
+
+Der OPV2 und die davor geschalteten Komponenten bilden den sog. aktiven Hochpassfilter mit Mehrfachgegenkopplung. 
+Dieser Filter arbeitet mit einer Gegenkopplung, was bedeutet, dass das Ausgangssignal über ein passives Filterglied wieder zurück auf den Eingang zurückgeführt wird. 
+Dies sorgt für eine bessere Steilheit im Frequenzgang eines Filters. 
+Ein Hochpassfilter lässt nur Frequenzen, die oberhalb seiner festgelegten Grenzfrequenz liegen, durch. 
+Der Frequenzgang beschreibt den Frequenzverlauf in Abhängigkeit zur Dämpfung und wird in einen Sperr- und einen Durchlassbereich sowie einen dazwischenliegenden Übergang gegliedert. 
+Der ideale Filter würde bei der Grenzfrequenz eine unendliche Dämpfung erreichen. 
+In der Realität verläuft der Übergang vom Durchlass- in den Sperrbereich nicht abrupt, sondern, wenn eine logarithmische Skalierung verwendet wurde, linear.
+In Abb. \ref{fig:LHP} kann man dies gut sehen.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[scale=0.5]{pictures/Low_Highpass.png}
+    \caption{Typischer Frequenzgang eines Tiefpassfilters (oben) und Hochpassfilters (unten), Rote Linie ist die Grenzfrequenz, Blaue Linie eine Dekade Abstand zur Grenzfrequenz, um Steilheit zu bestimmen}
+    \label{fig:LHP}
+\end{figure}
+
+Die Steilheit beschreibt die Steigung dieser Übergangsgerade und wird in \si{\dB\per\dek} angegeben. 
+Eine Dekade beschreibt den Abstand zwischen $10^x$\si{\hertz} und $10^{x+1}$\si{\hertz}. 
+Also z.B den Abstand zwischen \SI{10}{\hertz} und \SI{100}{\hertz} oder \SI{1000}{\hertz} und \SI{10000}{\hertz}. 
+Je steiler die Übergangsgerade, desto besser ist der Filter. 
+Des Weiteren ist an der Grenzfrequenz immer ein Abfall von ca. \SI{6}{\dB} zu beobachten, wenn eine Mehrfachrückkopplung verwendet wird. 
+Bei aktiven Filtern, wie sie hier beschrieben sind, erreicht man eine Steilheit von \SI{40}{\dB\per\dek}. 
+Für die Berechnung der Grenzfrequenz des Hochpasses mit Mehrfachgegenkopplung benötigen wir eine etwas andere Formel, als die, die wir beim Notchfilter verwendet haben. Da alle Werte gegeben sind wird die Berechnung nur bestätigt:
+% Für eine genaue Herleitung möchten wir auf \cite{aktivHochpass} verweisen, da die Herleitung den Rahmen der Arbeit sprengen würde. % TODO: Wenn nicht selbst hergeleitet, müsste es sowieso nicht in der Arbeit stehen
+%
+\begin{align*}
+                & f_g=\frac{1}{2 \cdot \pi \cdot C_5 \cdot \sqrt{{R_4} \cdot R_5}} 
+    \Rightarrow & f_g =\frac{1}{2 \cdot \pi \cdot \SI{220}{\nano\farad} \cdot \sqrt{\SI{47}{\kohm} \cdot \SI{220}{\kohm}}} = \SI{7.114}{\hertz} 
+    \approx \SI{7}{\hertz}
+\end{align*}
+  
+Der Hochpass hier ist auf eine Grenzfrequenz von ca. \SI{7}{\hertz} eingestellt. 
+Im Anschluss auf den Hochpass folgt ein Tiefpass (OPV3), der die selbe Funktionsweise hat, mit der Ausnahme, dass er nur die Frequenzen \textbf{unter} der Grenzfrequenz durchlässt.
+Mit der Formel zur Berechnung der Grenzfrequenz eines Tiefpasses ergibt sich für uns \cite{aktivHochpass}:
+%
+\begin{align*}
+            & f_g = \frac{1}{2 \cdot \pi \cdot \sqrt{R_7 \cdot R_8 \cdot C_7 \cdot C_8}}
+\Rightarrow & f_g=\frac{1}{2 \cdot \pi \cdot \sqrt{\SI{180}{\kohm} \cdot \SI{100}{\kohm} \cdot \SI{100}{\nano\farad} \cdot \SI{25}{\nano\farad} } } = \SI{23.72}{\hertz} \approx \SI{24}{\hertz}
+\end{align*}
+ 
+Der Tiefpass ist in unserem Fall für eine Grenzfrequenz von \SI{24}{\hertz} eingestellt.  
+
+\newcommand{\RPot}{R_{\textrm{Pot}}}
+Nach einem RC-Filterglied folgt dann der Endverstärker, welchen OPV4 mit entsprechenden Zusatzkomponenten bildet. 
+Hierbei handelt es sich um einen nicht-invertierenden Verstärker, dessen Verstärkung über den Spannungsteiler, der aus dem \SI{100}{\kohm}-Widerstand, dem \SI{220}{\kohm}-Widerstand und dem \SI{1}{\kohm}-Potentiometer $R_{\textrm{Pot}}$ besteht, eingestellt werden kann.
+Mit der folgenden Formel lässt sich die minimale ($R_p = \SI{1}{\kohm}$) und maximale ($R_p = \SI{0}{\ohm}$) Verstärkung berechnen \cite{EEGSchaltung}:
+%
+\begin{align*}
+   & G_2=\frac{R_9}{R_{10}+R_p}+1 \\ % TODO: Einheit von 1?
+    \xRightarrow{R_p = \SI{0}{\kohm}} & G_2=\frac{\SI{100}{kΩ}}{\SI{0.22}{kΩ}+\SI{0}{Ω}}+1= 455 \\
+    \xRightarrow{R_p = \SI{1}{\kohm}} & G_2=\frac{\SI{100}{kΩ}}{\SI{0.22}{kΩ}+\SI{1}{kΩ}}+1= 83
+\end{align*}
+
+Insgesamt ergibt sich bei unserem EEG also ein Verstärkung von maximal $G_1 * G_2  \Rightarrow 455 \cdot 90 = 40950$.
+Der Verstärker wurde bereits mittels Oszilloskop getestet, dabei fiel auf, dass das Signal noch durch \SI{50}{\hertz}-Brummen gestört wird.
+Deswegen wird das ganze EEG nun über \SI{9}{\volt}-Blockbatterien betrieben, um dem \SI{50}{\hertz}-Brummen eines Netzteils entgegenzuwirken, und zusätzlich noch über einen Masseanschluss geerdet. Alle diese Dinge hatten ein positiven Einfluss auf das EEG-Signal, reichten aber immer noch nicht ganz aus, um gute Ergebnisse zu erzielen.
+Deswegen ziehen wir in Erwägung, am Ende der Schaltung noch einen weiteren Notchfilter zu schalten. 
+Der ganze Aufbau ist provisorisch auf einem Steckbrett erfolgt (s. Abb. \ref{fig:Schaltung}), soll aber fest auf einer Platine verlötet und in ein Gehäuse verbaut werden, sobald es ausreichend getestet wurde und zufriedenstellende Ergebnisse geliefert hat.
+ \begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.5\linewidth]{pictures/Schaltung_cropped.jpeg}
+    \caption{Schaltung fertig auf einem Steckbrett aufgebaut}
+    \label{fig:Schaltung}
+\end{figure}
+Unabhängig davon haben wir parallel an einer Mess- und Ausleseeinheit gearbeitet, die ein wichtiger Teil für weitere Datenverarbeitung darstellt. 
+Diese Einheit besteht aus dem Analog/-Digitalwandler (ADC) MCP3208, der an an die SPI-Schnittstelle eines Raspberry Pi 3B angeschlossen wird.
+Der MCP3208 besitzt 8 Analoge Eingänge und hat eine Auflösung von 12 Bit sowie eine Abtastrate von 100ksp/s. \cite{ADC}
+
+% Dies sind wichtige Daten, da über die Auflösung die Messgenauigkeit festgelegt wird. 
+Ein ADC funktioniert, indem er einen Spannungsmessbereich, der über einen Referenzpin am IC festgelegt wird, in einzelne digitale Zustände aufteilt. 
+Über die Auflösung kann berechnet werden, in wie viele Zustände der ADC den Messbereich unterteilt, bei 12 Bit ergeben sich $2^{12}=4096$ Zustände. 
+Das bedeutet, dass bei einer Referenzspannung $U_\textrm{Ref}$ von \SI{5}{\volt} die Eingangsspannungen in 4096 Zustände unterteilt werden, sodass das kleinste erkennbare Spannungsintervall $U_\textrm{Intervall} = \frac{\SI{5}{\volt}}{4096} \approx \SI{1.2}{\milli\volt}$.
+Der ADC schreibt also allen Vielfachen von \SI{1.2}{\milli\volt} eine digitale Ganzzahl zu. 
+So entsprächen \SI{2.4}{\milli\volt} dem Wert 2, \SI{3.6}{\milli\volt} dem Wert 3, usw. 
+Nun lässt sich aus dem Digitalwert, den uns der MCP3208 liefert, ein Spannungswert berechnen:
+%
 \[
- G=\frac{\SI{49.4}{kΩ}}{R_g}+1
-\]
-In unserem Fall wäre das dann:
-
-\[
- G=\frac{\SI{49.4}{kΩ}}{\SI{0.560}{kΩ}}+1 = 89.2 \approx 90 
-\]
-Man hätte natürlich auch einen größeren Verstärkungsfaktor wählen können. Das Problem dabei ist jedoch, dass das Signal noch absolut ungefiltert verstärkt wird, was bedeutet, dass alle Signale bzw. alle Frequenzen, die das eigentlich gewünschte Signal stören oder überlagern, noch mit verstärkt werden. Die Filter, die nur eine festgelegte Dämpfung haben, können die Störsignale dann nicht mehr ausreichend unterdrücken. Deswegen wird zunächst über den AD620AN nur eine Vorverstärkung vorgenommen. Danach findet dann eine schrittweise Filterung des Signals statt. Als allererstes wird über den sog. Notch- oder  auch Kerbfilter, der aus OPV1 und vorgeschalteten Widerständen sowie Kondensatoren besteht, das $50Hz$-Netzbrummen heraus gefiltert. Diese kann das EEG-Signal erheblich stören, da der menschliche Körper u. a. als eine Art Kondensator fungiert und die $50Hz$-Netzfrequenz zum Eingang des Verstärkers leitet. Die Demsionierung des Verstärkers ist recht einfach. Über die beiden \SI{318}{kΩ}-Widerstände($R_1,R_2$ siehe Abb.\ref{fig:schaltplan}) sowie die beiden \SI{10}{\nano\farad}-Keramikkondensatoren($C_1,C_2$ siehe Abb.\ref{fig:schaltplan}) wird die Grenzfrequenz($f_g$) bestimmt. Dazu wird die sog. Thomson-Formel verwendet. Es gilt:
-
-\[
- f_g=\frac{1}{R \cdot C \cdot 2 \cdot \pi}
-\]
-In unserem Fall wäre das dann:
-\[
- f_g=\frac{1}{\SI{318}{kΩ} \cdot 10nF \cdot 2 \cdot \pi}=50,049Hz \approx 50Hz
-\]
-Weiterhin gilt für die Schaltung: $C_1 = C_2, C_3= 2\cdot C_1,R_1=R_2,R_3=\frac{R_1}{2} $ Es ergibt sich:
-
-\[
-    C_3 = 2 \cdot \SI{10}{\nano\farad} = \SI{20}{\nano\farad} \\
+    U = U_\textrm{Intervall} \cdot \textrm{Digitalwert}
 \]
 
+% Eine höhere Messgenauigkeit des EEGs kann sowohl durch eine höhere Auflösung als auch durch eine kleinere Referenzspannung erreicht werden. 
+Die Messgenauigkeit ist in diesem Fall mehr als ausreichend, da durch den EEG-Verstärker bei maximaler Verstärkung die untere Grenzspannung für EEG-Messungen von \SI{1}{\micro\volt} auf ca. \SI{41}{\milli\volt} verstärkt wird. 
 
-\[
-    R_3 = \frac{\SI{318}{kΩ}}{2}= \SI{159}{kΩ} 
-\]
-
-Wichtig ist hierbei noch zu erwähnen, dass die Widerstands- und Kapazitätswerte oft keine geraden Werte ergeben. Zudem gibt es je nach Baureihe (E12/E24) der Komponenten nur ganz bestimmte Werte. Man muss also durch geschickte Reihen- und Parallelschaltungen der Widerstände bzw. Kondensatoren, sich den Werten annähern. Die oben angegebenen Werte sind, Werte, mit denen wir, für unsere Verhältnisse, möglichst nah an den Sollwert kommen. Der \SI{318}{kΩ}-Widerstand besteht z. B. aus drei Widerständen:  \SI{270}{kΩ}, \SI{33}{kΩ} und \SI{15}{kΩ}. Das Gleiche gilt auch für den \SI{159}{kΩ}-Widerstand. 
-
-Der OPV2 und die davor geschalteten Komponenten bilden den sog. aktiven Hochpassfilter mit Mehrfachgegenkopplung. Dieser Filter arbeitet mit einer Gegenkopplung, was bedeutet, dass das Ausgangssignal über ein passives Filterglied wieder zurück auf den Eingang zurückgeführt wird. Dies sorgt für eine bessere Steilheit im Frequenzgang eines Filters. 
-
-Ein Hochpassfilter lässt alle Frequenzen die oberhalb seiner festgelegten Grenzfrequenz sind durch. 
-
-Der Frquenzgang beschreibt den Frequenzverlauf in Abhängigkeit zur Dämpfung und wird in eine Sperr- und einen Durchlassbereich gegliedert sowie einen dazwischen liegenden Übergang. Der ideale Filter würde bei der Grenzfrequenz seine maximale Dämpfung bzw. im idealen Fall unendliche Dämpfung erreichen. In der Realität ist 
+Ein Programm, um den Analog/-Digitalwandler auszulesen, wurde bereits geschrieben. 
+Der Zusammenbau beider Komponenten steht jedoch noch aus, da sowohl der EEG-Verstärker als auch die Ausleseeinheit noch verbessert und ausreichend getestet werden müssen. 
+ 
  
 \subsection{Fourier-Analyse}
 
-Die Fourier-Analyse kann die verschiedenen zugrundeliegenden Frequenzen von Datenfolgen, Funktionen, und mehr bestimmen, indem diese in Sinus-Kurven mit verschiedenen Frequenzen zerlegt werden, welche summiert möglichst nah am Ursprung liegen. 
-Dafür kriegt jede Frequenz eine Amplitude zugeordnet.
+Die Fourier-Analyse kann die verschiedenen zugrundeliegenden Frequenzen von Datenfolgen oder Funktionen bestimmen, indem diese in Sinus-Kurven mit verschiedenen Frequenzen zerlegt werden, welche summiert dem ursprünglichem Signal entsprechen.
+Zu diesem Zweck wird jeder Frequenz eine Amplitude zugeordnet.
 Die Fourier-Analyse dient also zur Spektralanalyse.
 
 Wir nutzen in unserem Projekt die Fast Fourier Transformation (FFT), welche lediglich eine komplexere aber effizientere Form der Diskreten Fourier Transformation (DFT) ist.
 % TODO: Beschreibung DFT?
-
 Aus der FFT folgt ein Array (eine Liste) an komplexen Zahlen. 
-Der Index eines Wertes in der Liste bestimmt, für welche Frequenz der Wert gilt (erster Wert: 1 Hertz, zweiter Wert: 2 Hertz, etc.). Nun muss für jede komplexe Zahl der Abstand zum Ursprung bestimmt werden, also der absolute Betrag. 
-Dieser entspricht dann der Amplitude der Frequenz. So lässt sich bestimmen, welche Frequenzen am stärksten vorkommen. Außerdem können dann Frequenzen herausgefiltert werden, indem die Werte bei den entsprechenden Indices auf 0 gesetzt werden. 
+Der Index eines Wertes in der Liste bestimmt die Frequenz dieses Wertes
+(erster Wert: 1 Hertz, zweiter Wert: 2 Hertz, etc.). Nun muss für jede komplexe Zahl der Abstand zum Ursprung bestimmt werden, also der absolute Betrag. 
+Dieser entspricht dann der Amplitude des Signals bei dieser Frequenz. So lässt sich bestimmen, welche Frequenzen am stärksten im Signal vorkommen. Außerdem können auf diese Weise Frequenzen herausgefiltert werden, indem die Werte bei den entsprechenden Indices auf 0 gesetzt werden. 
 
-Eine FFT kann Elektroenzephalogramme fast verlustfrei repräsentieren. 
-Dies lässt sich erkennen, wenn man mithilfe der durch die FFT entstandenen Spektralanalyse die Daten rekonstruiert (Inverse Fast Fourier Transformation, IFFT). 
+Eine Spektralanalyse ergibt v.a. bei EEG-Daten Sinn, da diese inherent auf Frequenzen aufgebaut sind, denn viele Neuronen im Gehirn, v.a. mit ähnlichen Aufgaben, sind synchronisiert, sodass sie eine ähnliche Frequenz haben.
+Es lassen sich verschiedenen Aktivitätsstufen der Neuronen und Aufgaben-/Gehirnbereichen verschiedene Frequenzbereiche zuweisen, wie schon in \nameref{section:UnserEEG} beschrieben.
+
+Eine FFT kann Elektroenzephalogramme verlustfrei repräsentieren.
+Dies lässt sich erkennen, indem man mithilfe der durch die FFT entstandenen Spektralanalyse die Daten rekonstruiert (Inverse Fast Fourier Transformation, IFFT). 
 Es werden dazu die Sinus-Kurven der Frequenzen mit den entsprechenden Amplituden multipliziert und dann addiert.
-
-Wie in Abb. \ref{fig:ifft} sichtbar, ist diese Rekonstruktion kaum von den originalen Daten unterscheidbar. % TODO: Gesamtdifferent oder anderes mathematische Maß für Ähnlichkeit anstelle / zusätzlich zu graphischem?
+Wie in Abb. \ref{fig:ifft} sichtbar, ist diese Rekonstruktion nicht von den originalen Daten unterscheidbar. % TODO: Gesamtdifferent oder anderes mathematische Maß für Ähnlichkeit anstelle / zusätzlich zu graphischem?
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=\linewidth]{pictures/blink_fft_ifft.png}
+    \includegraphics[width=0.8\linewidth]{pictures/blink_fft_ifft_cropped.png}
     \caption{Links: Originale EEG Daten, Mitte: Die Amplituden der Frequenzen dieser Daten, Rechts: Die Umkehrung der Frequenzdaten. Da der rechte Graph dem linken sehr ähnlich ist, lässt sich erkennen, dass es bei der Fourier Analyse keinen großen Informationsverlust gibt.}
     \label{fig:ifft}
 \end{figure}
@@ -545,41 +665,35 @@ Wie in Abb. \ref{fig:ifft} sichtbar, ist diese Rekonstruktion kaum von den origi
 \subsection{Neuronales Netz}
 
 Ein neuronales Netzwerk besteht aus drei Teilen: der Eingabeschicht, den verdeckten Schichten und der Ausgabeschicht. 
-
 Die Eingabeschicht ist eine Liste aus Zahlen. 
 Sie gibt an, welche Eingaben das Netzwerk bekommen soll, z.B. die Helligkeit der Pixel eines Graustufen-Bildes.
-
 Die verdeckten Schichten sind eine Ansammlung von in mehrere Schichten unterteilten Neuronen.
 
-Jedes Neuron besitzt eine sog. Aktivierung, die meist als Zahl zwischen 0 und 1 oder -1 und 1 angegeben werden kann. 
+Jedes Neuron besitzt eine sogenannte Aktivierung, die meist als Zahl im Intervall zwischen 0 und 1 oder zwischen  -1 und 1 angegeben werden kann. 
 Die Neuronen verschiedener Schichten sind durch sogenannte Gewichte (\eng{weights}) verbunden, die ebenfalls einen beliebigen Wert haben können.
 Die Ausgaben / Vorhersagen des neuronalen Netzwerkes werden von den Aktivierungen der Neuronen in der Ausgabeschicht abgelesen.
 
-Bei neuronalen Netzwerken gibt es zwei wichtige Verfahren: Den Forward Pass und die Backpropagation.
-
 \subsubsection{Forward Pass}
-
+Bei neuronalen Netzwerken gibt es zwei wichtige Verfahren: Den Forward Pass und die Backpropagation.
 Ersteres beschreibt das Weiterreichen % TODO: Formulierung?
 von Eingabewerten durch das Netzwerk.
 Zuerst werden die Aktivierungen der Neuronen in der Eingabeschicht gesetzt und danach mithilfe der verbindenden Gewichte zuerst die Netzeingaben und dann die Aktivierungen der Neuronen der nächsten Schicht berechnet, welche dann wiederum für die nächsten Schicht verwendet werden und so weiter.
 Dadurch werden die Eingaben von Schicht zu Schicht bis zur Ausgabe weiterverarbeitet.
-
-Das konkrete Verfahren zur Berechnung der Netzeingabe ist abhängig von Art der Schicht sowie Aufbau und Struktur.
+Das konkrete Verfahren zur Berechnung der Netzeingabe ist abhängig von Art der Schicht.
 %Die Netzeingabe, die aus den Aktivierungen der vorherigen Schicht berechnet wird, kann direkt als Aktivierung eines Neurons verwendet werden.
 
 Man wendet auf diese Netzeingabe eine Aktivierungsfunktion an, um die Aktivierung zu erhalten.
-Dies sorgt zum einen dafür, dass die Aktivierung begrenzt und somit ein unendliches Wachstum der Aktivierungen und entsprechend Gewichte verhindert wird, und zum anderen sicherstellt, dass es keine Linearität zwischen Eingaben und Ausgaben gibt. 
-Dadurch kann das Netzwerk vor allem Klassifizierungsaufgaben besser erlernen. % TODO: Quelle
+Dies sorgt dafür, dass es keine Linearität zwischen Eingaben und Ausgaben gibt, wodurch das Netzwerk auch nichtlineare Zusammenhänge modellieren kann. % TODO: Quelle
 
 \begin{figure}[h!]
     \centering
     \begin{tikzpicture}
-    \begin{axis}[
+    \begin{axis}[height=4.5cm, width=15cm,
         xlabel={Netzeingabe}, ylabel={Aktivierung}, domain={-10:10}, samples=100,
-        ymax=2, no markers, legend pos=south east, every plot/.style = {line width = 2pt}]
-        \addplot {1 / (1 + 2.71828^(-x))};
-        \addplot {tanh(x)};
-        \addplot {(x>=0)*x};
+        ymax=1.5, no markers, legend pos=south east, every plot/.style = {line width = 2pt}, font=\small]
+        \addplot+[line width = 1.2pt] {1 / (1 + 2.71828^(-x))};
+        \addplot+[line width = 1.2pt] {tanh(x)};
+        \addplot+[line width = 1.2pt, green!50!black] {(x>=0)*x};
         \legend{$\sig(x)$, $\tanh(x)$, ReLU};
     \end{axis}
     \end{tikzpicture}
@@ -587,23 +701,24 @@ Dadurch kann das Netzwerk vor allem Klassifizierungsaufgaben besser erlernen. % 
     \label{fig:act_funcs}
 \end{figure}
 
-Letztes Jahr haben wir dafür Sigmoid-Funktion genutzt, welche die Aktivierung auf Werte zwischen 0 und 1 beschränkt (s. Abb. \ref{fig:act_funcs}).
-
+Letztes Jahr haben wir dafür die Sigmoid-Funktion genutzt, welche die Aktivierung auf Werte zwischen 0 und 1 beschränkt (s. Abb. \ref{fig:act_funcs}).
+%
 \[
     \sig(x) = \frac{1}{1+e^{-x}}
 \]
 
-Doch dieses Jahr setzen wir auf die $\tanh$-Aktivierungsfunktion, bei der die Ausgabe immer zwischen -1 und 1 liegt (s. Abb. \ref{fig:act_funcs}), da sie 
-eine bessere Lernleistung für neuronale Netze bietet. \cite{blog:activationFunctions, blog:tanhVsSigmoid} Außerdem nutzen wir die ReLU-Aktivierungsfunktion, da sie besonders gut für die Convolutional Schichten geeignet ist. Die ReLu-Aktivierungsfunktion gibt für alle negativen Eingabewerte 0 aus und läßt alle positiven Eingabewerte unverändert.
+Doch dieses Jahr setzen wir auf die $\tanh$-Aktivierungsfunktion (Hyperbeltangens) \cite{wiki:Hyperbeltangens}, bei der die Ausgabe immer zwischen -1 und 1 liegt (s. Abb. \ref{fig:act_funcs}), da sie 
+eine bessere Lernleistung für neuronale Netze bietet. \cite{blog:activationFunctions, blog:tanhVsSigmoid} 
+%
+\[
+    \tanh(x) = 1-\frac{2}{\mathrm{e}^{2x}+1}
+\]
+
+Außerdem nutzen wir die ReLU-Aktivierungsfunktion, da sie besonders gut für die Convolutional Schichten geeignet ist. Die ReLU-Aktivierungsfunktion gibt für alle negativen Eingabewerte 0 aus und lässt alle positiven Eingabewerte unverändert.
 
 \subsubsection{Backpropagation}
 
-Der Forward Pass bildet außerdem den ersten Schritt der Backpropagation, die für das Lernen des Netzwerks verantwortlich ist.
-Dabei werden, nachdem alle Aktivierungen gesetzt wurden, die Aktivierung der letzten Schicht, also die Ausgaben, bewertet.
 
-Da wir Supervised Learning verwenden, benötigen wir dafür Trainingsdaten, die wir vorher \eng{gelabelt}, ihnen also die korrekten Ausgabedaten zugewiesen haben.
-Mit diesen wird dann jedes einzelne Ausgabeneuron mit einer sogenannten Verlustfunktion \enquote{bewertet}.
-Je weiter die Ausgaben des neuronalen Netzwerks von dem Ideal (im Trainingsdatensatz vorgegebene Ausgabedaten) abweichen, desto höher der sogenannte Verlust, der mit der Verlustfunktion berechnet wird.
 
 %indem die Differenz zwischen der tatsächlichen Aktivierung nach dem Forward Pass und den zugewiesenen korrekten Ausgaben gebildet wird.
 
@@ -639,29 +754,33 @@ Je weiter die Ausgaben des neuronalen Netzwerks von dem Ideal (im Trainingsdaten
 % \end{figure}
 
 % TODO: Different passend?
-Diese Differenz zwischen ist-Zustand und soll-Zustand wird nun in der Backpropagation verwendet, um die Gewichte anzupassen, denn mit ihr kann der sogenannte delta-Wert der Ausgabeschicht bestimmt werden.
-Dieser entspricht der Änderung der Aktivierung eines Neurons, die notwendig wäre, damit ein Forward Pass von dort aus ein korrektes Ergebnis liefert.
 
-Um diese delta-Werte für die Neuronen der verdeckten Schichten zu berechnen, werden natürlich die delta-Werte der Schicht näher zur Ausgabeschicht benötigt, da die benötigte Änderung nur von den Ausgaben aus bestimmt werden kann.
-Aufgrund dieses Zurückpropagierens der delta-Werte zur Eingabeschicht hin kommt auch der Name Backpropagation.
+\newcommand{\textD}{$\delta$}
 
-Auf die Berechnung des delta-Werts werden wir dieses Jahr nicht weiter eingehen, da sie für uns nicht direkt relevant ist und wir für unsere neuronale Netzwerke das Julia-Package Flux einsetzen, welches diese Arbeit übernimmt.
-% Interessant ist womöglich nur noch, dass dafür die delta-Werte der nächsten Schicht (in Richtung Ausgabe) benötigt werden und daher der \eng{backward} (dt. rückwärts) Teil im Namen kommt.
+Der Forward Pass bildet den ersten Schritt der Backpropagation, die für das Lernen des Netzwerkes verantwortlich ist. Dabei werden, nachdem alle Aktivierungen gesetzt wurden, die Aktivierung der letzten Schicht, also die Ausgaben, bewertet.
+Da wir Supervised Learning verwenden, benötigen wir dafür Trainingsdaten, denen wir vorher die korrekten Ausgabedaten zugewiesen haben.
+Mit diesen wird dann jedes einzelne Ausgabeneuron mit einer sogenannten Verlustfunktion "bewertet". Je weiter die Ausgaben des neuronalen Netzwerks von dem Ideal (im Trainingsdatensatz vorgegebene Ausgabedaten) abweichen, desto höher der sogenannte Verlust, der mit der Verlustfunktion berechnet wird.
 
-Mithilfe dieses delta-Werts wird dann bestimmt, wie die Gewichte des Netzwerks angepasst werden müssten, um diese gewünschte Änderung umzusetzen:
+Diese Differenz zwischen ist-Zustand und soll-Zustand wird nun in der Backpropagation verwendet, um die Gewichte anzupassen, denn mit ihr kann der sogenannte \textD-Wert der Ausgabeschicht bestimmt werden.
+Dieser entspricht der Änderung der Aktivierung eines Neurons, die notwendig wäre, damit ein Forward Pass ein besseres Ergebnis.
 
+Um diese \textD-Werte für die Neuronen der verdeckten Schichten zu berechnen, werden natürlich die \textD-Werte der dahinter liegenden Schichten benötigt, da die benötigte Änderung nur von den Ausgaben aus bestimmt werden kann.
+Aufgrund dieses Zurückpropagierens der \textD-Werte zur Eingabeschicht hin kommt auch der Name Backpropagation.
+Auf die Berechnung des \textD-Werts werden wir dieses Jahr nicht weiter eingehen, da sie für uns nicht direkt relevant ist und wir für unsere neuronale Netzwerke das Julia-Package Flux einsetzen, welches diese Arbeit übernimmt.
+
+Mithilfe dieses \textD-Werts wird dann bestimmt, wie die Gewichte des Netzwerks angepasst werden müssten, um diese gewünschte Änderung umzusetzen:
+%
 \form{\[
 	\Delta W_{i,j} = \eta * \delta_i * a_j
 \]}
 
 \noindent wobei $i$ das Neuron näher zur Ausgabe, $j$ das Neuron näher zur Eingabe und $W_{i,j}$ das Gewicht zwischen diesen beiden ist.
 
-Die Multiplikation mit $a_j$ findet statt, um zu ermöglichen, dass die Änderung der Gewichte entsprechend ihres tatsächlichen Einflusses geschieht, das bedeutet, wenn ein Gewicht mit einem Neuron verbunden ist, welches kaum aktiv ist (eine niedrige Aktivierung hat), wird das Gewicht zu diesem auch kaum angepasst, und wenn es negativ ist, dann wird auch die Änderung umgekehrt.
+Die Multiplikation mit $a_j$ findet statt, um zu ermöglichen, dass die Änderung der Gewichte entsprechend ihres tatsächlichen Einflusses geschieht. Das bedeutet, wenn ein Gewicht mit einem Neuron verbunden ist, welches kaum aktiv ist (eine niedrige Aktivierung hat), wird das Gewicht zu diesem auch kaum angepasst.
 
 $\eta$ ist die sogenannte Lernrate.
 Sie ist meist ein sehr niedriger Wert (0.01, 0.0001, etc.) und ist wichtig für das Kernkonzept des Lernen eines neuronalen Netzwerks:
 Sie sorgt dafür, dass bei jedem Trainingsdatensatz die Gewicht nur etwas an diesen angepasst werden, sodass das gesamte Training die Gewichtsanpassungen aller Trainingsdatensätze und somit hoffentlich auch eine Generalisierung dieser darstellt.
-
 Umgesetzt wird diese Änderung einfach mit
 \form{\[
     W_{i,j} = W_{i,j} + \Delta W_{i,j}
@@ -670,29 +789,25 @@ Umgesetzt wird diese Änderung einfach mit
 \subsubsection{Verlustfunktion}
 
 Insgesamt lässt sich sagen, dass ein neuronales Netzwerk versucht, die Verlustfunktion zu minimieren.
-Es gibt viele verschiedene Arten von Verlustfunktionen, die alle auch verschiedene Vor- und Nachteile haben.
-Für dieses Projekt haben wir uns dazu entschieden den Mean Squared Error als Verlustfunktion zu nutzen.
-%diese Differenz $\textrm{Ausgabe}_\textrm{ist} - \textrm{Ausgabe}_\textrm{soll}$ zu minimieren.
-%Diese Differenz ist also ähnlich einer Verlustfunktion, anhand derer optimiert wird, und lässt sich auch in einer tatsächlichen Verlustfunktion für Supervised trainierte neuronale Netzwerke, dem Mean Squared Error, wiederfinden:
-
+Es gibt viele verschiedene Arten von Verlustfunktionen %, die alle auch verschiedene Vor- und Nachteile haben.
+und wir haben uns dazu entschieden, den Mean Squared Error (kurz MSE) als Verlustfunktion zu nutzen, welcher sich mit folgender Formel berechnen läßt:
+%
 \form{ \[
 	C_0 = (a_0 - y)^2
 \]}
 \noindent wobei $C_0$ der Verlust der Ausgabeschicht (Schicht $0$, da Indexierung der Schichten bei der Ausgabe beginnt), $a_0$ der Vektor aller Aktivierungen der Ausgabeschicht, und $y$ ein Vektor der richtigen Ausgaben für die Eingaben, mit denen die Aktivierungen berechnet wurden, ist.
 
-Es wird also die Differenz $\textrm{Ausgabe}_\textrm{ist} - \textrm{Ausgabe}_\textrm{soll}$ quadriert.
-Der Wert dieser Verlustfunktion sinkt beim Trainieren idealerweise.
-
 \subsubsection{Fully Connected Schichten} 
 
 Bei Fully Connected Schichten sind alle Neuronen eines Layers mit allen Neuronen des nächsten Layers verbunden, außerdem hat typischerweise jedes Neuron einen sogenannten Bias, der hinzu addiert wird (s. Abb. \ref{fig:dense_nn}).
 
-\begin{figure}
-    \def\layersep{3cm}
+\begin{figure}[h!]
+    \def\layersep{6cm}
+    \def\biasDist{0.6}
     \centering
-    % \begin{minipage}[t]{0.6\linewidth}\vspace{0pt}%
+    \adjustbox{scale=0.8}{%
     \begin{tikzpicture}[
-        scale=1.2,
+        % scale=1.2,
         shorten >=1pt,->,draw=black!70, node distance=\layersep,
         neuron/.style={circle,fill=black!25,minimum size=20,inner sep=0},
         edge/.style 2 args={pos={(mod(#1+#2,2)+1)*0.33}, font=\tiny},
@@ -706,11 +821,11 @@ Bei Fully Connected Schichten sind alle Neuronen eines Layers mit allen Neuronen
     % Input layer
     \foreach \y in {1,...,2}
         \node[neuron, fill=green!40] (i\y) at (0,\y+1) {$i_\y$};
-    \node[neuron, fill=orange!40] (b1) at (0, 4.5) {$b_1$};
+    \node[neuron, fill=orange!40, above=\biasDist of i2] (b1) {$b_1$};
     % Hidden layer
     \foreach \y in {1,...,4}
         \path node[neuron, fill=blue!40] (h\y) at (\layersep,\y) {$h_\y$};
-    \node[neuron, fill=orange!40] (b2) at (\layersep, 5.5) {$b_2$};
+    \node[neuron, fill=orange!40, above=\biasDist of h4] (b2) {$b_2$};
     % Output node
     \node[neuron, fill=red!40] (o) at (2*\layersep,2.5) {$O$};
     
@@ -729,37 +844,26 @@ Bei Fully Connected Schichten sind alle Neuronen eines Layers mit allen Neuronen
         
     % Draw weights for all regular edges.
     \foreach \i in {1,...,2}
-    \foreach \j in {1,...,4}
-    \path (i\i) -- (h\j) node[weight={\i}{\j}];
+        \foreach \j in {1,...,4}
+            \path (i\i) -- (h\j) node[weight={\i}{\j}];
     \foreach \i in {1,...,4}
-    \path (h\i) -- (o) node[weight={\i}{1}];
+        \path (h\i) -- (o) node[weight={\i}{1}];
     % Draw weights for bias edges.
     \foreach \j in {1,...,4}
-    \path (b1) -- (h\j) node[weight={3}{\j}];
+        \path (b1) -- (h\j) node[weight={3}{\j}];
     \path (b2) -- (o) node[weight={5}{1}];
     \end{tikzpicture}
-    % \end{minipage}
-
-    
-    % \begin{minipage}[t]{0.5\linewidth}\vspace{0pt}%
-    % \begin{alignat*}{2}
-    %     &h_4 = i_2 * 0.1 + i_1 * (-0.25) \\
-    %     &h_3 = i_2 * 0.25 + i_1 * (-0.1) \\
-    %     & ... \\
-    %     & O = h_4 * 1.25 + h_3 * 0.9 + h_2 * 0.55 + h_1 * 0.2 \\
-    % \end{alignat*}
-    % \end{minipage}
+    }
     \caption{Ein Beispiel für ein neuronales Netzwerk bestehend aus einer Eingabeschicht($i_1$ und $i_2$) und zwei Fully Connected Schichten (Neuronen $h_1$ bis $h_4$ mit Bias $b_1$ und Neuron $O$ mit Bias $b_2$). 
     Die Kreise stellen Neuronen dar; die Zahlen auf den Pfeilen die Gewichte zwischen den jeweiligen Neuronen.}
     \label{fig:dense_nn}
 \end{figure}
 
 Um die Netzeingabe eines Neurons in einer Fully Connected Schicht zu berechnen, werden alle Aktivierungen der vorherigen Schicht mit den von dem Neuron dorthin führenden Gewichten multipliziert und aufsummiert.
-
 Der Bias ist eigentlich auch ein Gewicht, jedoch ist er mit einem Neuron verbunden, das immer die Aktivierung 1 hat. \cite{brotcrunsher:forwardpass}
 
 Die Formel für die Berechnung der Netzeingabe eines Neurons in einer Fully Connected Schicht lautet also:
-
+%
 \form{\[
 	\netin_j = \sum_{L} (a_{L} * W_{Lj}) + b_{j}
 	\]}
@@ -771,8 +875,7 @@ Die Formel für die Berechnung der Netzeingabe eines Neurons in einer Fully Conn
 Fully Connected Schichten sind die \enquote{Standard}-Schicht bei neuronalen Netzwerken. 
 Sie können und werden vielseitig eingesetzt, doch haben zwei Nachteile: 
 Da jede Eingabe und jedes folgende Neuron ihr eigenes, selbst angepasstes Gewicht hat, ist bei der Erkennung von Mustern bei Klassifizierungen die \enquote{Position} der zu erkennenden Sache in der Eingabe relevant.
-
-Wenn also das Netzwerk zum Beispiel mit vielen Hundebildern trainiert wird, in der Trainingsdaten der Hund aber nie in der rechten oberen Ecke war, dann können die Gewichte, die mit den Eingabeneuronen in dieser Ecke verbunden sind, auch nicht trainiert worden sein und somit bei der tatsächlichen Anwendung Hunde dort nie erkannt werden.
+Wenn also das Netzwerk zum Beispiel mit vielen Hundebildern trainiert wird, in den Trainingsdaten der Hund aber nie in der rechten oberen Ecke war, dann können die Gewichte, die mit den Eingabeneuronen in dieser Ecke verbunden sind, auch nicht trainiert worden sein und somit bei der tatsächlichen Anwendung Hunde dort nie erkannt werden.
 
 % Und der zweite Nachteil ist, dass sie nur eindimensionale Eingaben verarbeiten können.
 % Wenn diese 
@@ -788,11 +891,12 @@ Die Werte eines Fiterkernels sind die Gewichte einer Convolutional Schicht.
 Um die Werte der nächsten Schicht zu bestimmen, \enquote{wandert} der Filterkernel über die Eingaben, sodass er jede mögliche Position einmal einnimmt.
 Bei jedem Schritt wird der Filterkernel \enquote{angwendet}, indem das Skalarprodukt des aktuellen Ausschnittes der Eingaben und des Filters berechnet wird. 
 Um das Skalarprodukt zu berechnen, muss das erste Element des Filterkernels mit dem ersten Element des Eingabenausschnitts, das zweite Element des Filterkernels mit dem zweiten Element des Eingabenausschnittes usw. multipliziert werden und anschließend die Summe von all diesen ausgerechnet werden.
-Diese Summen bilden dann die Werte für die nächste Schicht des neuronalen Netzwerkes. (s. Abb. \ref{fig:conv_layers})
+Diese Summen bilden dann die Werte für die nächste Schicht des neuronalen Netzwerkes (s. Abb. \ref{fig:conv_layers}).
 % Die Ausgabe hat also ohne zusätzliches \feng{Padding} (dt. Polsterung) immer die gleiche Dimensionen wie die Eingabe, jedoch in jeder Dimension um zwei verkleinert, da der Kernel 
 
 \begin{figure}[h!]
     \centering
+    \adjustbox{scale=0.8}{%
     % source: https://tikz.net/conv2d/
     % Convolution operator.
     % Adapted from https://github.com/PetarV-/TikZ/tree/master/2D%20Convolution
@@ -879,12 +983,12 @@ Diese Summen bilden dann die Werte für die nächste Schicht des neuronalen Netz
             }
         }
     \end{tikzpicture}
+    }
     \caption{Eine 1-dimensionale und eine 2-dimensionale Convolutional Schicht. Die farbig hervorgehobenen Felder stellen einen Schritt des Kernels dar; als nächstes würde er ein Feld weiter nach rechts rücken und die Ausgabe auch.} %TODO ?
     \label{fig:conv_layers}
 \end{figure}
 
 Beim Trainieren des neuronalen Netzwerkes werden bei Convolutional Schichten die Gewichte, also die einzelnen Werte der Kernel, als anzupassende Gewichte behandelt.
-
 Bei Convolutional Schichten redet man meistens davon, dass ein Filterkernel eine Eigenschaft (engl. \eng{feature}) extrahiert.
 So könnte ein Filterkernel zum Beispiel alle vertikalen Kanten eines Bildes, alle scharfen Kanten einer Höhenkarte oder alle runden Objekte in einem LIDAR-Scan erkennen.
 
@@ -894,19 +998,9 @@ Deswegen werden Convolutional Schichten sehr gerne bei Bild- und Videoverarbeitu
 
 % TODO: Abbildung unserer Netzwerkstruktur
 
-Convolutional Schichten haben außerdem meistens mehrere Kanäle. 
-Bei mehreren Kanälen hat die Schicht mehrere verschiedene Filterkernel, die alle auf die gleichen Eingabewerte angewendet werden.
-Da jeder Kernel jeweils eine Ausgabe hat, hat die Schicht auch mehrere Ausgaben.
-
-% Die Operation ist äquivalent dazu, bei einer $n$-dimensionalen tatsächliche Eingabe einen $n+1$-dimensionalen Kernel auf eine $n+1$-dimensionale Eingabe anzuwenden.
-% Dabei muss die Eingabe entlang der $n+1$-ten Dimension kopiert werden. Die $n+1$-te Dimension des Kernels und der Ausgabe entspricht dem Kanal.
-
-% Es gibt also drei Möglichkeiten, die Ausgaben einer Convolutional Schicht weiterzuverarbeiten:
-% Zum einen, indem man jede Ausgabe als 
-Mehrere Kanäle können verwendet werden, um mehrere Features gleichzeitig zu extrahieren, z.B. alle Kreise, alle Rechtecke, alle Linien, alle roten Bereiche, etc., wobei für jedes Feature ein Kanal verwendet wird.
-
 \begin{figure}[h!]
     \centering
+    \adjustbox{scale=0.8}{%
     % source: https://tikz.net/conv2d/
     % Convolution operator.
     % Adapted from https://github.com/PetarV-/TikZ/tree/master/2D%20Convolution
@@ -990,10 +1084,21 @@ Mehrere Kanäle können verwendet werden, um mehrere Features gleichzeitig zu ex
       %       }
       %   }
     \end{tikzpicture}
+    }
     \caption{Eine 2-dimensionale Convolutional Schicht mit zwei Kanälen und entsprechend zwei Kerneln ($K_1$ und $K_2$) und zwei Ausgaben ($I*K_1$ und $I*K_2$). Es kann theoretisch beliebig viele Kanäle geben.}
     \label{fig:conv_layers_channels}
 \end{figure}
 
+Convolutional Schichten haben außerdem meistens mehrere Kanäle, sodass sie mehre Eigenschaften parallel untersuchen können. 
+Bei mehreren Kanälen hat die Schicht mehrere verschiedene Filterkernel, die alle auf die gleichen Eingabewerte angewendet werden.
+Da jeder Kernel jeweils eine Ausgabe hat, hat die Schicht auch mehrere Ausgaben.
+
+% Die Operation ist äquivalent dazu, bei einer $n$-dimensionalen tatsächliche Eingabe einen $n+1$-dimensionalen Kernel auf eine $n+1$-dimensionale Eingabe anzuwenden.
+% Dabei muss die Eingabe entlang der $n+1$-ten Dimension kopiert werden. Die $n+1$-te Dimension des Kernels und der Ausgabe entspricht dem Kanal.
+
+% Es gibt also drei Möglichkeiten, die Ausgaben einer Convolutional Schicht weiterzuverarbeiten:
+% Zum einen, indem man jede Ausgabe als 
+Mehrere Kanäle können verwendet werden, um mehrere Features gleichzeitig zu extrahieren, z.B. alle Kreise, alle Rechtecke, alle Linien, alle roten Bereiche, etc., wobei für jedes Feature ein Kanal verwendet wird.
 
 \subsubsection{Pooling Schichten}
 
@@ -1059,48 +1164,49 @@ Dabei wird von den verschiedenen Neuronengruppen, die zusammengefasst werden sol
 % \noindent wobei $L$ die nächste Schicht, $\delta_L$ der Vektor aller $\delta$'s der Schicht $L$, und $W_{Li}$ der Vektor aller Gewichte, die ein Neuron der nächsten Schicht und Neuron $i$ verbinden, ist.
 % Da immer die (in Reihenfolge des \feng{forward pass} gesehene) nächste Schicht benötigt wird, ergibt es Sinn, diese Optimierung bei der Ausgabeschicht zu starten und dann rückwärts die \mbox{$\delta$-Werte} für jede Schicht zu berechnen und für die nächsten Berechnungen zu speichern -- daher auch der Name Backpropagation.
 
-\subsubsection{Overfitting}
+\subsubsection{Overfitting} \label{section:overfitting}
 
-Unterschiede zwischen Testdaten- und Trainingsdaten-Genauigkeit sind ein bekanntes Problem bei neuronalen Netzwerken und werden durch sogenanntes \enquote{Overfitting} verursacht.
-Dabei passt sich das Netzwerk zu stark an die Trainingsdaten an, wodurch keine Muster in den Daten gefunden werden können und das neuronale Netzwerk nicht in der Lage ist, neue Daten korrekt zu klassifizieren, da es die Trainingsdaten einfach nur \enquote{auswendig gelernt} hat.  % TODO: Quelle?
+Unterschiede zwischen Testdaten- und Trainingsdaten-Genauigkeit sind ein bekanntes Problem bei neuronalen Netzwerken und werden durch sog. \enquote{Overfitting} verursacht.
+Dabei passt sich das Netzwerk zu stark an die Trainingsdaten an und \enquote{speichert} die korrekten Ausgaben indirekt in den Gewichten ab.
+Dies geschieht, da dies die Kosten so am leichtesten minimiert werden.
+Jedoch ist das abspeichern von Daten schlecht, da das Netzwerk damit den Prozess des Findens von Mustern in den Daten umgeht und somit nicht in der Lage ist, neue, unbekannte Daten korrekt zu klassifizieren. % TODO: Quelle?
+Zwei Hauptursachen für Overfitting sind also eine zu große und komplexe Netzwerkstruktur, der \enquote{Speicher} des Netzwerks, sowie zu wenige oder nicht ausreichend unterschiedliche Daten.
  
-Oft lässt sich das Problem darauf zurückführen, dass das neuronale Netzwerk die Trainingsdateneinfach nur "abspeichert", da dies die Kosten minimiert. Also kann Overfitting durch eine zu große Netzwerkstruktur oder zu wenige Daten verursacht werden.
- 
-Außerdem kann ein schlechtes Signal-Rausch-Verhältnis die Ursache sein: Das Signal-Rausch-Verhältnis gibt an, wie stark sich ein Nutzsignal von dem Hintergrundrauschen abhebt. 
-Gerade bei der Datenermittlung mit einem EEG ist dieses Verhältnis sehr schlecht, da die für uns relevanten Signale aus dem Gehirn durch den Schädel und Haut stark abgeschwächt werden, bevor sie bei den Elektroden ankommen. 
-Durch großes Hintergrundrauschen ist es für ein neuronales Netz schwer oder sogar unmöglich, grundlegende Muster in den Daten zu finden, da diese womöglich nicht einmal mehr existieren, sodass es durch fehlende Komplexität zwar keine 100\& Genauigkeit durch das direktere Abspeichern der Trainingsdaten erreichen kann, aber die Generalisierung noch schlechter wäre. 
-Dadurch tendiert das Modell bei der Kostenoptimierung der Neuronen zum Overfitting.
-
-Um Overfitting entgegenzuwirken, gibt es verschiedene Möglichkeiten. 
-Diese gehören zu den Verfahren der Regularisierung, die ein Modell
+Eine weiter Ursache kann ein schlechtes Signal-Rausch-Verhältnis sein:
+Das Signal-Rausch-Verhältnis gibt an, wie stark sich ein Nutzsignal von dem Hintergrundrauschen abhebt. 
+Gerade bei der Datenermittlung mit einem EEG ist dieses Verhältnis sehr schlecht, da die für uns relevanten Signale aus dem Gehirn durch den Schädel und die Haut stark abgeschwächt werden, bevor sie bei den Elektroden ankommen. 
+Durch großes Hintergrundrauschen ist es für ein neuronales Netz schwer, grundlegende Muster in den Daten zu finden. 
+Dadurch tendiert das Modell bei der Verlustoptimierung der Neuronen trotzdem zum Overfitting.
+Die Verkleinerung der Netzwerkstruktur kann aus dem selben oben beschriebenen Grund ein Problem darstellen, da eine gewisse Mindestgröße benötigt wird, um ein Problem überhaupt lösen zu können.
+Das Sammeln von mehr Trainingsdaten kann zwar gegen Overfitting helfen, ist aber sehr aufwändig und sorgt für einen größeren Bedarf an Speicherplatz sowie Rechenleistung.
 
 Bei der Verwendung von Dropout (dt. \textit{fallen lassen}) wird einer Schicht des neuronalen Netzwerkes eine Dropout-Wahrscheinlichkeit $P$ zugeordnet.
 Bei jedem Trainingsschritt des Modells wird dann für jedes einzelne Neuron dieser Schicht basierend auf der Dropout-Wahrscheinlichkeit zufällig entschieden, ob es seinen Wert beibehält oder dieser auf 0 gesetzt wird. 
-Bei einer Dropout-Wahrscheinlichkeit von 30\% werden also im Schnitt 30\% der Neuronen auf 0 gesetzt und somit ignoriert.  % Quelle?
-Dies führt dazu, dass das neuronale Netzwerk die Daten nicht so einfach auswendig lernen kann. % TODO: weiter ausführen?
+Bei einer Dropout-Wahrscheinlichkeit von 30\% werden also im Schnitt 30\% der Neuronen auf 0 gesetzt und somit ignoriert.
+Dies führt dazu, dass das neuronale Netzwerk die Daten nicht so einfach auswendig lernen kann.
+%da es sich nicht mehr auf eine statische Verarbeitung verlassen kann, sondern dynamisch mit den Daten umgehen können muss. Es muss mehrere Gruppen an Neuronen geben, die einen bestimmten Datensatzes klassifizieren können
 
-Außerdem gibt es die L1- und L2-Regularisierungen.  
-Die Idee hinter ist ähnlich zum Dropout, dass sie verhindert, dass das Netzwerk zu komplex wird und sich zu sehr an die Trainingsdaten anpasst.
-Im Gegensatz zu \feng{Dropout} wird bei der L2-Regularisierung eine Penalties-Funktion zum Verlust hinzugefügt, die das Ausmaß der Gewichte des Modells beschränkt. Stattdessen wird es gezwungen, eine gewisse Einfachheit beizubehalten, was dazu beitragen kann, dass das Netzwerk besser auf neue, noch nicht gesehene Daten generalisiert.
+Außerdem gibt es die L1- und L2-Regularisierungen, bei denen eine Penalties-Funktion zum Verlust hinzugefügt wird, die das Ausmaß der Gewichte des Modells beschränkt.
+Somit wird das Netzwerk gezwungen, für einen niedrigen Verlust eine gewisse Einfachheit beizubehalten, was das indirekte Speichern der Ergebnisse ausschließt.
 
-Die Verwendung von Rauschen (\eng{noise}) auf den Eingaben für ein Neuronales Netzwerk kann dazu beitragen, das Overfitting zu vermeiden und die allgemeine Robustheit des Modells zu erhöhen.
-Die Idee hinter der Verwendung von Rauschen auf dem Input ist, dass das Netzwerk gezwungen wird, sich an zusätzliche Unschärfen in den Eingaben zu gewöhnen und somit besser auf neue, noch nicht gesehene Daten generalisieren kann. Durch die Erhöhung der Robustheit des Modells gegenüber kleinen Änderungen der Eingaben kann es auch weniger empfindlich auf kleine Störungen oder Verzerrungen in den Daten reagieren.
+Die Anwendung von Rauschen (\eng{noise}) auf den Eingaben für ein Neuronales Netzwerk hilft auch dabei, bei Overfitting die Testdatengenauigkeit zu erhöhen.
+Die Idee dahinter ist, dass dadurch eine größere Menge an unterschiedlichen Trainingsdaten \enquote{simuliert} wird, da die Eingaben so in jeder Epoche unterschiedlich sind.
+% Netzwerk gezwungen wird, sich an zusätzliche Unschärfen in den Eingaben zu gewöhnen und somit besser auf neue, noch nicht gesehene Daten generalisieren kann. Durch die Erhöhung der Robustheit des Modells gegenüber kleinen Änderungen der Eingaben kann es auch weniger empfindlich auf kleine Störungen oder Verzerrungen in den Daten reagieren.
 
-Eine andere Methode, die dabei hilft Overfitting zu vermeiden, ist das Pruning.
+Eine weitere Methode ist das Pruning.
 Dabei werden zufällige einzelne Neuronen komplett aus dem Netzwerk entfernt, wodurch die Komplexität des Netzwerkes sinkt. 
 So wird es für das Netzwerk schwerer, die Daten auswendig zu lernen, und Overfitting wird verhindert.
-
-Das Pruning lässt sich noch weiter verbessern, indem man einen Forward Pass mit allen Testdaten und einen mit allen Trainingsdaten durchführt, für jedes Neuron jeweils die durchschnittliche Aktivierung bei dem jeweiligen Datensatz bestimmt, und diese dann subtrahiert und den Betrag nimmt.
-So erfährt man für jedes Neuron, wie sehr es zum Overfitting beiträgt: Nur ohne Overfitting ist die Differenz bei gleicher Fall-Verteilung in Trainings- und Testdaten ungefähr 0, ansonsten höher.
+Das Pruning lässt sich noch weiter verbessern, indem man einen Forward Pass mit allen Testdaten und einen mit allen Trainingsdaten durchführt und dabei für jedes Neuron jeweils die durchschnittliche Aktivierung bestimmt. Anschließend muss man die durchschnittlichen Aktivierungen beim Ausführen mit Testdaten von den durchschnittlichen Aktivierungen beim Ausführen mit Trainingsdaten subtrahieren.
+So erfährt man für jedes Neuron, wie sehr es zum Overfitting beiträgt: Nur ohne Overfitting ist die Differenz bei gleicher Fall-Verteilung in Trainings- und Testdaten ungefähr 0.
 Nun muss man nur noch die Neuronen mit der höchsten Differenz entfernen.
 
-\subsubsection{Unsere Implementation}
+\subsubsection{Unsere Implementation} \label{section:UnsereImplementation}
 
 Wir bieten in unserem Framework dem Nutzer eine Standard-Konfiguration, die beliebig abgeändert werden kann.
 Die Hoffnung ist, dass Nutzer nicht zuerst alle Komponenten verstehen und zusammenbauen müssen, sondern sich auf Standard-Werte und Prozesse verlassen können, die in den meisten Kontexten funktionieren und nur in seltenen Fällen angepasst werden müssen.
 
 Unser Plan, um dieses Ziel zu erreichen, ist es, die Standard-Konfiguration zuerst gut an unser aktuelles Implementationsbeispiel (Gedanken links, rechts) anzupassen.
-Danach wollen wir weitere Beispiele umsetzen (Augen schließen, akustische Signale, ...) und die Konfiguration ebenso an diese anpassen, sodass wir am Ende hoffentlich einen Satz an Standard-Werten haben, der für alle Beispiele gut funktioniert, oder zumindest mehrere, die auf Gruppen von Problemen anwendbar sind.
+Danach wollen wir weitere Beispiele umsetzen (Augen schließen, akustische Signale, etc. und die Konfiguration ebenso an diese anpassen, sodass wir am Ende hoffentlich einen Satz an Standard-Werten haben, der für alle Beispiele gut funktioniert, oder zumindest mehrere, die auf Gruppen von Problemen anwendbar sind.
 
 Wir verwenden in dieser Standard-Konfiguration selbst nicht alle oben beschriebenen Verfahren gegen Overfitting, doch wir haben sie alle umgesetzt, sodass wir und Nutzer sich jederzeit dazu entscheiden können, sie zu verwenden und zu testen.
 
@@ -1109,23 +1215,6 @@ Wir verwenden in dieser Standard-Konfiguration selbst nicht alle oben beschriebe
 Der gesamte Quellcode unseres Projektes sowie alle gesammelten Daten lassen sich auf unserem GitHub Repository \cite{InterpretingEEG} finden.
 
 Wir werden in diesem Bericht nur einige Design-Konzepte unseres Programms erklären; Informationen über die Verwendung sowie Details lassen sich in unserer Software-Dokumentation \cite{BCIInterfaceDocs} finden. 
-
-\begin{figure}
-    \centering
-    \begin{tikzpicture}
-        \begin{axis}[
-            xlabel={Ungefähre Zeit in s}, 
-            ylabel={Testdatengenauigkeit in \%}
-        ]
-            \addplot table [
-                x expr={\thisrow{Step}*10}, 
-                y expr={\thisrow{Value}*100}, % dezimal zu Prozent
-                col sep=comma] {models/TestdataGanglion/OneFile/allConv_4c_1_e0.0005_2023-01-14_17-08-34.csv};
-        \end{axis}
-    \end{tikzpicture}
-    \caption{Caption}
-    \label{fig:my_label}
-\end{figure}
 
 \subsection{Nutzerfreundlichkeit}
 
@@ -1140,14 +1229,11 @@ Aber dieses Jahr haben wir das Framework als tatsächliches Julia-Paket entwicke
 Alle von dem Paket benötigten Abhängigkeiten werden automatisch installiert und mitverwaltet.
 
 % TODO: test
-\begin{code}[0.75]{Verwaltung unseres Pakets in einem Skript; die Verwendung der Julia REPL ist ebenfalls möglich.}{code:Verwaltung}
+\begin{code}[0.9]{Verwaltung unseres Pakets in einem Skript; die Verwendung der Julia REPL ist ebenfalls möglich.}{code:Verwaltung}
     using Pkg
-    # Paket installieren
-    Pkg.add("https://github.com/AR102/Interpreting-EEG-with-AI")
-    # Paket aktualisieren
-    Pkg.update("BCIInterface")
-    # Paket in einem Programm verwenden
-    using BCIInterface
+    Pkg.add("https://github.com/AR102/Interpreting-EEG-with-AI") # installieren
+    Pkg.update("BCIInterface") # Paket aktualisieren
+    using BCIInterface # Paket in einem Programm verwenden
 \end{code}
 
 \subsubsection{Erweiter-- und Anpassbarkeit}
@@ -1155,15 +1241,12 @@ Alle von dem Paket benötigten Abhängigkeiten werden automatisch installiert un
 Wir haben beim Design des Frameworks starken Gebrauch von der Multimethoden-Unterstützung von Julia gemacht.
 Dabei können mehrere Funktionen den gleichen Namen haben. Welche Funktion ausgeführt wird, ist abhängig von der Anzahl und den Typen der Argumente. Für ein Beispiel siehe \coderef{multipleDispatch}.
 
-\begin{code}{Multiple-Dispatch-Beispiel}{multipleDispatch}
-# eigenen Datentypen namens "Dog" definieren
-struct Dog end
-# eigenen Datentypen namen "Cat" definieren
-struct Cat end
-
-# Funktion wird ausgeführt, wenn Parameter vom Typ "Dog" ist
+\begin{code}{%
+Multiple-Dispatch-Beispiel. Wenn \mintinline{julia}{makenoise(animal)} ausgeführt wird, entscheidet der Typ von \mintinline{julia}{animal}, welche der zwei Funktionen verwendet wird.
+}{multipleDispatch}
+struct Dog end # eigenen Datentypen namens "Dog" definieren
+struct Cat end # eigenen Datentypen namen "Cat" definieren
 makenoise(animal::Dog) = println("Wuff!")
-# Funktion wird ausgeführt, wenn Parameter vom Typ "Cat" ist
 makenoise(animal::Cat) = println("Meoow!")
 \end{code}
 
@@ -1171,11 +1254,11 @@ Da wir unser Programm modular aufgebaut haben, ist es durch Multimethoden leicht
 
 Ein Beispiel davon ist in \coderef{code:customEEG} zu sehen, wo ein eigenes EEG Gerät verwendet wird. In diesem Beispiel gibt dieses \enquote{EEG} nur zufällige Werte aus, aber der Nutzer könnte in der Funktion \mintinline{julia}{get_voltage} etwas beliebiges schreiben, also auch sich mit dem Internet verbinden, USB-Ports ansteuern, auf einen Netzwerk-Stream zugreifen, etc. 
 
-Ein großer Vorteil dieser Vorgehensweise ist, dass man als Nutzer weder auf Funktionen des Pakets verzichten / diese selbst implementieren muss noch den Quellcode unseres Pakets anpassen muss, was aufwändig sein und zu Problemen mit Paketaktualisierungen sowie Übersicht führen könnte. 
+Ein großer Vorteil dieser Vorgehensweise ist, dass man als Nutzer weder auf Funktionen des Pakets verzichten / diese selbst implementieren muss noch den Quellcode unseres Pakets anpassen muss, was aufwändig sein und zu Problemen mit Paketaktualisierungen sowie Übersichtsichtlichkeit führen könnte. 
 
-\begin{code}{Beispiel für die Verwendung eines eigenen EEGs}{code:customEEG}
+\begin{code}[0.8]{Beispiel für die Verwendung eines eigenen EEGs}{code:customEEG}
 using BCIInterface
-# eigenes EEG Gerät als eigenen Datentypen definieren
+# eigenes EEG-Gerät als eigenen Datentypen definieren
 struct MyBoard <: BCIInterface.EEG.EEGBoard
     # data_descriptor beschreibt Form der Daten
     # (Anzahl Elektroden? rohe Daten? Frequenzen?)
@@ -1185,42 +1268,40 @@ NUM_CHANNELS = 8
 MyBoard() = MyBoard(RawDataDescriptor(NUM_CHANNELS))
 # Überlade die interne Funktion zum Abrufen von Daten
 function BCIInterface.EEG.get_voltage(board::MyBoard, channel::Int)
-    # gib zufällige Zahl zwischen 0 und 1 zurück
-    return rand()
+    return rand() # gib Zufallszahl zwischen 0 und 1 zurück
 end
-
-device = Device(MyBoard(NUM_CHANNELS)
-...
+device = Device(MyBoard(NUM_CHANNELS) # Das eigene Board verwenden
 \end{code}
 
 \subsubsection{Weiteres}
 
 Weiter haben wir bei der Verwaltung der EEG-Daten ein einfaches Interface zum Speichern, Abrufen und Filtern von Daten implementiert.
-So können mit den Daten auch noch \enquote{tags} und \enquote{extra info} gespeichert werden, die später für die Filterung und Verarbeitung der Daten sehr nützlich sein können, wie es \coderef{code:tags} zeigt.
+So können mit den Daten auch noch \enquote{tags} und \enquote{extra info} gespeichert werden, die später für die Filterung und Verarbeitung der Daten sehr nützlich sein können.
+Die Filterung ist noch nicht vollständig umgesetzt (momentan können tags nur genutzt werden, um festzulegen, welchen Datensätzen welche Ausgaben zugeordnet sind) und extra infos funktionieren aufgrund von Schwierigkeiten mit CSV.jl noch nicht, doch abgesehen von letzterem erwarten wir, dass wir diese Funktionen sehr bald implementiert haben werden, da sie größtenteils bereits integriert sind und nur noch öffentliche Methoden zur Verwendung fehlen.
 
 % TODO: update if not implemented in time
 
-\begin{code}{Geürztes Beispiel, das die Verwendung von \enquote{tags} und \enquote{extra info} zeigt}{code:tags}
-...
-save_data(experiment, tags = [:room102, :PersonA], 
-    extra_info = Dict(:temp => 22.3))
-...
-filter = DataFilter(
-    tags = [:PersonA], # nur Daten von Person A
-    nottags = [:room105], # keine Daten aus Raum 105
-    extra_filter = x -> x.temp < 21 # nur Daten, wo Temperatur unter 21 war
-)
-filter!(data, filter)
-...
-\end{code}
-\subsection{Framework}
+% \begin{code}[0.85]{Gekürztes Beispiel, das die Verwendung von \enquote{tags} und \enquote{extra info} zeigt}{code:tags}
+% ...
+% save_data(experiment, tags = [:room102, :PersonA], 
+%     extra_info = Dict(:temp => 22.3))
+% ...
+% filter = DataFilter(
+%     tags = [:PersonA], # nur Daten von Person A
+%     nottags = [:room105], # keine Daten aus Raum 105
+%     extra_filter = x -> x.temp < 21 # nur Daten, wo Temperatur unter 21 war
+% )
+% filter!(data, filter)
+% ...
+% \end{code}
+% \subsection{Das Anwendungsbeispiel}
 
-\begin{figure}[h!]
-    \centering
-    \includegraphics[width=1.0\linewidth]{pictures/Workflow.png}
-    \caption{Zuerst nehmen wir die EEG Daten auf. Danach werden die Daten mit FFT weiterverarbeitet. Die Ergebnisse dieser FFT werden dann an ein neuronales Netzwerk weitergegeben, welches dann die Wahrscheinlichkeiten, die das Netzwerk den einzelnen "Labels" für diesen Datensatz zugeordnet hat, inform eines Vektors ausgibt.}
-    \label{Workflow}
-\end{figure}
+% \begin{figure}[h!]
+%     \centering
+%     \includegraphics[width=1.0\linewidth]{pictures/Workflow.png}
+%     \caption{Zuerst nehmen wir die EEG Daten auf. Danach werden die Daten mit FFT weiterverarbeitet. Die Ergebnisse dieser FFT werden dann an ein neuronales Netzwerk weitergegeben, welches dann die Wahrscheinlichkeiten, die das Netzwerk den einzelnen "Labels" für diesen Datensatz zugeordnet hat, inform eines Vektors ausgibt.}
+%     \label{Workflow}
+% \end{figure}
 
 % \begin{figure}
 %     \centering
@@ -1252,32 +1333,75 @@ filter!(data, filter)
 
 % Zuerst haben wir unser Netzwerk mit Daten aus dem Internet trainiert, die von einem EEG mit 16 Elektroden aufgenommen wurden, da wir wissen, dass es möglich ist ein neuronales Netzwerk zu trainieren, das diese Daten klassifizieren kann. Dadurch können wir das Framework von unserer Hardware getrennt testen und so vorläufig eine mögliche Fehlerquelle ausschließen.
 
+\subsection{Das neuronale Netzwerk}
+
 Wir waren in der Lage, eine sehr gute Genauigkeit beim Testen des Modells mit Trainingsdaten zu erreichen. 
 % TODO: Graph? Zahlen?
 Mit der Genauigkeit ist gemeint, welchen Anteil der gegebenen Datensätze das neuronale Netzwerk korrekt klassifizieren konnte. 
 Da die Trainingsdaten dem Modell durch das Trainieren jedoch bereits bekannt waren, haben wir zusätzlich noch die Genauigkeit des Modells bei der Analyse der Testdaten bestimmt. 
 Diese wurden vorher nie zum Trainieren des Netzwerks verwendet und repräsentieren somit viel besser die Genauigkeit des Modell in der späteren Verwendung, wo das Modell mit unbekannten, neuen Umständen und neuen, noch nie zuvor gesehenen Daten klarkommen muss.
-Bei der Evaluierung des Modells mit Testdaten konnten wir eine Genauigkeit von bis zu ungefähr 44,57\% erreichen. 
+Bei der Evaluierung des Modells mit Testdaten konnten wir eine Genauigkeit von bis zu ungefähr 44,57\% erreichen (s. Abb. \ref{fig:test_verlauf}). 
+
+\begin{figure}[h!]
+    \centering
+    \begin{tikzpicture}
+        \begin{axis}[
+            height=6.5cm,
+            width=15cm,
+            xlabel={Trainingszeit in s}, 
+            ylabel={Testdatengenauigkeit in \%},
+            legend pos = north east,
+            font = \small
+        ]
+            \newcommand{\sentMark}{triangle*}
+            \newcommand{\gangMark}{}
+            % \addplot table [
+            %     x expr={\thisrow{Step}*10}, 
+            %     y expr={\thisrow{Value}*100}, % dezimal zu Prozent
+            %     col sep=comma] {models/TestdataGanglion/OneFile/allConv_4c_1_e0.0005_2023-01-14_17-08-34.csv};
+            \addplot+[mark=\sentMark] table [
+                x expr={\thisrow{Step}*10}, 
+                y expr={\thisrow{Value}*100}, % dezimal zu Prozent
+                col sep=comma] {models/TestdataSentdex/OmegaA_16c_sentdex_e1.0e-5_2023-01-14_19-17-21.csv};
+            \addplot+[mark=\sentMark] table [
+                x expr={\thisrow{Step}*10}, 
+                y expr={\thisrow{Value}*100}, % dezimal zu Prozent
+                col sep=comma] {models/TestdataSentdex/OmegaA_16c_sentdex_e1.0e-5_2023-01-14_19-23-25.csv};
+            \addplot+[mark=\sentMark] table [
+                x expr={\thisrow{Step}*10}, 
+                y expr={\thisrow{Value}*100}, % dezimal zu Prozent
+                col sep=comma] {models/TestdataSentdex/OmegaA_16c_sentdex_e1.0e-5_2023-01-14_20-35-21.csv};
+            \addplot+[mark=\sentMark] table [
+                x expr={\thisrow{Step}*10}, 
+                y expr={\thisrow{Value}*100}, % dezimal zu Prozent
+                col sep=comma] {models/TestdataSentdex/OmegaA_16c_sentdex_e5.0e-5_2023-01-14_20-29-09.csv};
+            \addplot+[mark=\gangMark, dashed] table [
+                x expr={\thisrow{Step}*10}, 
+                y expr={\thisrow{Value}*100}, % dezimal zu Prozent
+                col sep=comma] {models/TestdataGanglion/OneFile/allConv_4c_1_2023-01-14_16-51-37.csv};
+            \addplot+[mark=\gangMark, dashed] table [
+                x expr={\thisrow{Step}*10}, 
+                y expr={\thisrow{Value}*100}, % dezimal zu Prozent
+                col sep=comma] {models/TestdataGanglion/OneFile/allConv_4c_1_e0.0005_2023-01-14_17-49-13.csv};
+            \addplot+[mark=\gangMark, dashed] table [
+                x expr={\thisrow{Step}*10}, 
+                y expr={\thisrow{Value}*100}, % dezimal zu Prozent
+                col sep=comma] {models/TestdataGanglion/OneFile/allConv_4c_1_e0.0005_2023-01-14_17-08-34.csv};
+            \legend{Testdaten von Sentdex,,,, eigene Testdaten};
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Die Testdatengenauigkeit des in Abb. \ref{fig:netz_struktur} dargestellten Netzwerks im Verlauf. Die durchgezogenen Linien mit Dreiecken repräsentieren die Genauigkeit mit den Testdaten von Sentdex, die gestrichelten Linien die Genauigkeit mit unseren eigenen Testdaten, die mit dem Ganglion aufgenommen wurden. Der unterschiedliche Verlauf der Linien gleichen Typs kommt daher, dass das Netzwerk beim Erstellen mit zufälligen Gewichten initialisiert wird und somit immer einen anderen Verlauf hat.}
+    \label{fig:test_verlauf}
+\end{figure}
 
 Da wir drei verschiedene Kategorien von Daten nutzen (Gedanken an Rechts, Gedanke an Links und Gedanken weder Rechts noch Links), würde eine zufällige Klassifizierung der Daten zu einer Genauigkeit von 33\% führen.
-Die Genauigkeit ist also deutlich über dem Zufall und somit lässt sich sagen, dass das neuronale Netzwerk zu einem gewissen Grad die Gedanken erkennt und es somit tatsächlich überhaupt möglich ist.
 
 % Man kann also festhalten, dass es möglich ist, mit unserem Framework ein BCI zu entwickeln, das die Daten, die wir online gefunden haben, deutlich besser als zufällig klassifizieren kann.
 
-Nachdem wir dieses Teilziel erreicht hatten, wollten wir unser Framework mit Daten testen, die wir selber aufgenommen hatten. 
-Dafür haben wir zuerst das EEG von OpenBCI genutzt, da unser eigenes noch nicht fertig war.
+Die Struktur des Netzwerks, mit dem wir dies erreicht haben, ist in Abb. \ref{fig:netz_struktur} zu sehen.
+Wir haben die Struktur größtenteils mit \eng{trial and error} ermittelt und die in \nameref{section:overfitting} beschriebenen Verfahren genutzt.
 
-% wir es schon verwendet haben und wissen, das es gute EEG Daten liefern kann. 
-Da wir noch keine Zeit dafür hatten, konnten wir nicht genug Trainingsdaten aufnehmen, um das Netzwerk effektiv trainieren zu könnnen, da hierfür viele Datensätze benötigt werden.
-
-Also haben wir die EEG-Daten von Sentdex zum Trainieren und unsere selbst aufgenommenen zum Testen verwendet und konnten tatsächlich eine Testdatengenauigkeit von bis zu 40,6\% erreichen.
-
-Dies ist zwar weit von ideal, aber dennoch sehr beeindruckend, da die Bedingungen von Trainings- und Testdaten so verschieden sind:
-Sie wurden mit verschiedenen Geräten, an verschiedenen Teilen der Welt, von verschiedenen Personen verschiedenen Alters auf verschiedene Weise aufgenommen.
-
-Dies unterstützt unsere Vermutung, dass es möglich ist, natürlich noch weiter, denn damit so etwas möglich ist, muss das neuronale Netzwerk ein Kern-Muster, welches wirklich nur mit dem Gedanken zusammenhängt, gefunden haben.
-
-\begin{figure}
+\begin{figure}[h!]
     \centering
     \begin{tikzpicture}[
         layer/.style={rotate=90, right=\layersep of #1.south, anchor=north, align=center}
@@ -1286,21 +1410,22 @@ Dies unterstützt unsere Vermutung, dass es möglich ist, natürlich noch weiter
         \def\layersep{0.4cm};
         \newcommand{\arr}{edge[-stealth]}
         \newcommand{\layerDesc}[2]{\textbf{#1}, {#2}}
+        \newcommand{\layerDescB}[2]{\textbf{#1} \\ {#2}}
 
-        \node[rotate=90, anchor=north, align=center] (conv1) {\layerDesc{1D Conv}{$\textrm{Dim}_K$ = 3, Kanäle = 64}};
+        \node[rotate=90, anchor=north, align=center] (conv1) {\layerDescB{1D Conv}{$\textrm{Dim}_K$ = 3, Kanäle = 64}};
         \node[layer=conv1] (drop1) {\layerDesc{Dropout}{$P = 20\%$}};
         \node[layer=drop1] (maxpool1){\layerDesc{Max Pool}{$n = 2$}};
-        \node[layer=maxpool1] (conv2) {\layerDesc{1D Conv}{$\textrm{Dim}_K$ = 2, Kanäle = 32}};
+        \node[layer=maxpool1] (conv2) {\layerDescB{1D Conv}{$\textrm{Dim}_K$ = 2, Kanäle = 32}};
         \node[layer=conv2] (maxpool2) {\layerDesc{Max Pool}{$n = 2$}};
-        \node[layer=maxpool2] (conv3) {\layerDesc{1D Conv}{Filtergröße = 2, Kanäle = 16}};
+        \node[layer=maxpool2] (conv3) {\layerDescB{1D Conv}{$\textrm{Dim}_K$ = 2, Kanäle = 16}};
         \node[layer=conv3] (maxpool3) {\layerDesc{Max Pool}{$n=2$}};
         \node[layer=maxpool3] (flatten) {Flatten};
         \node[layer=flatten] (drop2) {\layerDesc{Dropout}{P = 20\%}};
-        \node[layer=drop2] (dense1) {\layerDesc{Fully Connected}{Neuronen = 16}};
-        \node[layer=dense1] (dense2) {\layerDesc{Fully Connected}{Neuronen = 16}};
-        \node[layer=dense2] (dense3) {\layerDesc{Fully Connected}{Neuronen = 64}};
-        \node[layer=dense3] (dense4) {\layerDesc{Fully Connected}{Neuronen = 16}};
-        \node[layer=dense4] (dense5) {\layerDesc{Fully Connected}{Neuronen = 3}};
+        \node[layer=drop2] (dense1) {\layerDescB{Fully Connected}{Neuronen = 16}};
+        \node[layer=dense1] (dense2) {\layerDescB{Fully Connected}{Neuronen = 16}};
+        \node[layer=dense2] (dense3) {\layerDescB{Fully Connected}{Neuronen = 64}};
+        \node[layer=dense3] (dense4) {\layerDescB{Fully Connected}{Neuronen = 16}};
+        \node[layer=dense4] (dense5) {\layerDescB{Fully Connected}{Neuronen = 3}};
         \draw[-stealth]
             (conv1) \arr (drop1)
             (drop1) \arr (maxpool1)
@@ -1317,25 +1442,54 @@ Dies unterstützt unsere Vermutung, dass es möglich ist, natürlich noch weiter
             (dense4) \arr (dense5)
             ;
     \end{tikzpicture}
-    \caption{Struktur von unserem aktuell besten neuronalen Netzwerk. $\textrm{Dim}_K$ steht für die Größe des Kernels, 1d Conv für 1-dimensionale Convolutional Schicht.}
+    \caption{Struktur von unserem aktuell besten neuronalen Netzwerk. $\textrm{Dim}_K$ steht für die Größe des Kernels, 1d Conv für eine 1-dimensionale Convolutional Schicht.}
     \label{fig:netz_struktur}
 \end{figure}
 
+Nachdem wir dieses Teilziel erreicht hatten, wollten wir unser Framework mit Daten testen, die wir selber aufgenommen hatten. 
+Dafür haben wir zuerst das EEG von OpenBCI genutzt, da unser eigenes noch nicht fertig war.
+% wir es schon verwendet haben und wissen, das es gute EEG Daten liefern kann. 
+Da wir noch keine Zeit dafür hatten, konnten wir nicht genug Trainingsdaten aufnehmen, um das Netzwerk effektiv trainieren zu könnnen, da hierfür viele Datensätze benötigt werden.
+Also haben wir die EEG-Daten von Sentdex zum Trainieren und unsere selbst aufgenommenen zum Testen verwendet und konnten tatsächlich eine Testdatengenauigkeit von bis zu 43\% erreichen (s. Abb. \ref{fig:test_verlauf}).
+Dies ist zwar weit von ideal, aber dennoch sehr beeindruckend, da die Bedingungen von Trainings- und Testdaten so verschieden sind:
+Die Daten wurden mit verschiedenen Geräten, von verschiedenen Personen verschiedenen Alters auf verschiedene Weise aufgenommen.
+Dies unterstützt unsere Vermutung, dass es auch mit unserer Hardware möglich ist ein BCI zu entwickeln, dass Gedanken an verschiedene Richtungen sicher erkennen kann, da das neuronale Netzwerk bereits ein Kern-Muster, welches wirklich nur mit dem Gedanken zusammenhängt, gefunden hat.
+
+
 \section{Diskussion}
 
-Ziel unseres Projektes war es, ein Framework zu entwickeln, welches sich leicht auf die eigenen Zwecke anpassen lässt und das entwickeln von BCIs vereinfacht. Dies haben wir mit unserm eigenen Package erreicht, da es Entwicklung in einer stark abstrahierten Form ermöglicht und aufgrund unserer ausführlichen Dokumentation auch für Anfänger geeignet ist.
+Ziel unseres Projektes war es, ein Framework zu entwickeln, welches sich leicht auf die eigenen Zwecke anpassen lässt und die Entwicklung von BCIs vereinfacht. 
+Dies haben wir mit unserem eigenen Package erreicht, da es Entwicklung in einer stark abstrahierten Form ermöglicht.
+Wir arbeiten außerdem momentan an einer ausführlichen Dokumentation mit Beispielen und Anleitungen und, anders als letztes Jahr, versuchen wir alle Funktionen, die wir programmieren, mit Beschreibung, Argumenten etc. zu dokumentieren, siehe unsere Dokumentation \cite{BCIInterfaceDocs}.
 
-Es gibt aber auch noch viele Funktionen, die wir noch in unser Framework einbauen wollen. Zum Beispiel würde das entwickeln von BCIs durch eine Hyperparameter Optimierung stark vereinfacht werden. Hyperparameter sind die Parameter, die man vor dem trainieren festlegen muss, wie zum Beispiel die Netzwerkstruktur, die Velust- und Aktivierungsfunktionen sowie Lernrate. Eine Hyperparameter Optimierung kann automatisch gute Hyperparameter finden, indem sie systematisch verschiedene Konfigurationen ausprobiert. Dadurch wird einem noch mehr Arbeit abgenommen, da man die Hyperparameter nicht mehr manuell festlegen muss.
+Wir haben zwei Ziele für die direkte Zukunft.
+Das erste hat mit unserem EEG zu tun: 
+Wir wollen die Qualität der Daten unseres eigenen EEGs testen und diese sowie die erreichbare Genauigkeit des neuronalen Netzwerks mit den kommerziellen Versionen vergleichen.
+Zweitens wollen wir die Standardwerte verbessern und neue Funktionen implementieren, da wir zwar eine 44,57\% Testdatengenauigkeit erreichen konnten, aber wissen, dass 60\% möglich sind.
 
-Außerdem wollen wir unser selbst gebautes EEG noch weiter testen und verbessern, damit wir es in der Zukunft auch für die Erkennung von Gedanken an Richtungen verwenden können.
+Eine wichtige Funktion, die sowohl uns beim Verbessern der Standardwerte als auch Nutzern stark helfen würde, wäre eine Funktion zur Hyperparameter-Optimierung.
+Hyperparameter sind bei neuronalen Netzwerken Parameter, die vor dem Trainieren festgelegt werden müssen, wie zum Beispiel die Netzwerkstruktur,  die Velust- und Aktivierungsfunktionen, die Lernrate, die Regularisierungsfunktionen, Pruning, etc. 
+Eine Hyperparameter-Optimierung kann automatisch gute Hyperparameter finden, indem sie systematisch verschiedene Konfigurationen ausprobiert und bessere entwickelt.
+Eine Hyperparameter-Optimierung würde uns helfen, da wir so schneller bessere Standardwerte finden könnten.
+Denn das \eng{Trial and Error} Verfahren, vor allem per Hand, ist sehr zeitaufwändig -- inzwischen haben wir vermutlich schon hunderte verschiedene Konfigurationen manuell erstellt und ausprobiert.
+Außerdem würde ein Hyperparamter-Optimierung es erlauben, dass unser Framework in einer noch größeren Anzahl an Szenarien ohne manuelle Anpassung benutzt werden könnte.
 
-TODO:
-\begin{itemize}
-    \item Hyper Parameter Optimization
-    \item Mehr Standard Parameter-Sätze
-    \item Integration \& Testen des Selbstbau-EEG
-    \item Vergleich Sentdex, unser Ganglion und Selbst-Bau
-\end{itemize}
+Wir haben bereits eine Idee für ein solches Verfahren, welches eine evolutionäres Vorgehensweise nutzen würde:
+Das Programm würde unsere Standardkonfiguration (s. \nameref{section:UnsereImplementation}) als Basis nehmen, diese mehrfach kopieren und zufällig abändern, und dann alle Kopien für z.B. 20 Sekunden trainieren.
+Danach würde es sich die beste Konfiguration auswählen, diese wieder kopieren und zufällig verändern und den ganzen Prozess erneut beginnen.
+Doch wir wollen uns noch weiter mit den verschiedenen möglichen Verfahren beschäftigen und müssen die Hyperparameter-Optimierung natürlich noch implementieren und testen.
+
+Weiter in der Zukunft, nachdem wir hoffentlich mit unserem aktuellen Anwendungsbeispiel eine zufriedenstellende Genauigkeit erreichen konnten, werden wir weitere Anwendungsbeispiele umsetzen und dafür Daten sammeln.
+Nur so können wir sichergehen, dass unser Framework am Ende nicht einfach nur für einen Zweck verwendbar ist (s. \nameref{section:UnsereImplementation}).
+
+\newpage
+
+\section{Danksagung}
+
+Danke an den Förderverein \enquote{Gesellschaft der Freunde des Gymnasium Eversten e.V.} für die Finanzierung des EEG-Geräts. Ohne diese Hilfe wäre dieses Projekt nie zustande gekommen. Alle finanzierten Teile sind in der \hyperref[Materialien]{Materialliste} mit $\star$ gekennzeichnet.
+
+Größter Dank geht an unseren Projektbetreuer Herr Dr. Glade, der unser Projekt begleitet hat. 
+Er hat uns bei der wissenschaftlichen Methodik geholfen und uns wichtige Ressourcen zur Hand gegeben sowie bei Fragen weitergeholfen.
 
 \section{Quellen}
 \subsection{Abbildungen}
@@ -1345,17 +1499,25 @@ TODO:
     \centering
     {
     \setlength{\tabcolsep}{0pt}
-    \begin{tabular}{p{0.08\linewidth}p{0.9\linewidth}}
-        Abb. \ref{fig:conv_layers} %
-        & Kopiert und abgeändert von \href{https://tikz.net/conv2d/}{https://tikz.net/conv2d/}, ursprünglicher Author ist Janosh Riebesell  \\
+    \begin{tabular}{p{0.15\linewidth}p{0.85\linewidth}}
+        Abb. \ref{fig:conv_layers} und \ref{fig:conv_layers_channels}%
+        & Kopiert und abgeändert von \url{https://tikz.net/conv2d/}, ursprünglicher Author ist Janosh Riebesell  \\
         % Abb. \ref{fig:dense_nn} %
         % & Kopiert und abgeändert von \href{https://tikz.net/regular-vs-bayes-nn/}{https://tikz.net/regular-vs-bayes-nn/}, ursprünglicher Author ist Janosh Riebesell \\
         Abb. \ref{fig:OPV} %
-        & Linkes Bild: \href{https://www.conrad.de/de/ratgeber/handwerk-industrie-wiki/elektronik-bauteile/lm393.html}{https://www.conrad.de/de/ratgeber/handwerk-industrie-wiki/elektronik-bauteile/lm393.html}, rechtes Bild: \href{https://www.reichelt.de/operationsverstaerker-2-fach-dip-8-lm-358-dip-p10483.html}{https://www.reichelt.de/operationsverstaerker-2-fach-dip-8-lm-358-dip-p10483.html} \\
+        & Linkes Bild: \url{www.conrad.de/de/ratgeber/handwerk-industrie-wiki/elektronik-bauteile/lm393.html}, rechtes Bild: \url{https://www.reichelt.de/operationsverstaerker-2-fach-dip-8-lm-358-dip-p10483.html} \\
+        Abb. \ref{fig:LHP} %
+        & Kopiert, ursprünglich erstellt von Józef Król, siehe \url{https://docplayer.pl/48121857-Szybkie-metody-projektowania-filtrow-aktywnych.html} \\
     \end{tabular}
     }
     \label{tab:my_label}
 \end{table}
-\printbibliography[title={Literatur}, keyword={Literatur}]
-\printbibliography[title={Anderes}, notkeyword={Literatur}]
+
+Alle anderen Abbildungen wurden selbst erstellt.
+
+% \subsection{Quellen}
+\subsection{Literatur}
+\printbibliography[heading=none, title={Literatur}, keyword={Literatur}]
+\subsection{GitHub-Repositories und Videos}
+\printbibliography[heading=none, title={Anderes}, notkeyword={Literatur}]
 \end{document}
