@@ -18,7 +18,7 @@ We hope to make peoples lives easier and give beginners like ourselves a better 
 develop their own BCIs.
 
 We're just at the beginnings ourselves, however, and also want to learn and grow through
-this project. Any help and advice is appreciated!
+this project. Any help or advice is appreciated!
 
 See the [documentation](https://AR102.github.io/Interpreting-EEG-with-AI/) for installation
 and usage instructions.
