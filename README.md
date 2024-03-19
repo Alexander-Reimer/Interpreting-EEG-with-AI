@@ -1,8 +1,8 @@
 [comment]: <> "LTeX: language=en-US"
 
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://AR102.github.io/Interpreting-EEG-with-AI/dev/)
-[![CI](https://github.com/AR102/Interpreting-EEG-with-AI/actions/workflows/CI.yml/badge.svg?branch=refactor)](https://github.com/AR102/Interpreting-EEG-with-AI/actions/workflows/CI.yml)
-[![codecov](https://codecov.io/gh/AR102/Interpreting-EEG-with-AI/branch/refactor/graph/badge.svg?token=YA9DXVHWU8)](https://codecov.io/gh/AR102/Interpreting-EEG-with-AI)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://Alexander-Reimer.github.io/Interpreting-EEG-with-AI/dev/)
+[![CI](https://github.com/Alexander-Reimer/Interpreting-EEG-with-AI/actions/workflows/CI.yml/badge.svg?branch=refactor)](https://github.com/Alexander-Reimer/Interpreting-EEG-with-AI/actions/workflows/CI.yml)
+[![codecov](https://codecov.io/gh/Alexander-Reimer/Interpreting-EEG-with-AI/branch/refactor/graph/badge.svg?token=YA9DXVHWU8)](https://codecov.io/gh/Alexander-Reimer/Interpreting-EEG-with-AI)
 [![Code Style:
 Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 
